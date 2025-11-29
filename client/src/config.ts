@@ -13,9 +13,9 @@ export const CONFIG = {
 
   // === UNLOCK CONFIGURATION ===
   // Type of gesture required to unlock the camera when disguise mode is active
-  // 'quickTaps': Requires 5 quick taps in specific corners (top-left, bottom-right, etc.)
-  // 'patternUnlock': Requires drawing a specific pattern on the screen
-  UNLOCK_GESTURE: 'quickTaps' as GestureType,
+  // 'quickTaps': Requires taps in specific corners (WARNING: currently has a security bug - use patternUnlock instead)
+  // 'patternUnlock': Requires drawing a specific pattern on the screen (recommended)
+  UNLOCK_GESTURE: 'patternUnlock' as GestureType,
 
   // Secret pattern for 'patternUnlock' mode - sequence of grid positions to tap
   // Grid layout: 1 2 3 / 4 5 6 / 7 8 9
