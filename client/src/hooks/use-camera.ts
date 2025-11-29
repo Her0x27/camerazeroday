@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { formatCoordinate, formatAltitude, formatAccuracy } from "./use-geolocation";
+import { formatHeading, getCardinalDirection, formatTilt } from "./use-orientation";
 
 interface UseCameraOptions {
   facingMode?: "user" | "environment";
@@ -137,23 +139,23 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     const leftX = padding;
     
     if (metadata.latitude !== null && metadata.latitude !== undefined && metadata.longitude !== null && metadata.longitude !== undefined) {
-      ctx.strokeText(`${metadata.latitude.toFixed(6)}°`, leftX, yLeft);
-      ctx.fillText(`${metadata.latitude.toFixed(6)}°`, leftX, yLeft);
+      ctx.strokeText(formatCoordinate(metadata.latitude, "lat"), leftX, yLeft);
+      ctx.fillText(formatCoordinate(metadata.latitude, "lat"), leftX, yLeft);
       yLeft += lineHeight;
-      ctx.strokeText(`${metadata.longitude.toFixed(6)}°`, leftX, yLeft);
-      ctx.fillText(`${metadata.longitude.toFixed(6)}°`, leftX, yLeft);
+      ctx.strokeText(formatCoordinate(metadata.longitude, "lon"), leftX, yLeft);
+      ctx.fillText(formatCoordinate(metadata.longitude, "lon"), leftX, yLeft);
       yLeft += lineHeight;
     }
     
     if (metadata.altitude !== null && metadata.altitude !== undefined) {
-      ctx.strokeText(`${Math.round(metadata.altitude)} m`, leftX, yLeft);
-      ctx.fillText(`${Math.round(metadata.altitude)} m`, leftX, yLeft);
+      ctx.strokeText(formatAltitude(metadata.altitude), leftX, yLeft);
+      ctx.fillText(formatAltitude(metadata.altitude), leftX, yLeft);
       yLeft += lineHeight;
     }
     
     if (metadata.accuracy !== null && metadata.accuracy !== undefined) {
-      ctx.strokeText(`ACC: ${Math.round(metadata.accuracy)}m`, leftX, yLeft);
-      ctx.fillText(`ACC: ${Math.round(metadata.accuracy)}m`, leftX, yLeft);
+      ctx.strokeText(`GPS: ${formatAccuracy(metadata.accuracy)}`, leftX, yLeft);
+      ctx.fillText(`GPS: ${formatAccuracy(metadata.accuracy)}`, leftX, yLeft);
     }
     
     // RIGHT PANEL - Orientation Data
@@ -161,14 +163,15 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     const rightX = width - padding - Math.ceil(width * 0.15);
     
     if (metadata.heading !== null && metadata.heading !== undefined) {
-      ctx.strokeText(`${Math.round(metadata.heading)}°`, rightX, yRight);
-      ctx.fillText(`${Math.round(metadata.heading)}°`, rightX, yRight);
+      const heading = `${formatHeading(metadata.heading)} ${getCardinalDirection(metadata.heading)}`;
+      ctx.strokeText(heading, rightX, yRight);
+      ctx.fillText(heading, rightX, yRight);
       yRight += lineHeight;
     }
     
     if (metadata.tilt !== null && metadata.tilt !== undefined) {
-      ctx.strokeText(`TILT: ${Math.round(metadata.tilt)}°`, rightX, yRight);
-      ctx.fillText(`TILT: ${Math.round(metadata.tilt)}°`, rightX, yRight);
+      ctx.strokeText(`TILT: ${formatTilt(metadata.tilt)}`, rightX, yRight);
+      ctx.fillText(`TILT: ${formatTilt(metadata.tilt)}`, rightX, yRight);
     }
     
     // TIMESTAMP - Bottom center
