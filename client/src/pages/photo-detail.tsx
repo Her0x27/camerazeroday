@@ -181,7 +181,7 @@ export default function PhotoDetailPage() {
       <img
         src={photo.imageData}
         alt="Photo"
-        className="w-full h-full object-cover"
+        className="w-full h-full"
         data-testid="photo-image"
       />
 
