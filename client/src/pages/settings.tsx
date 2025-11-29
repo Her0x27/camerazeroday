@@ -10,7 +10,8 @@ import {
   Eye,
   RotateCcw,
   Database,
-  Trash2
+  Trash2,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,6 +197,22 @@ export default function SettingsPage() {
                   max={100}
                   step={5}
                   data-testid="slider-opacity"
+                />
+              </div>
+            )}
+
+            {/* Auto color */}
+            {settings.reticle.enabled && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
+                  <Palette className="w-4 h-4" />
+                  Auto Color
+                </Label>
+                <Switch
+                  id="auto-color"
+                  checked={settings.reticle.autoColor}
+                  onCheckedChange={(checked) => updateReticle({ autoColor: checked })}
+                  data-testid="switch-auto-color"
                 />
               </div>
             )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useCamera } from "@/hooks/use-camera";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
-import { Reticle } from "@/components/reticles";
+import { Reticle, getContrastingColor } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
 import { savePhoto, getPhotoCount, getLatestPhoto } from "@/lib/db";
 import type { InsertPhoto } from "@shared/schema";
@@ -23,6 +23,8 @@ export default function CameraPage() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [currentNote, setCurrentNote] = useState("");
+  const [reticleColor, setReticleColor] = useState<string>("#22c55e");
+  const colorSamplingCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Camera hook
   const {
@@ -93,6 +95,72 @@ export default function CameraPage() {
     }
   }, [settings.orientationEnabled, orientationSupported, requestOrientationPermission]);
 
+  // Auto-color sampling for reticle
+  useEffect(() => {
+    if (!isReady || !settings.reticle.autoColor || !settings.reticle.enabled) return;
+    
+    const video = videoRef.current;
+    if (!video) return;
+    
+    if (!colorSamplingCanvasRef.current) {
+      colorSamplingCanvasRef.current = document.createElement("canvas");
+      colorSamplingCanvasRef.current.width = 50;
+      colorSamplingCanvasRef.current.height = 50;
+    }
+    
+    const canvas = colorSamplingCanvasRef.current;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    
+    let animationId: number;
+    let lastUpdate = 0;
+    const updateInterval = 100;
+    
+    const sampleColor = (timestamp: number) => {
+      if (timestamp - lastUpdate < updateInterval) {
+        animationId = requestAnimationFrame(sampleColor);
+        return;
+      }
+      lastUpdate = timestamp;
+      
+      if (video.readyState >= 2) {
+        const centerX = video.videoWidth / 2 - 25;
+        const centerY = video.videoHeight / 2 - 25;
+        
+        try {
+          ctx.drawImage(video, centerX, centerY, 50, 50, 0, 0, 50, 50);
+          const imageData = ctx.getImageData(0, 0, 50, 50);
+          const data = imageData.data;
+          
+          let r = 0, g = 0, b = 0;
+          const sampleSize = data.length / 4;
+          
+          for (let i = 0; i < data.length; i += 4) {
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+          }
+          
+          r = Math.round(r / sampleSize);
+          g = Math.round(g / sampleSize);
+          b = Math.round(b / sampleSize);
+          
+          const newColor = getContrastingColor(r, g, b);
+          setReticleColor(newColor);
+        } catch {
+        }
+      }
+      
+      animationId = requestAnimationFrame(sampleColor);
+    };
+    
+    animationId = requestAnimationFrame(sampleColor);
+    
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [isReady, settings.reticle.autoColor, settings.reticle.enabled, videoRef]);
+
   // Capture and save photo directly
   const handleCapture = useCallback(async () => {
     if (!isReady || isCapturing) return;
@@ -112,6 +180,7 @@ export default function CameraPage() {
         note: noteText || undefined,
         timestamp,
         reticleConfig: settings.reticle,
+        reticleColor: reticleColor,
       });
       if (!result) {
         throw new Error("Failed to capture photo");
@@ -142,7 +211,7 @@ export default function CameraPage() {
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle]);
 
   return (
     <div 
@@ -189,7 +258,7 @@ export default function CameraPage() {
         <div className="absolute inset-0 viewfinder-overlay pointer-events-none" />
 
         {/* Reticle overlay */}
-        {isReady && <Reticle config={settings.reticle} />}
+        {isReady && <Reticle config={settings.reticle} dynamicColor={reticleColor} />}
 
         {/* Metadata overlay */}
         {isReady && (

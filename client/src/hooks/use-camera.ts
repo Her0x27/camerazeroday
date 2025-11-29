@@ -17,6 +17,7 @@ interface PhotoMetadata {
   note?: string;
   timestamp?: number;
   reticleConfig?: ReticleConfig;
+  reticleColor?: string;
 }
 
 interface UseCameraReturn {
@@ -291,12 +292,24 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       const reticleSize = Math.ceil(minDimension * (sizePercent / 100) / 2);
       
       const opacity = reticleConfig?.opacity ? reticleConfig.opacity / 100 : 0.5;
-      const greenColor = `rgba(34, 197, 94, ${opacity})`;
+      
+      let reticleColorValue: string;
+      if (reticleConfig?.autoColor && metadata?.reticleColor) {
+        const hexToRgba = (hex: string, alpha: number): string => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        reticleColorValue = hexToRgba(metadata.reticleColor, opacity);
+      } else {
+        reticleColorValue = `rgba(34, 197, 94, ${opacity})`;
+      }
       
       const strokeWidthPercent = reticleConfig?.strokeWidth || 3;
       const scaledStrokeWidth = Math.max(1, Math.ceil(reticleSize * 2 * (strokeWidthPercent / 100)));
       
-      ctx.strokeStyle = greenColor;
+      ctx.strokeStyle = reticleColorValue;
       ctx.lineWidth = scaledStrokeWidth;
       ctx.lineCap = "round";
       

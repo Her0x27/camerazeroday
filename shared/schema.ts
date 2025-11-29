@@ -36,6 +36,7 @@ export const reticleConfigSchema = z.object({
   opacity: z.number().min(10).max(100).default(50), // opacity %
   strokeWidth: z.number().min(1).max(10).default(3), // line thickness as % of reticle size
   showMetadata: z.boolean().default(true),
+  autoColor: z.boolean().default(true), // auto-adjust color based on background
 });
 
 export type ReticleConfig = z.infer<typeof reticleConfigSchema>;
@@ -59,6 +60,7 @@ export const defaultSettings: Settings = {
     opacity: 50,
     strokeWidth: 3,
     showMetadata: true,
+    autoColor: true,
   },
   gpsEnabled: true,
   orientationEnabled: true,

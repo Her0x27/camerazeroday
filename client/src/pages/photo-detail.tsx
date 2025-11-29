@@ -10,7 +10,9 @@ import {
   Edit2,
   X,
   Check,
-  Share2
+  Share2,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -41,6 +43,7 @@ export default function PhotoDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editedNote, setEditedNote] = useState("");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Load photo and all photo IDs for navigation
   useEffect(() => {
@@ -257,14 +260,43 @@ export default function PhotoDetailPage() {
         </div>
       </header>
 
-      {/* Photo display */}
-      <div className="relative flex-1 flex items-center justify-center bg-black/50 min-h-[40vh]">
+      {/* Photo display - fullscreen mode takes entire screen */}
+      <div 
+        className={`relative flex items-center justify-center bg-black cursor-pointer ${
+          isFullscreen ? "fixed inset-0 z-50" : "flex-1 min-h-[50vh]"
+        }`}
+        onClick={() => setIsFullscreen(!isFullscreen)}
+      >
         <img
           src={photo.imageData}
           alt="Photo"
-          className="max-w-full max-h-[60vh] object-contain"
+          className={`object-contain ${
+            isFullscreen 
+              ? "w-full h-full" 
+              : "w-full h-full max-h-[70vh]"
+          }`}
           data-testid="photo-image"
         />
+
+        {/* Fullscreen toggle button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`absolute bg-black/40 text-white hover:bg-black/60 ${
+            isFullscreen ? "top-4 right-4" : "bottom-4 right-4"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFullscreen(!isFullscreen);
+          }}
+          data-testid="button-fullscreen-toggle"
+        >
+          {isFullscreen ? (
+            <Minimize2 className="w-5 h-5" />
+          ) : (
+            <Maximize2 className="w-5 h-5" />
+          )}
+        </Button>
 
         {/* Navigation arrows */}
         {hasPrevious && (
@@ -272,7 +304,10 @@ export default function PhotoDetailPage() {
             variant="ghost"
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60"
-            onClick={goToPrevious}
+            onClick={(e) => {
+              e.stopPropagation();
+              goToPrevious();
+            }}
             data-testid="button-previous"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -284,81 +319,109 @@ export default function PhotoDetailPage() {
             variant="ghost"
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60"
-            onClick={goToNext}
+            onClick={(e) => {
+              e.stopPropagation();
+              goToNext();
+            }}
             data-testid="button-next"
           >
             <ChevronRight className="w-6 h-6" />
           </Button>
         )}
+
+        {/* Close button in fullscreen mode */}
+        {isFullscreen && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4 bg-black/40 text-white hover:bg-black/60"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFullscreen(false);
+            }}
+            data-testid="button-close-fullscreen"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        )}
+
+        {/* Photo counter in fullscreen */}
+        {isFullscreen && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+            {currentIndex + 1} / {allPhotoIds.length}
+          </div>
+        )}
       </div>
 
-      {/* Metadata panel */}
-      <div className="bg-card border-t border-border p-4 safe-bottom space-y-4">
-        <MetadataCompact
-          latitude={photo.metadata.latitude}
-          longitude={photo.metadata.longitude}
-          altitude={photo.metadata.altitude}
-          heading={photo.metadata.heading}
-        />
+      {/* Metadata panel - hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="bg-card border-t border-border p-4 safe-bottom space-y-4">
+          <MetadataCompact
+            latitude={photo.metadata.latitude}
+            longitude={photo.metadata.longitude}
+            altitude={photo.metadata.altitude}
+            heading={photo.metadata.heading}
+          />
 
-        {/* Note section */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-primary" />
-              <span className="font-medium text-sm">Note</span>
-            </div>
-            
-            {isEditingNote ? (
-              <div className="flex items-center gap-1">
+          {/* Note section */}
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="font-medium text-sm">Note</span>
+              </div>
+              
+              {isEditingNote ? (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8"
+                    onClick={handleCancelEdit}
+                    data-testid="button-cancel-edit"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 text-primary"
+                    onClick={handleSaveNote}
+                    data-testid="button-save-edit"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="ghost"
                   size="icon"
                   className="w-8 h-8"
-                  onClick={handleCancelEdit}
-                  data-testid="button-cancel-edit"
+                  onClick={() => setIsEditingNote(true)}
+                  data-testid="button-edit-note"
                 >
-                  <X className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8 text-primary"
-                  onClick={handleSaveNote}
-                  data-testid="button-save-edit"
-                >
-                  <Check className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8 h-8"
-                onClick={() => setIsEditingNote(true)}
-                data-testid="button-edit-note"
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+              )}
+            </div>
 
-          {isEditingNote ? (
-            <Textarea
-              value={editedNote}
-              onChange={(e) => setEditedNote(e.target.value)}
-              placeholder="Add a note..."
-              className="min-h-[80px] resize-none"
-              autoFocus
-              data-testid="input-edit-note"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {photo.note || "No note added"}
-            </p>
-          )}
-        </Card>
-      </div>
+            {isEditingNote ? (
+              <Textarea
+                value={editedNote}
+                onChange={(e) => setEditedNote(e.target.value)}
+                placeholder="Add a note..."
+                className="min-h-[80px] resize-none"
+                autoFocus
+                data-testid="input-edit-note"
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {photo.note || "No note added"}
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
