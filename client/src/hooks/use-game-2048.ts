@@ -94,7 +94,7 @@ export function moveLeft(grid: Grid): MoveResult {
 
 export function move(grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): MoveResult {
   let rotatedGrid = [...grid.map(row => [...row])];
-  const rotations: Record<string, number> = { left: 0, up: 1, right: 2, down: 3 };
+  const rotations: Record<string, number> = { left: 0, up: 3, right: 2, down: 1 };
   
   for (let i = 0; i < rotations[direction]; i++) {
     rotatedGrid = rotateGrid(rotatedGrid);

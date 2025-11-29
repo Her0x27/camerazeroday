@@ -256,12 +256,6 @@
     inset: -1px;
   }
   
-  /* Tactical HUD text styling */
-  .hud-text {
-    @apply font-mono text-xs tracking-wide;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-  }
-  
   /* Reticle glow effect */
   .reticle-glow {
     filter: drop-shadow(0 0 2px currentColor);
@@ -274,11 +268,6 @@
   
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  /* Position below top bar with safe-area consideration */
-  .below-topbar {
-    top: calc(env(safe-area-inset-top, 0px) + 3.25rem);
   }
   
   /* Camera viewfinder styling */

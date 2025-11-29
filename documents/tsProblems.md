@@ -109,7 +109,9 @@
   - Pure functions exported: createEmptyGrid, addRandomTile, rotateGrid, moveLeft, move, checkGameOver, checkWin
 - [x] Keep component focused on rendering and event handling
   - game-2048.tsx reduced from 483 to ~290 lines (40% reduction)
-- [ ] Add unit tests for game logic
+- [x] Add unit tests for game logic
+  - Created `client/src/hooks/use-game-2048.test.ts` with 31 tests
+  - Installed vitest framework, all tests passing
 
 ### 2.4 Direct IndexedDB Access
 **Location:** `client/src/lib/db.ts` (200+ lines)
@@ -946,7 +948,7 @@ Verified actual completion status of marked items:
 ✅ Application running on port 5000
 
 ### Remaining Lower Priority Items (Nice-to-Have):
-- Unit tests for game logic (2.3)
+- ~~Unit tests for game logic (2.3)~~ - DONE (Session 11)
 - Repository pattern for IndexedDB (2.4)
 - i18n dynamic loading (2.5) - unnecessary for 2-language setup
 - Performance metrics/monitoring (3.2)
@@ -996,3 +998,62 @@ Analyzed all custom hooks for usage across the codebase:
 ✅ No LSP errors
 ✅ Application running on port 5000
 ✅ All navigation tests passed (Camera, Settings, Gallery pages)
+
+---
+
+## Session 11 Summary (Unit Tests & Dead Code Cleanup)
+**Completed in this session:**
+
+### 1. Unit Tests for Game Logic (2.3)
+- Installed `vitest` testing framework
+- Created `client/src/hooks/use-game-2048.test.ts` with 31 comprehensive tests:
+  - `createEmptyGrid()` - 1 test
+  - `getRandomEmptyCell()` - 3 tests
+  - `addRandomTile()` - 3 tests (with mock Math.random)
+  - `initializeGrid()` - 2 tests
+  - `rotateGrid()` - 3 tests (including immutability check)
+  - `slideRow()` - 6 tests (merging, scoring, edge cases)
+  - `moveLeft()` - 2 tests
+  - `move()` - 4 tests (all directions with strict positional assertions)
+  - `canMove()` - 4 tests
+  - `hasWon()` - 3 tests
+- All 31 tests passing
+
+### 1a. Critical Bug Fix: Vertical Move Direction (use-game-2048.ts)
+- **Bug discovered**: move() function had incorrect rotation mapping for up/down moves
+- **Symptom**: "up" move merged tiles towards bottom, "down" merged towards top (reversed)
+- **Root cause**: Rotation map had swapped values: `{ up: 1, down: 3 }` instead of `{ up: 3, down: 1 }`
+- **Fix**: Corrected rotation mapping: `{ left: 0, up: 3, right: 2, down: 1 }`
+- **Verification**: All move tests now pass with strict positional assertions
+
+### 2. Dead CSS Removed (8.5)
+- **Removed unused CSS classes from `client/src/index.css`:**
+  - `.hud-text` - defined but never used in any component
+  - `.below-topbar` - defined but never used in any component
+
+### 3. Translation Keys Audit (8.4, 8.5)
+- **Unused translation keys identified:**
+  - `t.errors.*` - entire errors section not used directly
+  - `t.common.yes`, `t.common.no` - not used
+  - `t.common.warning` - not used (only `t.common.info` used)
+  - Note: These are kept for potential future use/API consistency
+
+### Files Created:
+- `client/src/hooks/use-game-2048.test.ts` - 31 unit tests for game logic
+
+### Files Modified:
+- `client/src/index.css` - Removed 2 unused CSS classes (~12 lines)
+- `documents/tsProblems.md` - Added Session 11 summary
+
+### Updated Checklist Status:
+- [x] 2.3 Unit tests for game logic - COMPLETE (31 tests passing)
+- [x] 8.5 Unused CSS classes removed
+- [N/A] 8.5 Translation keys - Reserved for future use, not removed
+
+### Current Project Status:
+✅ All High Priority items complete
+✅ All Medium Priority items complete
+✅ Unit tests added for game logic (31 tests)
+✅ Dead CSS removed
+✅ No LSP errors
+✅ Application running on port 5000
