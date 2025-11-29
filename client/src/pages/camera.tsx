@@ -70,7 +70,7 @@ export default function CameraPage() {
   // Start camera on mount
   useEffect(() => {
     startCamera();
-  }, []);
+  }, [startCamera]);
 
   // Online/offline status
   useEffect(() => {
