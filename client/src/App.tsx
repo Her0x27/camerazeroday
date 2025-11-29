@@ -8,6 +8,7 @@ import { SettingsProvider } from "@/lib/settings-context";
 import { I18nProvider } from "@/lib/i18n";
 import { DisguiseProvider, useDisguise } from "@/lib/disguise-context";
 import { SplashScreen } from "@/components/splash-screen";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Loader2 } from "lucide-react";
 
 const CameraPage = lazy(() => import("@/pages/camera"));
@@ -72,9 +73,11 @@ function App() {
         <TooltipProvider>
           <SettingsProvider>
             <DisguiseProvider>
-              {showSplash && <SplashScreen onComplete={handleSplashComplete} duration={2800} />}
-              <Router />
-              <Toaster />
+              <ErrorBoundary>
+                {showSplash && <SplashScreen onComplete={handleSplashComplete} duration={2800} />}
+                <Router />
+                <Toaster />
+              </ErrorBoundary>
             </DisguiseProvider>
           </SettingsProvider>
         </TooltipProvider>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import { Camera, ArrowLeft, Trash2, Filter, SortAsc, SortDesc, MapPin, FileText, X, Folder, FolderOpen, ChevronLeft, List, Grid, Cloud, Link, Upload, Loader2, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatDate } from "@/lib/date-utils";
 import { UploadProgressOverlay } from "@/components/upload-progress-overlay";
 import { LocationBadge, NoteBadge, CloudBadge } from "@/components/photo-badges";
+import { VirtualizedPhotoList, VirtualizedPhotoGrid, AutoSizerContainer } from "@/components/virtualized-gallery";
 import type { Photo, GalleryFilter, CloudData } from "@shared/schema";
 
 type ViewMode = "folders" | "photos";
@@ -62,6 +63,8 @@ export default function GalleryPage() {
   const [showLinksDialog, setShowLinksDialog] = useState(false);
   const [linksToShow, setLinksToShow] = useState<Array<{ id: string; url: string; deleteUrl: string }>>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  const uploadAbortControllerRef = useRef<AbortController | null>(null);
 
   // Calculate folders from photos
   const folders = useMemo((): FolderInfo[] => {
@@ -173,6 +176,16 @@ export default function GalleryPage() {
     setShowClearDialog(false);
   }, [clearAll]);
 
+  // Cancel any pending upload
+  useEffect(() => {
+    return () => {
+      if (uploadAbortControllerRef.current) {
+        uploadAbortControllerRef.current.abort();
+        uploadAbortControllerRef.current = null;
+      }
+    };
+  }, []);
+
   // Upload photos to ImgBB
   const handleUploadPhotos = useCallback(async (photos: Photo[]) => {
     if (!settings.imgbb?.apiKey || !settings.imgbb.isValidated) {
@@ -193,6 +206,11 @@ export default function GalleryPage() {
       return;
     }
 
+    if (uploadAbortControllerRef.current) {
+      uploadAbortControllerRef.current.abort();
+    }
+    uploadAbortControllerRef.current = new AbortController();
+
     startUpload(photosToUpload.length);
 
     try {
@@ -200,14 +218,18 @@ export default function GalleryPage() {
         photosToUpload.map(p => ({ id: p.id, imageData: p.imageData })),
         settings.imgbb.apiKey,
         settings.imgbb.expiration || 0,
-        updateProgress
+        updateProgress,
+        uploadAbortControllerRef.current.signal
       );
 
       let successCount = 0;
       let errorCount = 0;
+      let cancelledCount = 0;
 
       for (const [photoId, result] of Array.from(results.entries())) {
-        if (result.success && result.cloudData) {
+        if (result.error === "Upload cancelled") {
+          cancelledCount++;
+        } else if (result.success && result.cloudData) {
           await updatePhoto(photoId, { cloud: result.cloudData });
           setAllPhotos(prev => 
             prev.map(p => p.id === photoId ? { ...p, cloud: result.cloudData } : p)
@@ -218,17 +240,32 @@ export default function GalleryPage() {
         }
       }
 
-      toast({
-        title: t.gallery.uploadComplete,
-        description: t.gallery.uploadedCount.replace("{success}", String(successCount)).replace("{errors}", String(errorCount)),
-      });
+      if (cancelledCount > 0) {
+        toast({
+          title: t.common.info,
+          description: `Upload cancelled. ${successCount} completed before cancellation.`,
+        });
+      } else {
+        toast({
+          title: t.gallery.uploadComplete,
+          description: t.gallery.uploadedCount.replace("{success}", String(successCount)).replace("{errors}", String(errorCount)),
+        });
+      }
     } catch (error) {
-      toast({
-        title: t.common.error,
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast({
+          title: t.common.info,
+          description: "Upload cancelled",
+        });
+      } else {
+        toast({
+          title: t.common.error,
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive",
+        });
+      }
     } finally {
+      uploadAbortControllerRef.current = null;
       finishUpload();
     }
   }, [settings.imgbb, toast, t, startUpload, updateProgress, finishUpload]);
@@ -307,6 +344,15 @@ export default function GalleryPage() {
       ...prev,
       sortBy: prev.sortBy === "newest" ? "oldest" : "newest",
     }));
+  }, []);
+
+  // Handlers for virtualized gallery
+  const handlePhotoClick = useCallback((photoId: string) => {
+    navigate(`/photo/${photoId}`);
+  }, [navigate]);
+
+  const handleDeleteClick = useCallback((photoId: string) => {
+    setDeleteTarget(photoId);
   }, []);
 
   const headerTitle = viewMode === "folders" 
@@ -620,83 +666,27 @@ export default function GalleryPage() {
               {t.gallery.backToFolders}
             </Button>
           </div>
-        ) : displayType === "list" ? (
-          <div className="flex flex-col gap-2">
-            {filteredPhotos.map((photo) => (
-              <Card
-                key={photo.id}
-                className="group flex items-center gap-3 p-2 cursor-pointer hover-elevate"
-                onClick={() => navigate(`/photo/${photo.id}`)}
-                data-testid={`photo-card-${photo.id}`}
-              >
-                <img
-                  src={photo.thumbnailData}
-                  alt="Photo"
-                  className="w-16 h-16 object-cover rounded-md flex-shrink-0"
-                  loading="lazy"
-                />
-
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {formatDate(photo.metadata.timestamp, "long")}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    {photo.metadata.latitude !== null && <LocationBadge />}
-                    {photo.note && <NoteBadge />}
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteTarget(photo.id);
-                  }}
-                  data-testid={`button-delete-${photo.id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </Card>
-            ))}
-          </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-            {filteredPhotos.map((photo) => (
-              <Card
-                key={photo.id}
-                className="group relative aspect-square overflow-hidden cursor-pointer hover-elevate"
-                onClick={() => navigate(`/photo/${photo.id}`)}
-                data-testid={`photo-card-${photo.id}`}
-              >
-                <img
-                  src={photo.thumbnailData}
-                  alt="Photo"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+          <AutoSizerContainer className="flex-1" style={{ height: "calc(100vh - 180px)" }}>
+            {({ width, height }) =>
+              displayType === "list" ? (
+                <VirtualizedPhotoList
+                  photos={filteredPhotos}
+                  onPhotoClick={handlePhotoClick}
+                  onDeleteClick={handleDeleteClick}
+                  containerHeight={height}
                 />
-
-                <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                  {photo.metadata.latitude !== null && <LocationBadge variant="overlay" />}
-                  {photo.note && <NoteBadge variant="overlay" />}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/80"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteTarget(photo.id);
-                  }}
-                  data-testid={`button-delete-${photo.id}`}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </Card>
-            ))}
-          </div>
+              ) : (
+                <VirtualizedPhotoGrid
+                  photos={filteredPhotos}
+                  onPhotoClick={handlePhotoClick}
+                  onDeleteClick={handleDeleteClick}
+                  containerHeight={height}
+                  containerWidth={width}
+                />
+              )
+            }
+          </AutoSizerContainer>
         )}
       </main>
 

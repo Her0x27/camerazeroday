@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { 
   ArrowLeft, 
@@ -93,10 +93,21 @@ export default function SettingsPage() {
   const [apiKeyInput, setApiKeyInput] = useState(settings.imgbb?.apiKey || "");
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  
+  const validationAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setApiKeyInput(settings.imgbb?.apiKey || "");
   }, [settings.imgbb?.apiKey]);
+  
+  useEffect(() => {
+    return () => {
+      if (validationAbortControllerRef.current) {
+        validationAbortControllerRef.current.abort();
+        validationAbortControllerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleReset = useCallback(async () => {
     await resetSettings();
@@ -146,11 +157,19 @@ export default function SettingsPage() {
       return;
     }
 
+    if (validationAbortControllerRef.current) {
+      validationAbortControllerRef.current.abort();
+    }
+    validationAbortControllerRef.current = new AbortController();
+
     setIsValidating(true);
     setValidationError(null);
 
     try {
-      const result = await validateApiKey(apiKeyInput.trim());
+      const result = await validateApiKey(
+        apiKeyInput.trim(),
+        validationAbortControllerRef.current.signal
+      );
       
       if (result.valid) {
         await updateSettings({
@@ -171,8 +190,12 @@ export default function SettingsPage() {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       setValidationError("Key validation error");
     } finally {
+      validationAbortControllerRef.current = null;
       setIsValidating(false);
     }
   }, [apiKeyInput, settings.imgbb, updateSettings]);

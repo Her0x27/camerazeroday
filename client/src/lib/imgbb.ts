@@ -8,7 +8,10 @@ export interface UploadResult {
   error?: string;
 }
 
-export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
+export async function validateApiKey(
+  apiKey: string,
+  signal?: AbortSignal
+): Promise<{ valid: boolean; error?: string }> {
   if (!apiKey || apiKey.trim().length === 0) {
     return { valid: false, error: "API key cannot be empty" };
   }
@@ -24,6 +27,7 @@ export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; 
       {
         method: "POST",
         body: formData,
+        signal,
       }
     );
 
@@ -40,6 +44,9 @@ export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; 
       return { valid: false, error: "Invalid API response" };
     }
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { valid: false, error: "Request cancelled" };
+    }
     return { 
       valid: false, 
       error: error instanceof Error ? error.message : "Key validation error" 
@@ -50,7 +57,8 @@ export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; 
 export async function uploadToImgBB(
   imageBase64: string,
   apiKey: string,
-  expiration: number = 0
+  expiration: number = 0,
+  signal?: AbortSignal
 ): Promise<UploadResult> {
   if (!apiKey || apiKey.trim().length === 0) {
     return { success: false, error: "API key not configured" };
@@ -70,6 +78,7 @@ export async function uploadToImgBB(
     const response = await fetch(url, {
       method: "POST",
       body: formData,
+      signal,
     });
 
     const result: unknown = await response.json();
@@ -97,6 +106,9 @@ export async function uploadToImgBB(
       return { success: false, error: "Invalid API response" };
     }
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Upload cancelled" };
+    }
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Network error" 
@@ -107,9 +119,10 @@ export async function uploadToImgBB(
 async function uploadWithSettled(
   image: { id: string; imageData: string },
   apiKey: string,
-  expiration: number
+  expiration: number,
+  signal?: AbortSignal
 ): Promise<{ id: string; result: UploadResult }> {
-  const result = await uploadToImgBB(image.imageData, apiKey, expiration);
+  const result = await uploadToImgBB(image.imageData, apiKey, expiration, signal);
   return { id: image.id, result };
 }
 
@@ -118,7 +131,8 @@ export async function uploadMultipleToImgBB(
   apiKey: string,
   expiration: number = 0,
   onProgress?: (completed: number, total: number) => void,
-  concurrency: number = UPLOAD.CONCURRENT_UPLOADS
+  concurrency: number = UPLOAD.CONCURRENT_UPLOADS,
+  signal?: AbortSignal
 ): Promise<Map<string, UploadResult>> {
   const results = new Map<string, UploadResult>();
   const total = images.length;
@@ -130,8 +144,15 @@ export async function uploadMultipleToImgBB(
   }
 
   for (const chunk of chunks) {
+    if (signal?.aborted) {
+      for (const image of chunk) {
+        results.set(image.id, { success: false, error: "Upload cancelled" });
+      }
+      break;
+    }
+
     const settledResults = await Promise.allSettled(
-      chunk.map(image => uploadWithSettled(image, apiKey, expiration))
+      chunk.map(image => uploadWithSettled(image, apiKey, expiration, signal))
     );
     
     for (const settledResult of settledResults) {
