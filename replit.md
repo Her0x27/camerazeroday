@@ -12,12 +12,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Environment Configuration
 
-### Disguise Mode
+### Disguise Mode (Currently Enabled)
 - **Variable**: `VITE_DISGUISE_MODE`
-- **Values**: `'true'` or `'false'`
+- **Current Value**: `'true'`
 - **Description**: When set to `'true'`, forces the application to start in disguise mode (2048 game). The camera interface is hidden, and users cannot disable disguise mode from settings.
 - **Use Case**: Deploy disguised version on shared devices where you want to hide the camera application by default.
-- **Default**: `'false'` (disguise mode is optional and user-controlled)
+- **Status**: ✅ **ENABLED** - All users see only the 2048 game, camera is completely hidden for all users on this deployment
 
 ## System Architecture
 
