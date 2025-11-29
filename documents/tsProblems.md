@@ -90,19 +90,26 @@
 **Problem:** Mixes camera logic, UI rendering, metadata handling, upload logic, and note management in one component.
 **Recommendation:** Extract into smaller, focused components and hooks.
 
-- [ ] Extract metadata overlay to `<CameraMetadataOverlay />` component
-- [ ] Extract controls to `<CameraControls />` component
-- [ ] Extract note input to `<PhotoNoteInput />` component
-- [ ] Keep camera.tsx as a thin orchestrating container
+- [x] Extract metadata overlay to `<CameraMetadataOverlay />` component
+  - Created `client/src/pages/camera/components/camera-viewfinder.tsx` with CameraViewfinder component
+- [x] Extract controls to `<CameraControls />` component
+  - Created `client/src/pages/camera/components/camera-controls.tsx`
+- [x] Extract note input to `<PhotoNoteInput />` component
+  - Created `client/src/pages/camera/components/photo-note-dialog.tsx` with PhotoNoteDialog component
+- [x] Keep camera.tsx as a thin orchestrating container
+  - Main `camera/index.tsx` now orchestrates the extracted components
 
 ### 2.3 Game Logic Mixed with UI
 **Location:** `client/src/components/game-2048.tsx` (470 lines)
 **Problem:** Game state management and rendering logic are tightly coupled.
 **Recommendation:** Separate game logic into a custom hook.
 
-- [ ] Create `useGame2048()` hook with pure game logic
-- [ ] Export game functions (move, canMove, hasWon, etc.) as pure functions
-- [ ] Keep component focused on rendering and event handling
+- [x] Create `useGame2048()` hook with pure game logic
+  - Created `client/src/hooks/use-game-2048.ts` with all game state and logic
+- [x] Export game functions (move, canMove, hasWon, etc.) as pure functions
+  - Pure functions exported: createEmptyGrid, addRandomTile, rotateGrid, moveLeft, move, checkGameOver, checkWin
+- [x] Keep component focused on rendering and event handling
+  - game-2048.tsx reduced from 483 to ~290 lines (40% reduction)
 - [ ] Add unit tests for game logic
 
 ### 2.4 Direct IndexedDB Access
@@ -161,7 +168,8 @@
 
 - [ ] Use `useReducer` instead of multiple `useState` calls
 - [x] Memoize SVG elements with `useMemo`
-- [ ] Throttle move event handling
+- [x] Throttle move event handling
+  - Added MOVE_THROTTLE_MS (16ms) with ref-based throttling in handleMove
 - [ ] Consider using canvas instead of SVG for better performance
 
 ### 3.4 Game2048 Grid Cell Rerenders
@@ -319,10 +327,15 @@
 **Problem:** Some async operations in effects don't handle errors properly.
 **Recommendation:** Add comprehensive error handling.
 
-- [ ] Add try/catch to all async effect callbacks
-- [ ] Surface errors to UI through state
+- [x] Add try/catch to all async effect callbacks
+  - use-camera.ts: startCamera() already has try/catch, added .catch() for async effect call
+  - use-geolocation.ts: Uses callback-based API with handleError callback - no async effects
+  - use-orientation.ts: requestPermission() already has try/catch - no async effects
+- [x] Surface errors to UI through state
+  - All hooks set error state on failure
 - [ ] Add error recovery mechanisms
-- [ ] Log errors for debugging
+- [x] Log errors for debugging
+  - Added console.error in catch blocks
 
 ### 6.3 No Debounce on Slider Changes
 **Location:** `client/src/pages/settings.tsx` (sliders for watermark, crosshair, expiration)
@@ -460,10 +473,19 @@
 **Problem:** JSX nesting exceeds 5+ levels, reducing readability.
 **Recommendation:** Extract nested structures to components.
 
-- [ ] Extract deeply nested conditionals to components
-- [ ] Use early returns for conditional rendering
-- [ ] Create wrapper components for common patterns
-- [ ] Target max 3-4 levels of nesting
+- [x] Extract deeply nested conditionals to components
+  - Settings: 9 section components extracted (GeneralSettingsSection, WatermarkSection, etc.)
+  - Gallery: 5 components extracted (GalleryHeader, GalleryFilters, GalleryFolderList, GalleryEmptyState, GalleryLinksDialog)
+  - Camera: 3 components extracted (CameraControls, PhotoNoteDialog, CameraViewfinder)
+  - All complex conditional rendering now in dedicated components
+- [x] Use early returns for conditional rendering
+  - Used in extracted components for cleaner logic
+- [x] Create wrapper components for common patterns
+  - VirtualizedPhotoList/VirtualizedPhotoGrid for photo display
+  - UploadProgressOverlay for upload UI
+  - ConfirmDialog for confirmations
+- [x] Target max 3-4 levels of nesting
+  - All extracted components maintain shallow nesting
 
 ### 8.4 Hardcoded Strings Despite i18n
 **Location:** Various files

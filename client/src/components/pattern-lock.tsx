@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { PATTERN_LOCK, GESTURE, TIMING } from "@/lib/constants";
 
+const MOVE_THROTTLE_MS = 16;
+
 interface PatternLockProps {
   onPatternComplete: (pattern: number[]) => void;
   size?: number;
@@ -26,6 +28,7 @@ export const PatternLock = memo(function PatternLock({
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastMoveTimeRef = useRef<number>(0);
   
   const cellSize = size / PATTERN_LOCK.GRID_SIZE;
   
@@ -91,6 +94,7 @@ export const PatternLock = memo(function PatternLock({
     
     const pointIndex = getPointFromCoords(coords.x, coords.y);
     if (pointIndex !== null) {
+      lastMoveTimeRef.current = 0;
       setPattern([pointIndex]);
       setIsDrawing(true);
       setCurrentPos(coords);
@@ -100,6 +104,12 @@ export const PatternLock = memo(function PatternLock({
   const handleMove = useCallback((e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     if (!isDrawing || disabled) return;
     e.preventDefault();
+    
+    const now = Date.now();
+    if (now - lastMoveTimeRef.current < MOVE_THROTTLE_MS) {
+      return;
+    }
+    lastMoveTimeRef.current = now;
     
     const coords = getEventCoords(e);
     if (!coords) return;
@@ -117,6 +127,7 @@ export const PatternLock = memo(function PatternLock({
     
     setIsDrawing(false);
     setCurrentPos(null);
+    lastMoveTimeRef.current = 0;
     
     if (pattern.length >= GESTURE.MIN_PATTERN_LENGTH) {
       onPatternComplete(pattern);

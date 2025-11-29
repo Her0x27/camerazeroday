@@ -102,10 +102,21 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
   }, [currentFacing]);
 
   // Restart camera when facing changes
+  // Note: Using ref to track if camera was ever active to avoid dependency on changing state
+  const wasActiveRef = useRef(false);
   useEffect(() => {
     if (isReady || isLoading) {
-      startCamera();
+      wasActiveRef.current = true;
     }
+  }, [isReady, isLoading]);
+  
+  useEffect(() => {
+    if (wasActiveRef.current) {
+      startCamera().catch((err) => {
+        console.error("Failed to restart camera:", err);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFacing]);
 
   // Icon drawing helper functions

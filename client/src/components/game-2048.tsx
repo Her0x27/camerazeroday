@@ -4,14 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { PatternLock, patternToString } from "@/components/pattern-lock";
-import { GAME, GESTURE, TIMING, STORAGE_KEYS } from "@/lib/constants";
-
-type Grid = number[][];
-
-interface Position {
-  row: number;
-  col: number;
-}
+import { GESTURE, TIMING, STORAGE_KEYS } from "@/lib/constants";
+import { useGame2048, type Grid } from "@/hooks/use-game-2048";
 
 const TILE_COLORS: Record<number, { bg: string; text: string }> = {
   0: { bg: "bg-muted/50", text: "" },
@@ -27,122 +21,6 @@ const TILE_COLORS: Record<number, { bg: string; text: string }> = {
   1024: { bg: "bg-yellow-700 dark:bg-yellow-700/80", text: "text-white" },
   2048: { bg: "bg-emerald-500 dark:bg-emerald-500/80", text: "text-white" },
 };
-
-function createEmptyGrid(): Grid {
-  return Array(GAME.GRID_SIZE).fill(null).map(() => Array(GAME.GRID_SIZE).fill(0));
-}
-
-function getRandomEmptyCell(grid: Grid): Position | null {
-  const emptyCells: Position[] = [];
-  for (let row = 0; row < GAME.GRID_SIZE; row++) {
-    for (let col = 0; col < GAME.GRID_SIZE; col++) {
-      if (grid[row][col] === 0) {
-        emptyCells.push({ row, col });
-      }
-    }
-  }
-  if (emptyCells.length === 0) return null;
-  return emptyCells[Math.floor(Math.random() * emptyCells.length)];
-}
-
-function addRandomTile(grid: Grid): Grid {
-  const newGrid = grid.map(row => [...row]);
-  const pos = getRandomEmptyCell(newGrid);
-  if (pos) {
-    newGrid[pos.row][pos.col] = Math.random() < GAME.NEW_TILE_PROBABILITY_2 ? 2 : 4;
-  }
-  return newGrid;
-}
-
-function initializeGrid(): Grid {
-  let grid = createEmptyGrid();
-  grid = addRandomTile(grid);
-  grid = addRandomTile(grid);
-  return grid;
-}
-
-function rotateGrid(grid: Grid): Grid {
-  const newGrid = createEmptyGrid();
-  for (let row = 0; row < GAME.GRID_SIZE; row++) {
-    for (let col = 0; col < GAME.GRID_SIZE; col++) {
-      newGrid[col][GAME.GRID_SIZE - 1 - row] = grid[row][col];
-    }
-  }
-  return newGrid;
-}
-
-function slideRow(row: number[]): { row: number[]; score: number } {
-  const nonZero = row.filter(x => x !== 0);
-  const newRow: number[] = [];
-  let score = 0;
-  
-  for (let i = 0; i < nonZero.length; i++) {
-    if (i < nonZero.length - 1 && nonZero[i] === nonZero[i + 1]) {
-      const merged = nonZero[i] * 2;
-      newRow.push(merged);
-      score += merged;
-      i++;
-    } else {
-      newRow.push(nonZero[i]);
-    }
-  }
-  
-  while (newRow.length < GAME.GRID_SIZE) {
-    newRow.push(0);
-  }
-  
-  return { row: newRow, score };
-}
-
-function moveLeft(grid: Grid): { grid: Grid; score: number; moved: boolean } {
-  let totalScore = 0;
-  let moved = false;
-  const newGrid = grid.map(row => {
-    const { row: newRow, score } = slideRow(row);
-    totalScore += score;
-    if (row.join(',') !== newRow.join(',')) moved = true;
-    return newRow;
-  });
-  return { grid: newGrid, score: totalScore, moved };
-}
-
-function move(grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): { grid: Grid; score: number; moved: boolean } {
-  let rotatedGrid = [...grid.map(row => [...row])];
-  const rotations: Record<string, number> = { left: 0, up: 1, right: 2, down: 3 };
-  
-  for (let i = 0; i < rotations[direction]; i++) {
-    rotatedGrid = rotateGrid(rotatedGrid);
-  }
-  
-  const { grid: movedGrid, score, moved } = moveLeft(rotatedGrid);
-  
-  let finalGrid = movedGrid;
-  for (let i = 0; i < (4 - rotations[direction]) % 4; i++) {
-    finalGrid = rotateGrid(finalGrid);
-  }
-  
-  return { grid: finalGrid, score, moved };
-}
-
-function canMove(grid: Grid): boolean {
-  for (let row = 0; row < GAME.GRID_SIZE; row++) {
-    for (let col = 0; col < GAME.GRID_SIZE; col++) {
-      if (grid[row][col] === 0) return true;
-      if (col < GAME.GRID_SIZE - 1 && grid[row][col] === grid[row][col + 1]) return true;
-      if (row < GAME.GRID_SIZE - 1 && grid[row][col] === grid[row + 1][col]) return true;
-    }
-  }
-  return false;
-}
-
-function hasWon(grid: Grid): boolean {
-  for (let row = 0; row < GAME.GRID_SIZE; row++) {
-    for (let col = 0; col < GAME.GRID_SIZE; col++) {
-      if (grid[row][col] >= GAME.WINNING_TILE) return true;
-    }
-  }
-  return false;
-}
 
 interface GameTileProps {
   value: number;
@@ -175,15 +53,17 @@ interface Game2048Props {
 
 export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPattern = '', onActivity }: Game2048Props) {
   const { t } = useI18n();
-  const [grid, setGrid] = useState<Grid>(initializeGrid);
-  const [score, setScore] = useState(0);
-  const [bestScore, setBestScore] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.GAME_BEST_SCORE);
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const [gameOver, setGameOver] = useState(false);
-  const [won, setWon] = useState(false);
-  const [keepPlaying, setKeepPlaying] = useState(false);
+  const {
+    grid,
+    score,
+    bestScore,
+    gameOver,
+    won,
+    handleMove,
+    handleNewGame,
+    handleKeepPlaying,
+  } = useGame2048({ onActivity });
+
   const [showPatternOverlay, setShowPatternOverlay] = useState(false);
   const [patternError, setPatternError] = useState(false);
   
@@ -191,33 +71,6 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
   const tapTimesRef = useRef<number[]>([]);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const patternTapTimesRef = useRef<number[]>([]);
-  
-  const handleMove = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
-    if (gameOver || (won && !keepPlaying)) return;
-    
-    onActivity?.();
-    
-    const { grid: newGrid, score: moveScore, moved } = move(grid, direction);
-    
-    if (moved) {
-      const gridWithNewTile = addRandomTile(newGrid);
-      setGrid(gridWithNewTile);
-      setScore(prev => {
-        const newScore = prev + moveScore;
-        if (newScore > bestScore) {
-          setBestScore(newScore);
-          localStorage.setItem(STORAGE_KEYS.GAME_BEST_SCORE, newScore.toString());
-        }
-        return newScore;
-      });
-      
-      if (!keepPlaying && hasWon(gridWithNewTile)) {
-        setWon(true);
-      } else if (!canMove(gridWithNewTile)) {
-        setGameOver(true);
-      }
-    }
-  }, [grid, gameOver, won, keepPlaying, bestScore, onActivity]);
   
   const handleSecretTap = useCallback(() => {
     if (!onSecretGesture) return;
@@ -261,21 +114,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
     setShowPatternOverlay(false);
     setPatternError(false);
   }, []);
-  
-  const handleNewGame = useCallback(() => {
-    setGrid(initializeGrid());
-    setScore(0);
-    setGameOver(false);
-    setWon(false);
-    setKeepPlaying(false);
-    onActivity?.();
-  }, [onActivity]);
-  
-  const handleKeepPlaying = useCallback(() => {
-    setKeepPlaying(true);
-    setWon(false);
-  }, []);
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const directions: Record<string, 'left' | 'right' | 'up' | 'down'> = {
@@ -390,21 +229,12 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
             </div>
             
             {(gameOver || won) && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 rounded-lg backdrop-blur-sm">
-                <p className="text-2xl font-bold mb-4">
-                  {gameOver ? t.game2048.gameOver : t.game2048.youWin}
-                </p>
-                <div className="flex gap-2">
-                  <Button onClick={(e) => { e.stopPropagation(); handleNewGame(); }} data-testid="button-try-again">
-                    {t.game2048.tryAgain}
-                  </Button>
-                  {won && (
-                    <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleKeepPlaying(); }} data-testid="button-keep-playing">
-                      {t.game2048.keepPlaying}
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <GameOverlay
+                gameOver={gameOver}
+                won={won}
+                onNewGame={handleNewGame}
+                onKeepPlaying={handleKeepPlaying}
+              />
             )}
           </div>
           
@@ -415,68 +245,127 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
             {t.game2048.swipeToMove}
           </p>
           
-          <div className="flex justify-center gap-1 mt-4 md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => handleMove('up')} className="touch-none">
-              <ArrowUp className="w-5 h-5" />
-            </Button>
-          </div>
-          <div className="flex justify-center gap-1 md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => handleMove('left')} className="touch-none">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleMove('down')} className="touch-none">
-              <ArrowDown className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleMove('right')} className="touch-none">
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </div>
+          <MobileControls onMove={handleMove} />
         </CardContent>
       </Card>
       
       {showPatternOverlay && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
-          onClick={handleClosePatternOverlay}
-          data-testid="pattern-overlay"
-        >
-          <div 
-            className="flex flex-col items-center gap-6 p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Lock className="w-5 h-5" />
-              <span className="text-sm font-medium">{t.game2048.drawPattern}</span>
-            </div>
-            
-            <div className={`p-4 rounded-xl bg-muted/30 ${patternError ? 'animate-shake ring-2 ring-destructive' : ''}`}>
-              <PatternLock
-                onPatternComplete={handlePatternComplete}
-                size={220}
-                dotSize={18}
-                lineColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-                activeDotColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-              />
-            </div>
-            
-            <p className="text-xs text-muted-foreground text-center max-w-[200px]">
-              {t.game2048.patternHint}
-            </p>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClosePatternOverlay}
-              className="text-muted-foreground"
-              data-testid="button-cancel-pattern"
-            >
-              {t.game2048.cancel}
-            </Button>
-          </div>
-        </div>
+        <PatternOverlay
+          onPatternComplete={handlePatternComplete}
+          onClose={handleClosePatternOverlay}
+          patternError={patternError}
+        />
       )}
     </div>
   );
 }
+
+interface GameOverlayProps {
+  gameOver: boolean;
+  won: boolean;
+  onNewGame: () => void;
+  onKeepPlaying: () => void;
+}
+
+const GameOverlay = memo(function GameOverlay({ gameOver, won, onNewGame, onKeepPlaying }: GameOverlayProps) {
+  const { t } = useI18n();
+  
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 rounded-lg backdrop-blur-sm">
+      <p className="text-2xl font-bold mb-4">
+        {gameOver ? t.game2048.gameOver : t.game2048.youWin}
+      </p>
+      <div className="flex gap-2">
+        <Button onClick={(e) => { e.stopPropagation(); onNewGame(); }} data-testid="button-try-again">
+          {t.game2048.tryAgain}
+        </Button>
+        {won && (
+          <Button variant="outline" onClick={(e) => { e.stopPropagation(); onKeepPlaying(); }} data-testid="button-keep-playing">
+            {t.game2048.keepPlaying}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+});
+
+interface MobileControlsProps {
+  onMove: (direction: 'left' | 'right' | 'up' | 'down') => void;
+}
+
+const MobileControls = memo(function MobileControls({ onMove }: MobileControlsProps) {
+  return (
+    <>
+      <div className="flex justify-center gap-1 mt-4 md:hidden">
+        <Button variant="ghost" size="icon" onClick={() => onMove('up')} className="touch-none">
+          <ArrowUp className="w-5 h-5" />
+        </Button>
+      </div>
+      <div className="flex justify-center gap-1 md:hidden">
+        <Button variant="ghost" size="icon" onClick={() => onMove('left')} className="touch-none">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onMove('down')} className="touch-none">
+          <ArrowDown className="w-5 h-5" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onMove('right')} className="touch-none">
+          <ArrowRight className="w-5 h-5" />
+        </Button>
+      </div>
+    </>
+  );
+});
+
+interface PatternOverlayProps {
+  onPatternComplete: (pattern: number[]) => void;
+  onClose: () => void;
+  patternError: boolean;
+}
+
+const PatternOverlay = memo(function PatternOverlay({ onPatternComplete, onClose, patternError }: PatternOverlayProps) {
+  const { t } = useI18n();
+  
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+      onClick={onClose}
+      data-testid="pattern-overlay"
+    >
+      <div 
+        className="flex flex-col items-center gap-6 p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Lock className="w-5 h-5" />
+          <span className="text-sm font-medium">{t.game2048.drawPattern}</span>
+        </div>
+        
+        <div className={`p-4 rounded-xl bg-muted/30 ${patternError ? 'animate-shake ring-2 ring-destructive' : ''}`}>
+          <PatternLock
+            onPatternComplete={onPatternComplete}
+            size={220}
+            dotSize={18}
+            lineColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+            activeDotColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+          />
+        </div>
+        
+        <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+          {t.game2048.patternHint}
+        </p>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="text-muted-foreground"
+          data-testid="button-cancel-pattern"
+        >
+          {t.game2048.cancel}
+        </Button>
+      </div>
+    </div>
+  );
+});
 
 export default Game2048;
