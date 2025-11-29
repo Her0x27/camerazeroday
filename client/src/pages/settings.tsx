@@ -23,7 +23,13 @@ import {
   Loader2,
   Settings2,
   ImageIcon,
-  Camera
+  Camera,
+  Languages,
+  Smartphone,
+  Download,
+  Wifi,
+  WifiOff,
+  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,12 +49,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSettings } from "@/lib/settings-context";
+import { useI18n } from "@/lib/i18n";
+import { usePWA } from "@/hooks/use-pwa";
 import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
 import { validateApiKey } from "@/lib/imgbb";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const { settings, updateSettings, updateReticle, resetSettings } = useSettings();
+  const { language, setLanguage, availableLanguages, t } = useI18n();
+  const { canInstall, isInstalled, isInstalling, install, isIOS, showIOSInstructions } = usePWA();
   
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -177,13 +194,43 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Settings2 className="w-5 h-5 text-primary" />
-              General
+              {t.settings.general.title}
             </CardTitle>
             <CardDescription>
-              Basic application settings
+              {t.settings.general.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Language */}
+            <div className="flex items-center justify-between gap-4">
+              <Label className="flex items-center gap-2">
+                <Languages className="w-4 h-4" />
+                <div>
+                  <span>{t.settings.general.language}</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {t.settings.general.languageDesc}
+                  </p>
+                </div>
+              </Label>
+              <Select
+                value={language}
+                onValueChange={(val) => setLanguage(val as "en" | "ru")}
+              >
+                <SelectTrigger className="w-32" data-testid="select-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableLanguages.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.nativeName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+
             {/* Sound */}
             <div className="flex items-center justify-between">
               <Label htmlFor="sound-enabled" className="flex items-center gap-2 cursor-pointer">
@@ -193,9 +240,9 @@ export default function SettingsPage() {
                   <VolumeX className="w-4 h-4" />
                 )}
                 <div>
-                  <span>Capture Sound</span>
+                  <span>{t.settings.general.captureSound}</span>
                   <p className="text-xs text-muted-foreground font-normal">
-                    Play shutter sound when taking a photo
+                    {t.settings.general.captureSoundDesc}
                   </p>
                 </div>
               </Label>
@@ -660,15 +707,99 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* PWA */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Smartphone className="w-5 h-5 text-primary" />
+              {t.settings.pwa.title}
+            </CardTitle>
+            <CardDescription>
+              {t.settings.pwa.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Install Status */}
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                <div>
+                  <span>{t.settings.pwa.installApp}</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {t.settings.pwa.installAppDesc}
+                  </p>
+                </div>
+              </Label>
+              {isInstalled ? (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  {t.settings.pwa.installed}
+                </span>
+              ) : canInstall ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={install}
+                  disabled={isInstalling}
+                  data-testid="button-install-pwa"
+                >
+                  {isInstalling ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>{t.common.on}</>
+                  )}
+                </Button>
+              ) : showIOSInstructions ? (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Share2 className="w-4 h-4" />
+                  Add to Home
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {t.settings.pwa.notInstalled}
+                </span>
+              )}
+            </div>
+
+            {showIOSInstructions && (
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                Tap <Share2 className="w-3 h-3 inline" /> then "Add to Home Screen"
+              </p>
+            )}
+
+            <Separator />
+
+            {/* Offline Status */}
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                {navigator.onLine ? (
+                  <Wifi className="w-4 h-4 text-green-500" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-amber-500" />
+                )}
+                <div>
+                  <span>{t.settings.pwa.offlineMode}</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {t.settings.pwa.offlineModeDesc}
+                  </p>
+                </div>
+              </Label>
+              <span className={`text-xs flex items-center gap-1 ${navigator.onLine ? 'text-green-500' : 'text-amber-500'}`}>
+                {navigator.onLine ? t.camera.online : t.camera.offline}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Reset Settings */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <RotateCcw className="w-5 h-5 text-primary" />
-              Reset
+              {t.settings.reset.title}
             </CardTitle>
             <CardDescription>
-              Restore settings to factory defaults
+              {t.settings.reset.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -679,10 +810,10 @@ export default function SettingsPage() {
               data-testid="button-reset-settings"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Reset All Settings
+              {t.settings.reset.resetAllSettings}
             </Button>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              Your photos will not be affected
+              {t.settings.reset.photosNotAffected}
             </p>
           </CardContent>
         </Card>
@@ -691,10 +822,10 @@ export default function SettingsPage() {
         <div className="text-center text-xs text-muted-foreground space-y-1 pt-4">
           <div className="flex items-center justify-center gap-2">
             <Crosshair className="w-4 h-4 text-primary" />
-            <span className="font-semibold">Camera ZeroDay</span>
+            <span className="font-semibold">{t.settings.appInfo.title}</span>
           </div>
-          <p>Tactical Camera PWA</p>
-          <p>Photos are stored locally on your device</p>
+          <p>{t.settings.appInfo.subtitle}</p>
+          <p>{t.settings.appInfo.storageNote}</p>
         </div>
       </main>
 
@@ -702,15 +833,15 @@ export default function SettingsPage() {
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset Settings?</AlertDialogTitle>
+            <AlertDialogTitle>{t.settings.dialogs.resetTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will restore all settings to their default values. Your photos will not be affected.
+              {t.settings.dialogs.resetDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-reset">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-reset">{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleReset} data-testid="button-confirm-reset">
-              Reset
+              {t.common.reset}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -720,19 +851,19 @@ export default function SettingsPage() {
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear All Photos?</AlertDialogTitle>
+            <AlertDialogTitle>{t.settings.dialogs.clearTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all {storageInfo?.photos || 0} photos from your device. This action cannot be undone.
+              {t.settings.dialogs.clearDescription.replace('{count}', String(storageInfo?.photos || 0))}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-clear-storage">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-clear-storage">{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClearPhotos}
               className="bg-destructive hover:bg-destructive/90"
               data-testid="button-confirm-clear-storage"
             >
-              Clear All
+              {t.settings.dialogs.clearAll}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

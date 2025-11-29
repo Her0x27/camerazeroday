@@ -5,12 +5,15 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/lib/settings-context";
+import { I18nProvider } from "@/lib/i18n";
+import { DisguiseProvider } from "@/lib/disguise-context";
 import { SplashScreen } from "@/components/splash-screen";
 
 import CameraPage from "@/pages/camera";
 import GalleryPage from "@/pages/gallery";
 import PhotoDetailPage from "@/pages/photo-detail";
 import SettingsPage from "@/pages/settings";
+import DisguiseGamePage from "@/pages/disguise-game";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +23,7 @@ function Router() {
       <Route path="/gallery" component={GalleryPage} />
       <Route path="/photo/:id" component={PhotoDetailPage} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/disguise-game" component={DisguiseGamePage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -38,13 +42,17 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SettingsProvider>
-          {showSplash && <SplashScreen onComplete={handleSplashComplete} duration={2800} />}
-          <Router />
-          <Toaster />
-        </SettingsProvider>
-      </TooltipProvider>
+      <I18nProvider>
+        <TooltipProvider>
+          <SettingsProvider>
+            <DisguiseProvider>
+              {showSplash && <SplashScreen onComplete={handleSplashComplete} duration={2800} />}
+              <Router />
+              <Toaster />
+            </DisguiseProvider>
+          </SettingsProvider>
+        </TooltipProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

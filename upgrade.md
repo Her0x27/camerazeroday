@@ -28,7 +28,8 @@
 - [x] **Cloud Upload (ImgBB)** - API key, expiration, auto-upload
 - [x] **Storage** - Photo count, storage usage, clear data
 - [ ] **Disguise Mode** - 2048 game, secret gestures, auto-lock (Phase 3)
-- [ ] **PWA** - Installation, offline mode info (Phase 2)
+- [x] **PWA** - Installation, offline mode info
+- [x] **Reset** - Reset all settings
 
 ---
 
@@ -61,21 +62,22 @@
 - In development mode, SW must be unregistered/rejected
 
 ### 4.1 Manifest:
-- [ ] Complete manifest.json with all icon sizes
-- [ ] Theme colors for Android/iPhone
-- [ ] Proper display modes
+- [x] Complete manifest.json with all icon sizes
+- [x] Theme colors for Android/iPhone
+- [x] Proper display modes
 
 ### 4.2 Service Worker (Production Only):
-- [ ] Cache static assets
-- [ ] Cache API responses where applicable
-- [ ] Offline fallback page
-- [ ] Skip SW registration in development mode
-- [ ] Add environment check before SW registration
+- [x] Cache static assets
+- [x] Cache API responses where applicable
+- [x] Offline fallback page
+- [x] Skip SW registration in development mode
+- [x] Add environment check before SW registration
 
 ### 4.3 Installation:
-- [ ] Detect installability (beforeinstallprompt)
-- [ ] Show install button/prompt in settings
-- [ ] Handle iOS "Add to Home Screen" guidance
+- [x] Detect installability (beforeinstallprompt)
+- [x] Show install button/prompt in settings
+- [x] Handle iOS "Add to Home Screen" guidance
+- [x] usePWA hook for install state management
 
 ---
 
@@ -83,19 +85,19 @@
 **Description:** Full internationalization support
 
 ### 5.1 Infrastructure:
-- [ ] Create i18n context/provider
-- [ ] Language detection (browser preference)
-- [ ] Language switcher in settings
-- [ ] Persist language preference
+- [x] Create i18n context/provider
+- [x] Language detection (browser preference)
+- [x] Language switcher in settings
+- [x] Persist language preference
 
 ### 5.2 Translations:
-- [ ] Camera page strings
-- [ ] Gallery page strings
-- [ ] Settings page strings
-- [ ] Photo detail page strings
-- [ ] 2048 game strings
-- [ ] Error messages and toasts
-- [ ] Metadata labels
+- [x] Camera page strings (prepared)
+- [x] Gallery page strings (prepared)
+- [x] Settings page strings (prepared, partially applied)
+- [x] Photo detail page strings (prepared)
+- [x] 2048 game strings (prepared)
+- [x] Error messages and toasts (prepared)
+- [x] Metadata labels (prepared)
 
 ---
 
@@ -122,16 +124,16 @@
 
 ## Implementation Order
 
-1. **Phase 1: Foundation** (Current)
-   - [~] Create upgrade.md checklist
-   - [ ] Gallery icon dual counters
-   - [ ] Settings reorganization
+1. **Phase 1: Foundation** ✅ Completed
+   - [x] Create upgrade.md checklist
+   - [x] Gallery icon dual counters
+   - [x] Settings reorganization
 
-2. **Phase 2: Core Features**
-   - [ ] Localization system (EN/RU)
-   - [ ] PWA improvements (production-only SW)
+2. **Phase 2: Core Features** ✅ Completed
+   - [x] Localization system (EN/RU)
+   - [x] PWA improvements (production-only SW)
 
-3. **Phase 3: Advanced Features**
+3. **Phase 3: Advanced Features** (Current)
    - [ ] Disguise Mode with 2048 game
    - [ ] Platform adaptation refinements
 
