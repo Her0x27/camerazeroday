@@ -201,6 +201,7 @@ export default function CameraPage() {
             heading={orientationData.heading}
             tilt={orientationData.tilt}
             showMetadata={settings.reticle.showMetadata}
+            lastUpdate={geoData.lastUpdate}
           />
         )}
 

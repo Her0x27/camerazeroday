@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 interface GeolocationData {
   latitude: number | null;
@@ -6,6 +6,7 @@ interface GeolocationData {
   altitude: number | null;
   accuracy: number | null;
   timestamp: number;
+  lastUpdate: number;
 }
 
 interface UseGeolocationReturn {
@@ -24,6 +25,7 @@ const defaultData: GeolocationData = {
   altitude: null,
   accuracy: null,
   timestamp: Date.now(),
+  lastUpdate: Date.now(),
 };
 
 export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
@@ -34,13 +36,21 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   const watchIdRef = useRef<number | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const positionOptions: PositionOptions = useMemo(() => ({
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0,
+  }), []);
+
   const handleSuccess = useCallback((position: GeolocationPosition) => {
+    const now = Date.now();
     setData({
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
       altitude: position.coords.altitude,
       accuracy: position.coords.accuracy,
       timestamp: position.timestamp,
+      lastUpdate: now,
     });
     setError(null);
     setIsLoading(false);
@@ -65,12 +75,6 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
     setIsLoading(false);
   }, []);
 
-  const positionOptions: PositionOptions = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0,
-  };
-
   const startWatching = useCallback(() => {
     if (!navigator.geolocation || !enabled) {
       setError("Geolocation not supported");
@@ -88,15 +92,14 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
       positionOptions
     );
 
-    // Добавляем полинг каждые 500мс для частых обновлений
     pollIntervalRef.current = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         handleSuccess,
         handleError,
         positionOptions
       );
-    }, 500);
-  }, [enabled, handleSuccess, handleError]);
+    }, 300);
+  }, [enabled, handleSuccess, handleError, positionOptions]);
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -119,12 +122,14 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          const now = Date.now();
           const geoData: GeolocationData = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             altitude: position.coords.altitude,
             accuracy: position.coords.accuracy,
             timestamp: position.timestamp,
+            lastUpdate: now,
           };
           setData(geoData);
           resolve(geoData);
@@ -136,7 +141,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
         positionOptions
       );
     });
-  }, [handleError]);
+  }, [handleError, positionOptions]);
 
   // Auto-start watching if enabled
   useEffect(() => {

@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { MapPin, Compass, Mountain, Target, Signal } from "lucide-react";
+import { memo, useState, useEffect } from "react";
+import { MapPin, Compass, Mountain, Target, Signal, Clock } from "lucide-react";
 import { formatCoordinate, formatAltitude, formatAccuracy } from "@/hooks/use-geolocation";
 import { formatHeading, getCardinalDirection } from "@/hooks/use-orientation";
 
@@ -11,6 +11,15 @@ interface MetadataOverlayProps {
   heading: number | null;
   tilt: number | null;
   showMetadata: boolean;
+  lastUpdate?: number;
+}
+
+function formatLastUpdate(lastUpdate: number | undefined): string {
+  if (!lastUpdate) return "---";
+  const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
+  if (seconds < 1) return "LIVE";
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m`;
 }
 
 export const MetadataOverlay = memo(function MetadataOverlay({
@@ -21,11 +30,23 @@ export const MetadataOverlay = memo(function MetadataOverlay({
   heading,
   tilt,
   showMetadata,
+  lastUpdate,
 }: MetadataOverlayProps) {
+  const [, forceUpdate] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate(n => n + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!showMetadata) return null;
 
   const hasLocation = latitude !== null && longitude !== null;
   const hasOrientation = heading !== null;
+  const updateAge = lastUpdate ? (Date.now() - lastUpdate) / 1000 : Infinity;
+  const isLive = updateAge < 2;
 
   return (
     <>
@@ -49,6 +70,16 @@ export const MetadataOverlay = memo(function MetadataOverlay({
             <span className="font-mono text-xs text-white/90">
               GPS: {formatAccuracy(accuracy)}
             </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Clock className={`w-3.5 h-3.5 ${isLive ? "text-green-400" : "text-amber-400"}`} />
+            <span className={`font-mono text-xs ${isLive ? "text-green-400" : "text-amber-400"}`}>
+              {formatLastUpdate(lastUpdate)}
+            </span>
+            {isLive && (
+              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            )}
           </div>
         </div>
       </div>
