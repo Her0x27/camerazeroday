@@ -253,6 +253,11 @@ export const ru: Translations = {
     drawPattern: "Нарисуйте ключ для разблокировки",
     patternHint: "Соедините минимум 4 точки",
     cancel: "Отмена",
+    pwaInstallTitle: "Установить приложение",
+    pwaInstallDesc: "Установите для офлайн-игры и удобства",
+    pwaInstall: "Установить",
+    pwaNotNow: "Не сейчас",
+    pwaIosHint: "Нажмите «Поделиться», затем «На экран Домой»",
   },
   
   errors: {

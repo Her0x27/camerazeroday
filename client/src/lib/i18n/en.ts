@@ -251,6 +251,11 @@ export const en = {
     drawPattern: "Draw Pattern to Unlock",
     patternHint: "Connect at least 4 dots",
     cancel: "Cancel",
+    pwaInstallTitle: "Install App",
+    pwaInstallDesc: "Install for offline play and better experience",
+    pwaInstall: "Install",
+    pwaNotNow: "Not now",
+    pwaIosHint: "Tap Share then \"Add to Home Screen\"",
   },
   
   errors: {
