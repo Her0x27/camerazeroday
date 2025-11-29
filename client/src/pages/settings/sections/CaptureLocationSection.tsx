@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
 import type { Settings } from "@shared/schema";
 
 interface CaptureLocationSectionProps {
@@ -16,15 +17,17 @@ export const CaptureLocationSection = memo(function CaptureLocationSection({
   settings,
   updateSettings,
 }: CaptureLocationSectionProps) {
+  const { t } = useI18n();
+  
   return (
     <Card data-testid="section-capture-location">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Camera className="w-5 h-5 text-primary" />
-          Capture / Location
+          {t.settings.capture.title}
         </CardTitle>
         <CardDescription>
-          GPS and device orientation settings
+          {t.settings.capture.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -32,9 +35,9 @@ export const CaptureLocationSection = memo(function CaptureLocationSection({
           <Label htmlFor="gps-enabled" className="flex items-center gap-2 cursor-pointer">
             <MapPin className="w-4 h-4" />
             <div>
-              <span>GPS Location</span>
+              <span>{t.settings.capture.gpsLocation}</span>
               <p className="text-xs text-muted-foreground font-normal">
-                Record GPS coordinates when capturing
+                {t.settings.capture.gpsLocationDesc}
               </p>
             </div>
           </Label>
@@ -53,7 +56,7 @@ export const CaptureLocationSection = memo(function CaptureLocationSection({
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Target className="w-4 h-4" />
-                  Accuracy Limit
+                  {t.settings.capture.accuracyLimit}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {settings.accuracyLimit || 20}m
@@ -68,7 +71,7 @@ export const CaptureLocationSection = memo(function CaptureLocationSection({
                 data-testid="slider-accuracy-limit"
               />
               <p className="text-xs text-muted-foreground">
-                Block photo capture if GPS accuracy exceeds this limit
+                {t.settings.capture.accuracyLimitDesc}
               </p>
             </div>
           </>
@@ -80,9 +83,9 @@ export const CaptureLocationSection = memo(function CaptureLocationSection({
           <Label htmlFor="orientation-enabled" className="flex items-center gap-2 cursor-pointer">
             <Compass className="w-4 h-4" />
             <div>
-              <span>Compass & Orientation</span>
+              <span>{t.settings.capture.compassOrientation}</span>
               <p className="text-xs text-muted-foreground font-normal">
-                Record heading and device tilt angle
+                {t.settings.capture.compassOrientationDesc}
               </p>
             </div>
           </Label>

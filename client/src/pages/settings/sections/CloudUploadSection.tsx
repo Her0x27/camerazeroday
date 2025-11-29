@@ -44,10 +44,10 @@ export const CloudUploadSection = memo(function CloudUploadSection({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Cloud className="w-5 h-5 text-primary" />
-          Cloud Upload (ImgBB)
+          {t.settings.cloud.title}
         </CardTitle>
         <CardDescription>
-          Automatic photo upload to ImgBB cloud
+          {t.settings.cloud.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
