@@ -178,7 +178,7 @@ export default function PhotoDetailPage() {
   return (
     <div className="fixed inset-0 bg-black flex flex-col">
       {/* Transparent header overlaying the photo */}
-      <header className="absolute top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-sm safe-top">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-transparent safe-top">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <Button
             variant="ghost"
