@@ -210,7 +210,6 @@ export default function PhotoDetailPage() {
         </Button>
       )}
 
-      {/* Transparent header at bottom */}
       <header className="absolute bottom-0 left-0 right-0 z-50 bg-transparent">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <Button
