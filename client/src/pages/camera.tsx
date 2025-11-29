@@ -279,7 +279,7 @@ export default function CameraPage() {
           <button
             onClick={handleCapture}
             disabled={!isReady || isCapturing}
-            className={`aspect-square flex-[1.5] max-w-28 rounded-full border-4 flex items-center justify-center transition-all overflow-hidden ${
+            className={`aspect-square flex-1 max-w-20 rounded-full border-3 flex items-center justify-center transition-all overflow-hidden ${
               isReady && !isCapturing
                 ? "border-white bg-white/10 hover:bg-white/20 active:scale-95 active:bg-white/30"
                 : "border-muted-foreground/50 bg-muted/20"
@@ -294,7 +294,7 @@ export default function CameraPage() {
               />
             ) : (
               <div 
-                className={`w-[80%] h-[80%] rounded-full transition-all ${
+                className={`w-[70%] h-[70%] rounded-full transition-all ${
                   isCapturing 
                     ? "bg-primary scale-75" 
                     : isReady 
