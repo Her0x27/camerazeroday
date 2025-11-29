@@ -10,12 +10,14 @@ import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
 import { Reticle } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
-import { savePhoto, getPhotoCount, getAllPhotos } from "@/lib/db";
+import { savePhoto, getPhotoCount, getLatestPhoto } from "@/lib/db";
+import { useCaptureSound } from "@/hooks/use-capture-sound";
 import type { InsertPhoto } from "@shared/schema";
 
 export default function CameraPage() {
   const [, navigate] = useLocation();
   const { settings } = useSettings();
+  const { playCapture } = useCaptureSound();
   
   const [photoCount, setPhotoCount] = useState(0);
   const [lastPhotoThumb, setLastPhotoThumb] = useState<string | null>(null);
@@ -55,9 +57,9 @@ export default function CameraPage() {
         setPhotoCount(count);
         
         if (count > 0) {
-          const photos = await getAllPhotos("newest");
-          if (photos.length > 0) {
-            setLastPhotoThumb(photos[0].thumbnailData);
+          const latest = await getLatestPhoto();
+          if (latest) {
+            setLastPhotoThumb(latest.thumbnailData);
           }
         }
       } catch (error) {
@@ -99,6 +101,7 @@ export default function CameraPage() {
 
     setIsCapturing(true);
     const timestamp = Date.now();
+    const noteText = currentNote.trim();
     
     try {
       const result = await capturePhoto({
@@ -108,14 +111,14 @@ export default function CameraPage() {
         accuracy: geoData.accuracy,
         heading: orientationData.heading,
         tilt: orientationData.tilt,
-        note: currentNote.trim() ? currentNote.trim() : undefined,
+        note: noteText || undefined,
         timestamp,
       });
       if (!result) {
         throw new Error("Failed to capture photo");
       }
 
-      // Save photo with optional note
+      // Save photo with note as folder name
       const photo: InsertPhoto = {
         imageData: result.imageData,
         thumbnailData: result.thumbnailData,
@@ -128,7 +131,8 @@ export default function CameraPage() {
           tilt: orientationData.tilt,
           timestamp,
         },
-        note: currentNote.trim() ? currentNote.trim() : undefined,
+        note: noteText || undefined,
+        folder: noteText || undefined,
       };
 
       await savePhoto(photo);
@@ -137,31 +141,14 @@ export default function CameraPage() {
 
       // Play capture sound if enabled
       if (settings.soundEnabled) {
-        try {
-          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.value = 800;
-          oscillator.type = "sine";
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          
-          oscillator.start();
-          oscillator.stop(audioContext.currentTime + 0.1);
-        } catch (e) {
-          // Audio not available
-        }
+        playCapture();
       }
     } catch (error) {
       console.error("Capture error:", error);
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, settings]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, settings.soundEnabled, playCapture]);
 
   return (
     <div 

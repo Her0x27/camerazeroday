@@ -204,6 +204,41 @@ export async function clearAllPhotos(): Promise<void> {
   });
 }
 
+export async function getFolders(): Promise<string[]> {
+  const photos = await getAllPhotos();
+  const folders = new Set<string>();
+  
+  for (const photo of photos) {
+    if (photo.folder) {
+      folders.add(photo.folder);
+    }
+  }
+  
+  return Array.from(folders).sort();
+}
+
+export async function getPhotosByFolder(folder: string | null, sortOrder: "newest" | "oldest" = "newest"): Promise<Photo[]> {
+  const allPhotos = await getAllPhotos(sortOrder);
+  
+  if (folder === null) {
+    return allPhotos.filter(p => !p.folder);
+  }
+  
+  return allPhotos.filter(p => p.folder === folder);
+}
+
+export async function getFolderCounts(): Promise<Map<string | null, number>> {
+  const photos = await getAllPhotos();
+  const counts = new Map<string | null, number>();
+  
+  for (const photo of photos) {
+    const folder = photo.folder || null;
+    counts.set(folder, (counts.get(folder) || 0) + 1);
+  }
+  
+  return counts;
+}
+
 // Settings operations
 export async function getSettings(): Promise<Settings> {
   const db = await openDB();

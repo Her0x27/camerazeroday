@@ -20,6 +20,7 @@ export const photoSchema = z.object({
   thumbnailData: z.string(), // smaller base64 thumbnail
   metadata: photoMetadataSchema,
   note: z.string().optional(),
+  folder: z.string().optional(), // folder name derived from note
 });
 
 export type Photo = z.infer<typeof photoSchema>;
