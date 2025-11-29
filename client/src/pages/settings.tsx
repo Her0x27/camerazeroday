@@ -557,12 +557,12 @@ export default function SettingsPage() {
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
                 <Key className="w-4 h-4" />
-                API Token
+                {t.settings.cloud.apiToken}
               </Label>
               <div className="flex gap-2">
                 <Input
                   type="password"
-                  placeholder="Enter ImgBB API key"
+                  placeholder={t.settings.cloud.enterApiKey}
                   value={apiKeyInput}
                   onChange={(e) => {
                     setApiKeyInput(e.target.value);
@@ -583,7 +583,7 @@ export default function SettingsPage() {
                   ) : settings.imgbb?.isValidated ? (
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   ) : (
-                    "Validate"
+                    t.settings.cloud.validate
                   )}
                 </Button>
               </div>
@@ -596,11 +596,11 @@ export default function SettingsPage() {
               {settings.imgbb?.isValidated && !validationError && (
                 <p className="text-xs text-green-500 flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
-                  API key validated
+                  {t.settings.cloud.apiKeyValidated}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Get a free API key at{" "}
+                {t.settings.cloud.getApiKey}{" "}
                 <a 
                   href="https://api.imgbb.com/" 
                   target="_blank" 
@@ -619,12 +619,12 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Photo Expiration
+                  {t.settings.cloud.photoExpiration}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {(settings.imgbb?.expiration || 0) === 0 
-                    ? "Never" 
-                    : `${settings.imgbb?.expiration} sec`}
+                    ? t.common.never 
+                    : `${settings.imgbb?.expiration} ${t.common.seconds}`}
                 </span>
               </div>
               <Slider
@@ -636,8 +636,8 @@ export default function SettingsPage() {
                 data-testid="slider-imgbb-expiration"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>0 = never expires</span>
-                <span>86400 = 24 hours</span>
+                <span>{t.settings.cloud.neverExpires}</span>
+                <span>{t.settings.cloud.hours24}</span>
               </div>
             </div>
 
@@ -648,9 +648,9 @@ export default function SettingsPage() {
               <Label htmlFor="auto-upload" className="flex items-center gap-2 cursor-pointer">
                 <Upload className="w-4 h-4" />
                 <div>
-                  <span>Auto Upload</span>
+                  <span>{t.settings.cloud.autoUpload}</span>
                   <p className="text-xs text-muted-foreground font-normal">
-                    Upload photos immediately after capture
+                    {t.settings.cloud.autoUploadDesc}
                   </p>
                 </div>
               </Label>

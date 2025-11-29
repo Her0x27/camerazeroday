@@ -21,6 +21,7 @@ export const ru: Translations = {
     on: "Вкл",
     off: "Выкл",
     never: "Никогда",
+    seconds: "сек",
   },
   
   camera: {

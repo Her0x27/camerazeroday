@@ -19,6 +19,7 @@ export const en = {
     on: "On",
     off: "Off",
     never: "Never",
+    seconds: "sec",
   },
   
   camera: {
