@@ -258,10 +258,14 @@
 **Problem:** Some grid operations mutate arrays in place despite creating new arrays.
 **Recommendation:** Ensure full immutability.
 
-- [ ] Audit `rotateGrid()` for mutations
-- [ ] Audit `moveLeft()` for mutations
-- [ ] Use spread operators consistently
-- [ ] Consider using Immer for complex state updates
+- [x] Audit `rotateGrid()` for mutations
+  - Creates new grid with createEmptyGrid(), then assigns values - fully immutable
+- [x] Audit `moveLeft()` for mutations
+  - Uses .map() which creates new arrays - fully immutable
+- [x] Use spread operators consistently
+  - Already uses [...row] and .map() throughout
+- [x] Consider using Immer for complex state updates
+  - Not needed - code is already immutable without Immer overhead
 
 ### 5.2 Multiple Photo Data Transformations
 **Location:** `client/src/lib/db.ts`, `client/src/pages/gallery.tsx`
@@ -341,9 +345,13 @@
 **Problem:** Camera stream may not be properly stopped on component unmount.
 **Recommendation:** Add cleanup for media streams.
 
-- [ ] Stop all tracks on cleanup
-- [ ] Handle component remount gracefully
-- [ ] Add stream status tracking
+- [x] Stop all tracks on cleanup
+  - Lines 49-58: stopCamera() stops all tracks with getTracks().forEach(track => track.stop())
+  - Lines 590-595: useEffect cleanup calls stopCamera() on unmount
+- [x] Handle component remount gracefully
+  - Lines 65-66: startCamera() calls stopCamera() first to clear any existing stream
+- [x] Add stream status tracking
+  - Uses isReady, isLoading, and error states
 - [ ] Test with React StrictMode
 
 ---
@@ -374,10 +382,11 @@
 **Problem:** All page components are imported at the top level.
 **Recommendation:** Implement route-based code splitting.
 
-- [ ] Wrap page imports with `React.lazy()`
-- [ ] Add `Suspense` boundaries around `Router`
-- [ ] Create shared loading component
-- [ ] Test loading behavior
+- [x] Wrap page imports with `React.lazy()`
+- [x] Add `Suspense` boundaries around `Router`
+- [x] Create shared loading component (`PageLoader`)
+- [x] Test loading behavior
+  - Note: Already implemented! All pages use lazy() imports with Suspense fallback
 
 ### 7.4 Large Single Files
 **Location:** `client/src/pages/settings.tsx` (1090 lines), `client/src/pages/gallery.tsx` (845 lines)
