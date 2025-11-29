@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Camera, Settings, Image, FileText, Crosshair, Wifi, WifiOff } from "lucide-react";
+import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCamera } from "@/hooks/use-camera";
@@ -21,10 +21,9 @@ export default function CameraPage() {
   
   const [photoCount, setPhotoCount] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [showNoteDialog, setShowNoteDialog] = useState(false);
-  const [pendingCapture, setPendingCapture] = useState<{ imageData: string; thumbnailData: string } | null>(null);
-  const [note, setNote] = useState("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [currentNote, setCurrentNote] = useState("");
 
   // Camera hook
   const {
@@ -80,7 +79,7 @@ export default function CameraPage() {
     }
   }, [settings.orientationEnabled, orientationSupported, requestOrientationPermission]);
 
-  // Capture photo
+  // Capture and save photo directly
   const handleCapture = useCallback(async () => {
     if (!isReady || isCapturing) return;
 
@@ -92,29 +91,10 @@ export default function CameraPage() {
         throw new Error("Failed to capture photo");
       }
 
-      // Store capture data and show note dialog
-      setPendingCapture(result);
-      setNote("");
-      setShowNoteDialog(true);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Capture Failed",
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setIsCapturing(false);
-    }
-  }, [isReady, isCapturing, capturePhoto, toast]);
-
-  // Save photo (with or without note)
-  const handleSavePhoto = useCallback(async (withNote: boolean) => {
-    if (!pendingCapture) return;
-
-    try {
+      // Save photo with optional note
       const photo: InsertPhoto = {
-        imageData: pendingCapture.imageData,
-        thumbnailData: pendingCapture.thumbnailData,
+        imageData: result.imageData,
+        thumbnailData: result.thumbnailData,
         metadata: {
           latitude: geoData.latitude,
           longitude: geoData.longitude,
@@ -124,7 +104,7 @@ export default function CameraPage() {
           tilt: orientationData.tilt,
           timestamp: Date.now(),
         },
-        note: withNote && note.trim() ? note.trim() : undefined,
+        note: currentNote.trim() ? currentNote.trim() : undefined,
       };
 
       await savePhoto(photo);
@@ -132,7 +112,7 @@ export default function CameraPage() {
       
       toast({
         title: "Photo Saved",
-        description: withNote && note.trim() ? "Photo saved with note" : "Photo saved successfully",
+        description: "Photo saved successfully",
       });
 
       // Play capture sound if enabled
@@ -159,25 +139,13 @@ export default function CameraPage() {
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Save Failed",
+        title: "Capture Failed",
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
-      setPendingCapture(null);
-      setShowNoteDialog(false);
-      setNote("");
+      setIsCapturing(false);
     }
-  }, [pendingCapture, geoData, orientationData, note, settings, toast]);
-
-  // Skip note and save directly
-  const handleSkipNote = useCallback(() => {
-    handleSavePhoto(false);
-  }, [handleSavePhoto]);
-
-  // Save with note
-  const handleSaveWithNote = useCallback(() => {
-    handleSavePhoto(true);
-  }, [handleSavePhoto]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, settings, toast]);
 
   return (
     <div 
@@ -313,8 +281,19 @@ export default function CameraPage() {
             />
           </button>
 
-          {/* Spacer for symmetry */}
-          <div className="w-14 h-14 flex-shrink-0" />
+          {/* Note button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-14 h-14 rounded-md bg-card/50 text-white hover:bg-card relative flex-shrink-0"
+            onClick={() => setShowNoteDialog(true)}
+            data-testid="button-note"
+          >
+            <FileText className="w-6 h-6" />
+            {currentNote && (
+              <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -326,35 +305,34 @@ export default function CameraPage() {
               <FileText className="w-5 h-5 text-primary" />
               Add Note
             </DialogTitle>
-            <DialogDescription>
-              Add an optional note to this photo, or skip to save without one.
-            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-2">
             <Textarea
-              placeholder="Enter note (optional)..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              placeholder="Enter note..."
+              value={currentNote}
+              onChange={(e) => setCurrentNote(e.target.value)}
               className="min-h-[100px] resize-none"
-              data-testid="input-photo-note"
+              data-testid="input-note"
+              autoFocus
             />
             
             <div className="flex gap-3">
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={handleSkipNote}
-                data-testid="button-skip-note"
+                onClick={() => setShowNoteDialog(false)}
+                data-testid="button-close-note"
               >
-                Skip
+                Done
               </Button>
               <Button
+                variant="outline"
                 className="flex-1"
-                onClick={handleSaveWithNote}
-                data-testid="button-save-note"
+                onClick={() => setCurrentNote("")}
+                data-testid="button-clear-note"
               >
-                Save
+                Clear
               </Button>
             </div>
           </div>
