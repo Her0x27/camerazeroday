@@ -296,23 +296,7 @@ export default function CameraPage() {
 
       {/* Bottom controls */}
       <div className="bg-black/80 backdrop-blur-sm safe-bottom z-10">
-        <div className="flex items-center justify-between px-[5%] py-2 h-20">
-          {/* Left side - Gallery */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
-            onClick={() => navigate("/gallery")}
-            data-testid="button-gallery"
-          >
-            <Image className="w-7 h-7" />
-            {photoCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center px-1">
-                {photoCount > 99 ? "99+" : photoCount}
-              </span>
-            )}
-          </Button>
-
+        <div className="relative flex items-center justify-center px-[5%] py-2 h-20">
           {/* Center - Capture button */}
           <button
             onClick={handleCapture}
@@ -349,8 +333,26 @@ export default function CameraPage() {
             )}
           </button>
 
-          {/* Right side - Note and Settings */}
-          <div className="flex items-center gap-2">
+          {/* Left side - Gallery (absolute) */}
+          <div className="absolute left-4 flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
+              onClick={() => navigate("/gallery")}
+              data-testid="button-gallery"
+            >
+              <Image className="w-7 h-7" />
+              {photoCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center px-1">
+                  {photoCount > 99 ? "99+" : photoCount}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* Right side - Note and Settings (absolute) */}
+          <div className="absolute right-4 flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
