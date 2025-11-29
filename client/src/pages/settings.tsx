@@ -111,7 +111,7 @@ export default function SettingsPage() {
   // Handle ImgBB API key validation
   const handleValidateApiKey = useCallback(async () => {
     if (!apiKeyInput.trim()) {
-      setValidationError("Введите API ключ");
+      setValidationError("Please enter API key");
       return;
     }
 
@@ -131,7 +131,7 @@ export default function SettingsPage() {
         });
         setValidationError(null);
       } else {
-        setValidationError(result.error || "Неверный API ключ");
+        setValidationError(result.error || "Invalid API key");
         await updateSettings({
           imgbb: {
             ...settings.imgbb,
@@ -140,7 +140,7 @@ export default function SettingsPage() {
         });
       }
     } catch (error) {
-      setValidationError("Ошибка проверки ключа");
+      setValidationError("Key validation error");
     } finally {
       setIsValidating(false);
     }

@@ -49,7 +49,7 @@ export interface UploadResult {
 
 export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
   if (!apiKey || apiKey.trim().length === 0) {
-    return { valid: false, error: "API ключ не может быть пустым" };
+    return { valid: false, error: "API key cannot be empty" };
   }
 
   try {
@@ -74,13 +74,13 @@ export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; 
       const errorResult = result as ImgBBError;
       return { 
         valid: false, 
-        error: errorResult.error?.message || "Неверный API ключ" 
+        error: errorResult.error?.message || "Invalid API key" 
       };
     }
   } catch (error) {
     return { 
       valid: false, 
-      error: error instanceof Error ? error.message : "Ошибка проверки ключа" 
+      error: error instanceof Error ? error.message : "Key validation error" 
     };
   }
 }
@@ -91,7 +91,7 @@ export async function uploadToImgBB(
   expiration: number = 0
 ): Promise<UploadResult> {
   if (!apiKey || apiKey.trim().length === 0) {
-    return { success: false, error: "API ключ не настроен" };
+    return { success: false, error: "API key not configured" };
   }
 
   try {
@@ -131,13 +131,13 @@ export async function uploadToImgBB(
       const errorResult = result as ImgBBError;
       return { 
         success: false, 
-        error: errorResult.error?.message || "Ошибка загрузки" 
+        error: errorResult.error?.message || "Upload error" 
       };
     }
   } catch (error) {
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : "Ошибка сети" 
+      error: error instanceof Error ? error.message : "Network error" 
     };
   }
 }

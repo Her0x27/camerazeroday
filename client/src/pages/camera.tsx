@@ -229,26 +229,39 @@ export default function CameraPage() {
 
       // Auto-upload to ImgBB if enabled
       if (settings.imgbb?.autoUpload && settings.imgbb?.isValidated && settings.imgbb?.apiKey) {
-        try {
-          const uploadResult = await uploadToImgBB(
-            result.imageData,
-            settings.imgbb.apiKey,
-            settings.imgbb.expiration || 0
-          );
-          if (uploadResult.success && uploadResult.cloudData) {
-            await updatePhoto(savedPhoto.id, { cloud: uploadResult.cloudData });
+        if (!navigator.onLine) {
+          toast({
+            title: "Offline",
+            description: "Photo saved locally, will upload when online",
+          });
+        } else {
+          try {
+            const uploadResult = await uploadToImgBB(
+              result.imageData,
+              settings.imgbb.apiKey,
+              settings.imgbb.expiration || 0
+            );
+            if (uploadResult.success && uploadResult.cloudData) {
+              await updatePhoto(savedPhoto.id, { cloud: uploadResult.cloudData });
+              toast({
+                title: "Uploaded",
+                description: "Photo uploaded to cloud",
+              });
+            } else {
+              toast({
+                title: "Upload Failed",
+                description: uploadResult.error || "Unknown error",
+                variant: "destructive",
+              });
+            }
+          } catch (uploadError) {
+            console.error("Auto-upload error:", uploadError);
             toast({
-              title: "Uploaded",
-              description: "Photo uploaded to cloud",
+              title: "Upload Failed",
+              description: "Photo saved locally, cloud upload failed",
+              variant: "destructive",
             });
           }
-        } catch (uploadError) {
-          console.error("Auto-upload error:", uploadError);
-          toast({
-            title: "Upload Failed",
-            description: "Photo saved locally, cloud upload failed",
-            variant: "destructive",
-          });
         }
       }
     } catch (error) {

@@ -53,7 +53,7 @@ export default function GalleryPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [showLinksDialog, setShowLinksDialog] = useState(false);
-  const [linksToShow, setLinksToShow] = useState<Array<{ id: string; url: string }>>([]);
+  const [linksToShow, setLinksToShow] = useState<Array<{ id: string; url: string; deleteUrl: string }>>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Calculate folders from photos
@@ -253,6 +253,7 @@ export default function GalleryPage() {
       photosWithLinks.map(p => ({
         id: p.id,
         url: p.cloud!.url,
+        deleteUrl: p.cloud!.deleteUrl,
       }))
     );
     setShowLinksDialog(true);
@@ -781,22 +782,41 @@ export default function GalleryPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex-1 overflow-auto space-y-2 my-4">
+          <div className="flex-1 overflow-auto space-y-3 my-4">
             {linksToShow.map((item, index) => (
               <div 
                 key={item.id}
-                className="flex items-center gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted cursor-pointer group"
-                onClick={() => handleCopyLink(item.url, item.id)}
+                className="p-2 rounded-md bg-muted/50 space-y-1"
                 data-testid={`link-item-${index}`}
               >
-                <span className="flex-1 text-sm truncate font-mono">
-                  {item.url}
-                </span>
-                {copiedId === item.id ? (
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                ) : (
-                  <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
-                )}
+                <div 
+                  className="flex items-center gap-2 hover:bg-muted cursor-pointer rounded p-1 group"
+                  onClick={() => handleCopyLink(item.url, item.id)}
+                >
+                  <span className="text-xs text-muted-foreground w-12">Image:</span>
+                  <span className="flex-1 text-sm truncate font-mono">
+                    {item.url}
+                  </span>
+                  {copiedId === item.id ? (
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                  )}
+                </div>
+                <div 
+                  className="flex items-center gap-2 hover:bg-muted cursor-pointer rounded p-1 group"
+                  onClick={() => handleCopyLink(item.deleteUrl, `del-${item.id}`)}
+                >
+                  <span className="text-xs text-destructive w-12">Delete:</span>
+                  <span className="flex-1 text-xs truncate font-mono text-muted-foreground">
+                    {item.deleteUrl}
+                  </span>
+                  {copiedId === `del-${item.id}` ? (
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                  )}
+                </div>
               </div>
             ))}
           </div>
