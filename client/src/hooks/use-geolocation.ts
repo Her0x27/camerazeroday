@@ -67,7 +67,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
 
   const positionOptions: PositionOptions = {
     enableHighAccuracy: true,
-    timeout: 10000,
+    timeout: 300000,
     maximumAge: 0,
   };
 
@@ -94,7 +94,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
         handleError,
         positionOptions
       );
-    }, 2000);
+    }, 1000);
   }, [enabled, handleSuccess, handleError]);
 
   const stopWatching = useCallback(() => {
