@@ -220,12 +220,12 @@ export default function GalleryPage() {
       }
 
       toast({
-        title: "Upload Complete",
-        description: `Uploaded: ${successCount}, errors: ${errorCount}`,
+        title: t.gallery.uploadComplete,
+        description: t.gallery.uploadedCount.replace("{success}", String(successCount)).replace("{errors}", String(errorCount)),
       });
     } catch (error) {
       toast({
-        title: "Upload Error",
+        title: t.common.error,
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
@@ -233,7 +233,7 @@ export default function GalleryPage() {
       setIsUploading(false);
       setUploadProgress({ completed: 0, total: 0 });
     }
-  }, [settings.imgbb, toast]);
+  }, [settings.imgbb, toast, t]);
 
   // Upload current folder or all photos
   const handleUploadCurrentView = useCallback(async () => {
@@ -248,8 +248,8 @@ export default function GalleryPage() {
     
     if (photosWithLinks.length === 0) {
       toast({
-        title: "No Links",
-        description: "Upload photos to cloud first",
+        title: t.gallery.noLinks,
+        description: t.gallery.uploadFirst,
       });
       return;
     }
@@ -262,7 +262,7 @@ export default function GalleryPage() {
       }))
     );
     setShowLinksDialog(true);
-  }, [viewMode, filteredPhotos, allPhotos, toast]);
+  }, [viewMode, filteredPhotos, allPhotos, toast, t]);
 
   // Copy link to clipboard
   const handleCopyLink = useCallback(async (url: string, id: string) => {
@@ -272,12 +272,12 @@ export default function GalleryPage() {
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to copy link",
+        title: t.common.error,
+        description: t.gallery.copyFailed,
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, t]);
 
   // Copy all links
   const handleCopyAllLinks = useCallback(async () => {
@@ -285,17 +285,17 @@ export default function GalleryPage() {
     try {
       await navigator.clipboard.writeText(allLinks);
       toast({
-        title: "Copied",
-        description: `${linksToShow.length} links copied to clipboard`,
+        title: t.gallery.copied,
+        description: t.gallery.linksCopied.replace("{count}", String(linksToShow.length)),
       });
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to copy links",
+        title: t.common.error,
+        description: t.gallery.copyFailed,
         variant: "destructive",
       });
     }
-  }, [linksToShow, toast]);
+  }, [linksToShow, toast, t]);
 
   // Count photos with cloud links
   const uploadedCount = useMemo(() => {
@@ -312,14 +312,14 @@ export default function GalleryPage() {
   }, []);
 
   const headerTitle = viewMode === "folders" 
-    ? "Gallery" 
+    ? t.gallery.title 
     : selectedFolder === null 
-      ? "Uncategorized" 
+      ? t.gallery.uncategorized 
       : selectedFolder;
 
   const headerSubtitle = viewMode === "folders"
-    ? `${folders.length} ${folders.length === 1 ? "folder" : "folders"}, ${allPhotos.length} ${allPhotos.length === 1 ? "photo" : "photos"}`
-    : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? "photo" : "photos"}`;
+    ? `${folders.length} ${folders.length === 1 ? t.gallery.folder : t.gallery.folders}, ${allPhotos.length} ${allPhotos.length === 1 ? t.gallery.photo : t.gallery.photos}`
+    : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? t.gallery.photo : t.gallery.photos}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -387,7 +387,7 @@ export default function GalleryPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Filter Photos</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t.gallery.filterPhotos}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => setFilter((prev) => ({ 
@@ -397,7 +397,7 @@ export default function GalleryPage() {
                       data-testid="filter-has-location"
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      Has Location
+                      {t.gallery.hasLocation}
                       {filter.hasLocation && <span className="ml-auto text-primary">Active</span>}
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -408,7 +408,7 @@ export default function GalleryPage() {
                       data-testid="filter-has-note"
                     >
                       <FileText className="w-4 h-4 mr-2" />
-                      Has Note
+                      {t.gallery.hasNote}
                       {filter.hasNote && <span className="ml-auto text-primary">Active</span>}
                     </DropdownMenuItem>
                     {(filter.hasLocation || filter.hasNote) && (
@@ -420,7 +420,7 @@ export default function GalleryPage() {
                           data-testid="filter-clear"
                         >
                           <X className="w-4 h-4 mr-2" />
-                          Clear Filters
+                          {t.gallery.clearFilters}
                         </DropdownMenuItem>
                       </>
                     )}
@@ -446,7 +446,7 @@ export default function GalleryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>ImgBB Cloud</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t.settings.cloud.title}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleUploadCurrentView}
@@ -454,7 +454,7 @@ export default function GalleryPage() {
                     data-testid="button-upload-to-cloud"
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload {viewMode === "photos" ? "folder" : "all photos"}
+                    {viewMode === "photos" ? t.gallery.uploadFolder : t.gallery.uploadAll}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleGetLinks}
@@ -462,7 +462,7 @@ export default function GalleryPage() {
                     data-testid="button-get-links"
                   >
                     <Link className="w-4 h-4 mr-2" />
-                    Get Links ({uploadedCount})
+                    {t.gallery.getLinks} ({uploadedCount})
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -489,13 +489,13 @@ export default function GalleryPage() {
           {filter.hasLocation && (
             <Badge variant="secondary" className="text-xs gap-1">
               <MapPin className="w-3 h-3" />
-              Location
+              {t.gallery.hasLocation}
             </Badge>
           )}
           {filter.hasNote && (
             <Badge variant="secondary" className="text-xs gap-1">
               <FileText className="w-3 h-3" />
-              Note
+              {t.gallery.hasNote}
             </Badge>
           )}
         </div>
@@ -516,13 +516,13 @@ export default function GalleryPage() {
             <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center mb-4">
               <Camera className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-semibold mb-2">No Photos Yet</h2>
+            <h2 className="text-lg font-semibold mb-2">{t.gallery.noPhotosYet}</h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-              Start capturing tactical photos with GPS coordinates and orientation data
+              {t.gallery.noPhotosDescription}
             </p>
             <Button onClick={() => navigate("/")} data-testid="button-start-capturing">
               <Camera className="w-4 h-4 mr-2" />
-              Start Capturing
+              {t.camera.startCapturing}
             </Button>
           </div>
         ) : viewMode === "folders" ? (
@@ -539,7 +539,7 @@ export default function GalleryPage() {
                     {folder.latestThumb ? (
                       <img
                         src={folder.latestThumb}
-                        alt={folder.name ?? "Uncategorized"}
+                        alt={folder.name ?? t.gallery.uncategorized}
                         className="w-full h-full object-cover opacity-70"
                         loading="lazy"
                       />
@@ -551,14 +551,14 @@ export default function GalleryPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">
-                      {folder.name ?? "Uncategorized"}
+                      {folder.name ?? t.gallery.uncategorized}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge 
                         variant="secondary" 
                         className="text-[10px] px-1.5 py-0.5"
                       >
-                        {folder.count} {folder.count === 1 ? "photo" : "photos"}
+                        {folder.count} {folder.count === 1 ? t.gallery.photo : t.gallery.photos}
                       </Badge>
                     </div>
                   </div>
@@ -579,7 +579,7 @@ export default function GalleryPage() {
                   {folder.latestThumb ? (
                     <img
                       src={folder.latestThumb}
-                      alt={folder.name ?? "Uncategorized"}
+                      alt={folder.name ?? t.gallery.uncategorized}
                       className="w-full h-full object-cover opacity-60"
                       loading="lazy"
                     />
@@ -592,13 +592,13 @@ export default function GalleryPage() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
                     <Folder className="w-10 h-10 text-primary mb-2" />
                     <span className="font-semibold text-white text-center text-sm line-clamp-2">
-                      {folder.name ?? "Uncategorized"}
+                      {folder.name ?? t.gallery.uncategorized}
                     </span>
                     <Badge 
                       variant="secondary" 
                       className="mt-2 bg-black/60 text-white border-none text-xs"
                     >
-                      {folder.count} {folder.count === 1 ? "photo" : "photos"}
+                      {folder.count} {folder.count === 1 ? t.gallery.photo : t.gallery.photos}
                     </Badge>
                   </div>
                 </Card>
@@ -610,16 +610,16 @@ export default function GalleryPage() {
             <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center mb-4">
               <FolderOpen className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-semibold mb-2">No Photos</h2>
+            <h2 className="text-lg font-semibold mb-2">{t.gallery.noPhotos}</h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               {filter.hasLocation || filter.hasNote
-                ? "No photos match your current filters"
-                : "This folder is empty"
+                ? t.gallery.noPhotosMatchFilter
+                : t.gallery.noPhotosInFolder
               }
             </p>
             <Button onClick={handleBackToFolders} variant="outline" data-testid="button-back-to-folders">
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Folders
+              {t.gallery.backToFolders}
             </Button>
           </div>
         ) : displayType === "list" ? (
