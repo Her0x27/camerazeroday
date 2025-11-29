@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ReticleConfig } from "@shared/schema";
 
 interface ReticleProps {
@@ -5,14 +6,12 @@ interface ReticleProps {
   className?: string;
 }
 
-// Simple crosshair - just two crossing lines
-export function Reticle({ config, className = "" }: ReticleProps) {
+export const Reticle = memo(function Reticle({ config, className = "" }: ReticleProps) {
   if (!config.enabled) return null;
 
-  const halfSize = config.size / 2;
   const style = {
     opacity: config.opacity / 100,
-    color: "#22c55e", // tactical green
+    color: "#22c55e",
     width: `${config.size}px`,
     height: `${config.size}px`,
   };
@@ -27,12 +26,9 @@ export function Reticle({ config, className = "" }: ReticleProps) {
         style={style}
         className="drop-shadow-lg"
       >
-        {/* Horizontal line */}
         <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth="1.5" />
-        
-        {/* Vertical line */}
         <line x1="50" y1="0" x2="50" y2="100" stroke="currentColor" strokeWidth="1.5" />
       </svg>
     </div>
   );
-}
+});

@@ -1,6 +1,8 @@
+import { memo } from "react";
 import { MapPin, Compass, Mountain, Target, Signal } from "lucide-react";
 import { formatCoordinate, formatAltitude, formatAccuracy } from "@/hooks/use-geolocation";
 import { formatHeading, getCardinalDirection } from "@/hooks/use-orientation";
+import { formatTimeShort } from "@/lib/format-utils";
 
 interface MetadataOverlayProps {
   latitude: number | null;
@@ -12,7 +14,7 @@ interface MetadataOverlayProps {
   showMetadata: boolean;
 }
 
-export function MetadataOverlay({
+export const MetadataOverlay = memo(function MetadataOverlay({
   latitude,
   longitude,
   altitude,
@@ -28,10 +30,8 @@ export function MetadataOverlay({
 
   return (
     <>
-      {/* Top-left: GPS data - below header */}
       <div className="absolute top-16 left-4 z-5">
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
-          {/* Coordinates */}
           <div className="flex items-center gap-2">
             <MapPin className={`w-3.5 h-3.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
             <div className="font-mono text-xs text-white/90 tracking-wide">
@@ -40,13 +40,11 @@ export function MetadataOverlay({
             </div>
           </div>
           
-          {/* Altitude */}
           <div className="flex items-center gap-2 pt-1 border-t border-white/10">
             <Mountain className={`w-3.5 h-3.5 ${altitude !== null ? "text-primary" : "text-muted-foreground"}`} />
             <span className="font-mono text-xs text-white/90">{formatAltitude(altitude)}</span>
           </div>
           
-          {/* GPS Accuracy */}
           <div className="flex items-center gap-2">
             <Signal className={`w-3.5 h-3.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
             <span className="font-mono text-xs text-white/90">
@@ -56,10 +54,8 @@ export function MetadataOverlay({
         </div>
       </div>
 
-      {/* Top-right: Orientation data - below header */}
       <div className="absolute top-16 right-4 z-5">
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
-          {/* Compass heading */}
           <div className="flex items-center gap-2">
             <Compass className={`w-3.5 h-3.5 ${hasOrientation ? "text-primary" : "text-muted-foreground"}`} />
             <div className="font-mono text-xs text-white/90 flex items-center gap-1.5">
@@ -68,7 +64,6 @@ export function MetadataOverlay({
             </div>
           </div>
           
-          {/* Tilt */}
           <div className="flex items-center gap-2 pt-1 border-t border-white/10">
             <Target className={`w-3.5 h-3.5 ${tilt !== null ? "text-primary" : "text-muted-foreground"}`} />
             <span className="font-mono text-xs text-white/90">
@@ -78,22 +73,16 @@ export function MetadataOverlay({
         </div>
       </div>
 
-      {/* Center bottom: Timestamp - above bottom controls */}
       <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-5">
         <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1">
           <span className="font-mono text-[10px] text-white/70 tracking-wider">
-            {new Date().toLocaleTimeString("en-US", { 
-              hour12: false, 
-              hour: "2-digit", 
-              minute: "2-digit", 
-              second: "2-digit" 
-            })}
+            {formatTimeShort()}
           </span>
         </div>
       </div>
     </>
   );
-}
+});
 
 // Compact version for gallery/detail views
 interface MetadataCompactProps {

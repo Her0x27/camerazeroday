@@ -43,7 +43,7 @@ function openDB(): Promise<IDBDatabase> {
 
 // Generate unique ID
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 // Photo CRUD operations
@@ -93,6 +93,53 @@ export async function getAllPhotos(sortOrder: "newest" | "oldest" = "newest"): P
         cursor.continue();
       } else {
         resolve(photos);
+      }
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getLatestPhoto(): Promise<Photo | undefined> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTOS_STORE, "readonly");
+    const store = tx.objectStore(PHOTOS_STORE);
+    const index = store.index("timestamp");
+    const request = index.openCursor(null, "prev");
+
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest).result;
+      if (cursor) {
+        resolve(cursor.value);
+      } else {
+        resolve(undefined);
+      }
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getPhotoIds(sortOrder: "newest" | "oldest" = "newest"): Promise<string[]> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTOS_STORE, "readonly");
+    const store = tx.objectStore(PHOTOS_STORE);
+    const index = store.index("timestamp");
+    const direction = sortOrder === "newest" ? "prev" : "next";
+    const request = index.openCursor(null, direction);
+    const ids: string[] = [];
+
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest).result;
+      if (cursor) {
+        ids.push(cursor.value.id);
+        cursor.continue();
+      } else {
+        resolve(ids);
       }
     };
 
