@@ -41,6 +41,8 @@ export const en = {
     photoUploaded: "Photo uploaded to cloud",
     willUploadWhenOnline: "Photo saved locally, will upload when online",
     cloudUploadFailed: "Photo saved locally, cloud upload failed",
+    lastPhoto: "Last photo",
+    failedToCapture: "Failed to capture photo",
   },
   
   gallery: {
@@ -166,6 +168,8 @@ export const en = {
       autoUpload: "Auto Upload",
       autoUploadDesc: "Upload photos immediately after capture",
       configureFirst: "Configure and validate API key first",
+      pleaseEnterApiKey: "Please enter API key",
+      validationError: "Key validation error",
     },
     
     storage: {

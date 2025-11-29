@@ -43,6 +43,8 @@ export const ru: Translations = {
     photoUploaded: "Фото загружено в облако",
     willUploadWhenOnline: "Фото сохранено локально, загрузится при подключении",
     cloudUploadFailed: "Фото сохранено локально, загрузка в облако не удалась",
+    lastPhoto: "Последнее фото",
+    failedToCapture: "Ошибка при съёмке фото",
   },
   
   gallery: {
@@ -168,6 +170,8 @@ export const ru: Translations = {
       autoUpload: "Авто-загрузка",
       autoUploadDesc: "Загружать фото сразу после съёмки",
       configureFirst: "Сначала настройте и проверьте API-ключ",
+      pleaseEnterApiKey: "Введите API-ключ",
+      validationError: "Ошибка проверки ключа",
     },
     
     storage: {

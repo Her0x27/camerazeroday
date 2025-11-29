@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatBytes } from "@/lib/date-utils";
+import { useI18n } from "@/lib/i18n";
 
 interface StorageInfo {
   photos: number;
@@ -20,30 +21,32 @@ export const StorageSection = memo(function StorageSection({
   storageInfo,
   onShowClearDialog,
 }: StorageSectionProps) {
+  const { t } = useI18n();
+  
   return (
     <Card data-testid="section-storage">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Database className="w-5 h-5 text-primary" />
-          Storage
+          {t.settings.storage.title}
         </CardTitle>
         <CardDescription>
-          Locally stored photos on your device
+          {t.settings.storage.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {storageInfo && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Photos stored</span>
+              <span className="text-muted-foreground">{t.settings.storage.photosStored}</span>
               <span className="font-medium">{storageInfo.photos}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Storage used</span>
+              <span className="text-muted-foreground">{t.settings.storage.storageUsed}</span>
               <span className="font-medium">{formatBytes(storageInfo.used)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Available</span>
+              <span className="text-muted-foreground">{t.settings.storage.available}</span>
               <span className="font-medium">{formatBytes(storageInfo.quota - storageInfo.used)}</span>
             </div>
             
@@ -68,7 +71,7 @@ export const StorageSection = memo(function StorageSection({
           data-testid="button-clear-storage"
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Clear All Photos
+          {t.settings.storage.clearAllPhotos}
         </Button>
       </CardContent>
     </Card>

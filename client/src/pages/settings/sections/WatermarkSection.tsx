@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
 import type { Settings, ReticleConfig } from "@shared/schema";
 
 interface WatermarkSectionProps {
@@ -18,15 +19,17 @@ export const WatermarkSection = memo(function WatermarkSection({
   updateSettings,
   updateReticle,
 }: WatermarkSectionProps) {
+  const { t } = useI18n();
+  
   return (
     <Card data-testid="section-watermark">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <ImageIcon className="w-5 h-5 text-primary" />
-          Watermark
+          {t.settings.watermark.title}
         </CardTitle>
         <CardDescription>
-          Metadata display on captured photos
+          {t.settings.watermark.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -34,9 +37,9 @@ export const WatermarkSection = memo(function WatermarkSection({
           <Label htmlFor="show-metadata" className="flex items-center gap-2 cursor-pointer">
             <Eye className="w-4 h-4" />
             <div>
-              <span>Show Metadata</span>
+              <span>{t.settings.watermark.showMetadata}</span>
               <p className="text-xs text-muted-foreground font-normal">
-                Display GPS, altitude and orientation on screen
+                {t.settings.watermark.showMetadataDesc}
               </p>
             </div>
           </Label>
@@ -55,7 +58,7 @@ export const WatermarkSection = memo(function WatermarkSection({
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Type className="w-4 h-4" />
-                  Watermark Size
+                  {t.settings.watermark.watermarkSize}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {settings.watermarkScale || 100}%
@@ -70,7 +73,7 @@ export const WatermarkSection = memo(function WatermarkSection({
                 data-testid="slider-watermark-scale"
               />
               <p className="text-xs text-muted-foreground">
-                Size of metadata watermarks on captured photos
+                {t.settings.watermark.watermarkSizeDesc}
               </p>
             </div>
           </>

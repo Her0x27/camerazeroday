@@ -193,7 +193,7 @@ export default function CameraPage() {
         watermarkScale: settings.watermarkScale || 100,
       });
       if (!result) {
-        throw new Error("Failed to capture photo");
+        throw new Error(t.camera.failedToCapture);
       }
 
       const photo: InsertPhoto = {

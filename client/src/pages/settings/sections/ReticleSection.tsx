@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
 import type { Settings, ReticleConfig } from "@shared/schema";
 
 interface ReticleSectionProps {
@@ -16,15 +17,17 @@ export const ReticleSection = memo(function ReticleSection({
   settings,
   updateReticle,
 }: ReticleSectionProps) {
+  const { t } = useI18n();
+  
   return (
     <Card data-testid="section-reticle">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Crosshair className="w-5 h-5 text-primary" />
-          Crosshair
+          {t.settings.crosshair.title}
         </CardTitle>
         <CardDescription>
-          Aiming crosshair display on camera screen
+          {t.settings.crosshair.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -32,9 +35,9 @@ export const ReticleSection = memo(function ReticleSection({
           <Label htmlFor="reticle-enabled" className="flex items-center gap-2 cursor-pointer">
             <Eye className="w-4 h-4" />
             <div>
-              <span>Show Crosshair</span>
+              <span>{t.settings.crosshair.showCrosshair}</span>
               <p className="text-xs text-muted-foreground font-normal">
-                Display crosshair overlay in viewfinder
+                {t.settings.crosshair.showCrosshairDesc}
               </p>
             </div>
           </Label>
@@ -54,7 +57,7 @@ export const ReticleSection = memo(function ReticleSection({
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Crosshair className="w-4 h-4" />
-                  Size
+                  {t.settings.crosshair.size}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {settings.reticle.size}%
@@ -74,7 +77,7 @@ export const ReticleSection = memo(function ReticleSection({
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Crosshair className="w-4 h-4" />
-                  Thickness
+                  {t.settings.crosshair.thickness}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {settings.reticle.strokeWidth || 3}%
@@ -94,7 +97,7 @@ export const ReticleSection = memo(function ReticleSection({
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Eye className="w-4 h-4" />
-                  Opacity
+                  {t.settings.crosshair.opacity}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
                   {settings.reticle.opacity}%
@@ -116,9 +119,9 @@ export const ReticleSection = memo(function ReticleSection({
               <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
                 <Palette className="w-4 h-4" />
                 <div>
-                  <span>Auto Color</span>
+                  <span>{t.settings.crosshair.autoColor}</span>
                   <p className="text-xs text-muted-foreground font-normal">
-                    Adjust crosshair color for better contrast
+                    {t.settings.crosshair.autoColorDesc}
                   </p>
                 </div>
               </Label>

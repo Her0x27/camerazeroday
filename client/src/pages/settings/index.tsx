@@ -129,7 +129,7 @@ export default function SettingsPage() {
 
   const handleValidateApiKey = useCallback(async () => {
     if (!apiKeyInput.trim()) {
-      setValidationError("Please enter API key");
+      setValidationError(t.settings.cloud.pleaseEnterApiKey);
       return;
     }
 
@@ -169,7 +169,7 @@ export default function SettingsPage() {
       if (error instanceof Error && error.name === 'AbortError') {
         return;
       }
-      setValidationError("Key validation error");
+      setValidationError(t.settings.cloud.validationError);
     } finally {
       validationAbortControllerRef.current = null;
       setIsValidating(false);

@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Camera, Settings, Image, Gamepad2, FileText, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 interface CameraControlsProps {
   onCapture: () => void;
@@ -120,6 +121,8 @@ const GalleryButton = memo(function GalleryButton({
   photoCount,
   cloudCount,
 }: GalleryButtonProps) {
+  const { t } = useI18n();
+  
   return (
     <div className="absolute left-4 flex items-center">
       <Button
@@ -132,7 +135,7 @@ const GalleryButton = memo(function GalleryButton({
         {lastPhotoThumb ? (
           <img 
             src={lastPhotoThumb} 
-            alt="Last photo" 
+            alt={t.camera.lastPhoto} 
             className="w-full h-full object-cover opacity-70 rounded-sm"
           />
         ) : (

@@ -12,12 +12,14 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { getPhoto, getPhotoIds, createCleanImageBlob } from "@/lib/db";
 import { usePhotoMutations } from "@/hooks/use-photo-mutations";
+import { useI18n } from "@/lib/i18n";
 import type { Photo } from "@shared/schema";
 
 export default function PhotoDetailPage() {
   const [, params] = useRoute("/photo/:id");
   const [, navigate] = useLocation();
   const { deletePhotoById } = usePhotoMutations();
+  const { t } = useI18n();
   
   const photoId = params?.id;
   
@@ -137,7 +139,7 @@ export default function PhotoDetailPage() {
       
       await navigator.share({
         files: [file],
-        title: "Camera ZeroDay Photo",
+        title: t.photoDetail.shareTitle,
       });
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
@@ -157,12 +159,12 @@ export default function PhotoDetailPage() {
   if (!photo) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <h2 className="text-lg font-semibold mb-2">Photo Not Found</h2>
+        <h2 className="text-lg font-semibold mb-2">{t.photoDetail.photoNotFound}</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          This photo may have been deleted
+          {t.photoDetail.mayHaveBeenDeleted}
         </p>
         <Button onClick={() => navigate("/gallery")} data-testid="button-back-to-gallery">
-          Back to Gallery
+          {t.common.backToGallery}
         </Button>
       </div>
     );
@@ -173,7 +175,7 @@ export default function PhotoDetailPage() {
       {/* Fullscreen photo display */}
       <img
         src={photo.imageData}
-        alt="Photo"
+        alt={t.gallery.photo}
         className="w-full h-full"
         data-testid="photo-image"
       />
@@ -257,9 +259,9 @@ export default function PhotoDetailPage() {
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="Delete Photo?"
-        description="This action cannot be undone. The photo will be permanently removed from your device."
-        confirmText="Delete"
+        title={t.photoDetail.deleteConfirmTitle}
+        description={t.photoDetail.deleteConfirmDescription}
+        confirmText={t.common.delete}
         onConfirm={handleDelete}
         variant="destructive"
         confirmTestId="button-confirm-delete-dialog"

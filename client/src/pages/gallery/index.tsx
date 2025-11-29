@@ -219,7 +219,7 @@ export default function GalleryPage() {
       if (cancelledCount > 0) {
         toast({
           title: t.common.info,
-          description: `Upload cancelled. ${successCount} completed before cancellation.`,
+          description: t.gallery.uploadCancelledPartial.replace("{count}", String(successCount)),
         });
       } else {
         toast({
@@ -231,12 +231,12 @@ export default function GalleryPage() {
       if (error instanceof Error && error.name === 'AbortError') {
         toast({
           title: t.common.info,
-          description: "Upload cancelled",
+          description: t.gallery.uploadCancelled,
         });
       } else {
         toast({
           title: t.common.error,
-          description: error instanceof Error ? error.message : "Unknown error",
+          description: error instanceof Error ? error.message : t.common.unknownError,
           variant: "destructive",
         });
       }
@@ -450,7 +450,7 @@ export default function GalleryPage() {
         open={showClearDialog}
         onOpenChange={setShowClearDialog}
         title={t.gallery.clearAll}
-        description={`This will permanently delete all ${allPhotos.length} photos from your device. This action cannot be undone.`}
+        description={t.gallery.clearAllConfirmDescription.replace("{count}", String(allPhotos.length))}
         confirmText={t.gallery.clearAll}
         onConfirm={handleClearAll}
         variant="destructive"

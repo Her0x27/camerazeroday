@@ -24,9 +24,14 @@ interface GalleryLinksDialogProps {
     gallery: {
       cloudLinks: string;
       getLinks: string;
+      copyAll: string;
+      copyFailed: string;
     };
     common: {
       error: string;
+      close: string;
+      link: string;
+      delete: string;
     };
   };
   toast: (props: { title: string; description: string; variant?: "destructive" }) => void;
@@ -50,11 +55,11 @@ export const GalleryLinksDialog = memo(function GalleryLinksDialog({
     } catch {
       toast({
         title: t.common.error,
-        description: "Failed to copy link",
+        description: t.gallery.copyFailed,
         variant: "destructive",
       });
     }
-  }, [toast, t.common.error]);
+  }, [toast, t.common.error, t.gallery.copyFailed]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,7 +85,7 @@ export const GalleryLinksDialog = memo(function GalleryLinksDialog({
                 className="flex items-center gap-2 hover:bg-muted cursor-pointer rounded p-1 group"
                 onClick={() => handleCopyLink(item.url, item.id)}
               >
-                <span className="text-xs text-muted-foreground w-12">Link:</span>
+                <span className="text-xs text-muted-foreground w-12">{t.common.link}:</span>
                 <span className="flex-1 text-sm truncate font-mono">
                   {item.url}
                 </span>
@@ -94,7 +99,7 @@ export const GalleryLinksDialog = memo(function GalleryLinksDialog({
                 className="flex items-center gap-2 hover:bg-muted cursor-pointer rounded p-1 group"
                 onClick={() => handleCopyLink(item.deleteUrl, `del-${item.id}`)}
               >
-                <span className="text-xs text-destructive w-12">Delete:</span>
+                <span className="text-xs text-destructive w-12">{t.common.delete}:</span>
                 <span className="flex-1 text-xs truncate font-mono text-muted-foreground">
                   {item.deleteUrl}
                 </span>
@@ -114,14 +119,14 @@ export const GalleryLinksDialog = memo(function GalleryLinksDialog({
             onClick={() => onOpenChange(false)}
             data-testid="button-close-links"
           >
-            Close
+            {t.common.close}
           </Button>
           <Button
             onClick={onCopyAllLinks}
             data-testid="button-copy-all-links"
           >
             <Copy className="w-4 h-4 mr-2" />
-            Copy All
+            {t.gallery.copyAll}
           </Button>
         </div>
       </DialogContent>

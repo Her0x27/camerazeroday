@@ -3,6 +3,7 @@ import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reticle } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
+import { useI18n } from "@/lib/i18n";
 import type { ReticleConfig } from "@shared/schema";
 
 interface CameraViewfinderProps {
@@ -81,11 +82,12 @@ export const CameraViewfinder = memo(function CameraViewfinder({
 });
 
 const LoadingOverlay = memo(function LoadingOverlay() {
+  const { t } = useI18n();
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/80">
       <div className="flex flex-col items-center gap-3">
         <Camera className="w-12 h-12 text-primary animate-pulse" />
-        <span className="text-sm text-white/70">Starting camera...</span>
+        <span className="text-sm text-white/70">{t.camera.startingCamera}</span>
       </div>
     </div>
   );
@@ -97,13 +99,14 @@ interface ErrorOverlayProps {
 }
 
 const ErrorOverlay = memo(function ErrorOverlay({ error, onRetry }: ErrorOverlayProps) {
+  const { t } = useI18n();
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/90 p-6">
       <div className="flex flex-col items-center gap-4 text-center max-w-sm">
         <Camera className="w-12 h-12 text-destructive" />
         <span className="text-sm text-white">{error}</span>
         <Button onClick={onRetry} variant="outline" size="sm" data-testid="button-retry-camera">
-          Retry
+          {t.camera.retry}
         </Button>
       </div>
     </div>
