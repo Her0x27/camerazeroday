@@ -42,8 +42,9 @@ export function useOrientation(enabled: boolean = true): UseOrientationReturn {
     let heading = event.alpha;
     
     // For iOS, we need to handle webkitCompassHeading
-    if ((event as any).webkitCompassHeading !== undefined) {
-      heading = (event as any).webkitCompassHeading;
+    const webkitEvent = event as DeviceOrientationEventWithWebkit;
+    if (webkitEvent.webkitCompassHeading !== undefined) {
+      heading = webkitEvent.webkitCompassHeading;
     } else if (heading !== null) {
       // Normalize alpha to compass heading (0 = North)
       heading = (360 - heading) % 360;
@@ -64,8 +65,9 @@ export function useOrientation(enabled: boolean = true): UseOrientationReturn {
 
     try {
       // iOS 13+ requires permission
-      if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
-        const permission = await (DeviceOrientationEvent as any).requestPermission();
+      const DeviceOrientationEventWithPermission = DeviceOrientationEvent as unknown as DeviceOrientationEventStatic;
+      if (typeof DeviceOrientationEventWithPermission.requestPermission === "function") {
+        const permission = await DeviceOrientationEventWithPermission.requestPermission();
         if (permission === "granted") {
           setIsPermissionGranted(true);
           setError(null);

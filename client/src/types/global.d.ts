@@ -30,6 +30,22 @@ interface IDBFactoryWithDatabases extends IDBFactory {
   databases(): Promise<Array<{ name: string; version: number }>>;
 }
 
+interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
+  readonly webkitCompassHeading?: number;
+}
+
+interface DeviceOrientationEventStatic {
+  new(type: string, eventInitDict?: DeviceOrientationEventInit): DeviceOrientationEvent;
+  prototype: DeviceOrientationEvent;
+  requestPermission?: () => Promise<"granted" | "denied">;
+}
+
+interface WebkitAudioContext extends AudioContext {}
+
+interface Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 declare global {
   interface Window {
     __REACT_ROOT__?: import("react-dom/client").Root;

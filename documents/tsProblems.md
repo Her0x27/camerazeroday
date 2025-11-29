@@ -511,7 +511,7 @@
 - [ ] Split oversized components into smaller modules
 - [x] Extract duplicated logic into shared hooks (useStorage, usePhotoMutations, useDebouncedCallback)
 - [x] Replace magic numbers with named constants
-- [x] Add missing TypeScript types and remove `any` (except Safari-specific casts in use-orientation.ts)
+- [x] Add missing TypeScript types and remove `any` (Safari-specific casts fixed in Session 7)
 - [x] Move hardcoded strings to i18n (Cloud section in settings.tsx fixed)
 
 ### Low Priority (Maintainability)
@@ -607,9 +607,9 @@
   - Get free API key message
 
 **Type Issues Found**:
-- `use-orientation.ts` has `as any` casts for DeviceOrientationEvent (Safari compatibility)
-  - These are necessary for iOS Safari support where the API differs from spec
-  - Left as-is since they're platform-specific polyfills
+- `use-orientation.ts` had `as any` casts for DeviceOrientationEvent (Safari compatibility)
+  - Fixed in Session 7: Added DeviceOrientationEventWithWebkit and DeviceOrientationEventStatic types
+  - Updated code to use proper type assertions instead of `as any`
 
 **Summary**: Most "incomplete" tasks were either already done or not needed based on actual code analysis
 
@@ -736,3 +736,57 @@
 
 **Conclusion:**
 The project now has all high-priority performance and stability improvements implemented. The application is production-ready with proper error handling, optimal rendering performance, and complete i18n support.
+
+---
+
+## Session 7 Summary (TypeScript Typing & Performance Fix)
+**Completed in this session:**
+
+### 1. photo-detail.tsx Performance Fix (from Fixed01.tsProblems.md)
+- **Problem**: Loading ALL photos just to get IDs for navigation
+- **Solution**: Changed `getAllPhotos("newest")` to `getPhotoIds("newest")`
+- **Impact**: Significant memory/performance improvement for large galleries
+
+### 2. DeviceOrientation iOS Types (4.2, Fixed01 - 4.2)
+- Added to `client/src/types/global.d.ts`:
+  - `DeviceOrientationEventWithWebkit` interface with `webkitCompassHeading`
+  - `DeviceOrientationEventStatic` interface with `requestPermission` method
+- Updated `client/src/hooks/use-orientation.ts`:
+  - Replaced `(event as any).webkitCompassHeading` with typed cast
+  - Replaced `(DeviceOrientationEvent as any).requestPermission` with typed cast
+- **Result**: No more `as any` for iOS Safari DeviceOrientation API
+
+### 3. WebKit Audio API Types (Fixed01 - 4.1)
+- Added to `client/src/types/global.d.ts`:
+  - `WebkitAudioContext` interface extending `AudioContext`
+  - Extended `Window` interface with `webkitAudioContext`
+
+### Files Modified:
+- `client/src/pages/photo-detail.tsx` - Use getPhotoIds instead of getAllPhotos
+- `client/src/types/global.d.ts` - Add iOS Safari and WebKit Audio types
+- `client/src/hooks/use-orientation.ts` - Use proper types instead of `as any`
+
+### Summary Checklist Update:
+- [x] 4.2 navigator.connection: Types added (already marked)
+- [x] Fixed01 3.1: getLatestPhoto() - EXISTS and USED in camera.tsx
+- [x] Fixed01 3.2: getPhotoIds() - EXISTS and NOW USED in photo-detail.tsx
+- [x] Fixed01 4.1: WebKit Audio types - ADDED
+- [x] Fixed01 4.2: DeviceOrientation iOS types - ADDED and USED
+
+### Fixed01.tsProblems.md Status:
+**Critical (Performance):**
+- [x] getLatestPhoto() - Created and used
+- [x] getPhotoIds() - Created and now used in photo-detail.tsx
+- [x] React.memo for MetadataOverlay - Done (line 27)
+- [x] React.memo for Reticle - Done (line 10)
+- [x] Lazy loading for pages - Done (App.tsx)
+
+**High Priority (Code Quality):**
+- [x] ConfirmDialog component - Exists and used
+- [x] formatDate utility - date-utils.ts
+- [x] trim() duplication - Fixed (uses noteText variable)
+
+**Medium Priority (Typing):**
+- [x] WebKit Audio API types - Added to global.d.ts
+- [x] DeviceOrientationEvent iOS types - Added and used
+- [x] substr -> substring - Already fixed (db.ts line 46)

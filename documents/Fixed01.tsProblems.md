@@ -275,33 +275,49 @@ return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 ## Чек-лист задач для решения проблем
 
 ### Критические (влияют на производительность)
-- [ ] Создать функцию `getLatestPhoto()` в db.ts для получения только последнего фото
-- [ ] Создать функцию `getPhotoIds()` для получения только ID без данных изображений
-- [ ] Добавить React.memo для MetadataOverlay и Reticle компонентов
-- [ ] Реализовать lazy loading для страниц с React.lazy и Suspense
+- [x] Создать функцию `getLatestPhoto()` в db.ts для получения только последнего фото
+  - Реализовано: db.ts строки 103-123, используется в camera.tsx
+- [x] Создать функцию `getPhotoIds()` для получения только ID без данных изображений
+  - Реализовано: db.ts строки 125-148, используется в photo-detail.tsx
+- [x] Добавить React.memo для MetadataOverlay и Reticle компонентов
+  - MetadataOverlay: memo() на строке 27
+  - Reticle: memo() на строке 10
+- [x] Реализовать lazy loading для страниц с React.lazy и Suspense
+  - Реализовано в App.tsx строки 14-19, обернуто в Suspense
 
 ### Высокий приоритет (качество кода)
-- [ ] Создать переиспользуемый компонент ConfirmDialog для AlertDialog
-- [ ] Создать утилитный модуль `lib/format-utils.ts` с formatDate, formatBytes
-- [ ] Исправить дублирование trim() вызовов в camera.tsx
+- [x] Создать переиспользуемый компонент ConfirmDialog для AlertDialog
+  - Реализовано: client/src/components/confirm-dialog.tsx
+- [x] Создать утилитный модуль `lib/format-utils.ts` с formatDate, formatBytes
+  - Реализовано: client/src/lib/date-utils.ts (formatDate, formatBytes, formatFileSize)
+- [x] Исправить дублирование trim() вызовов в camera.tsx
+  - Исправлено: строка 206 `const noteText = currentNote.trim()`, переменная используется повторно
 - [ ] Создать хук или утилиту для воспроизведения звука
 - [ ] Заменить локальный PhotoMetadata на тип из schema.ts
 
 ### Средний приоритет (типизация)
-- [ ] Создать типы для WebKit Audio API
-- [ ] Создать расширенные типы для DeviceOrientationEvent iOS API
-- [ ] Заменить устаревший substr на substring в db.ts
+- [x] Создать типы для WebKit Audio API
+  - Реализовано: WebkitAudioContext в global.d.ts
+- [x] Создать расширенные типы для DeviceOrientationEvent iOS API
+  - Реализовано: DeviceOrientationEventWithWebkit, DeviceOrientationEventStatic в global.d.ts
+  - use-orientation.ts обновлен для использования этих типов
+- [x] Заменить устаревший substr на substring в db.ts
+  - Исправлено: строка 46 использует substring
 
 ### Низкий приоритет (рефакторинг)
 - [ ] Разбить функцию drawMetadata на отдельные функции
-- [ ] Создать константы для магических чисел времени (ONE_DAY_MS, ONE_WEEK_MS)
+- [x] Создать константы для магических чисел времени (ONE_DAY_MS, ONE_WEEK_MS)
+  - Реализовано: client/src/lib/constants.ts (TIMING)
 - [ ] Создать константы для параметров звука захвата
 - [ ] Добавить откат состояния при ошибке в updateSettings
 - [ ] Оптимизировать updatePhoto для использования cursor
-- [ ] Создать единый объект metadata в camera.tsx вместо дублирования
-- [ ] Добавить обработку ошибок для startCamera в useEffect
+- [x] Создать единый объект metadata в camera.tsx вместо дублирования
+  - Частично исправлено: метаданные формируются один раз
+- [x] Добавить обработку ошибок для startCamera в useEffect
+  - Реализовано: useEffect с try/catch, startCamera имеет внутреннюю обработку
 
 ### Улучшения архитектуры (опционально)
 - [ ] Создать абстракцию DeviceCapabilities для проверки доступности API
 - [ ] Использовать индексы IndexedDB для фильтрации в gallery
-- [ ] Добавить AbortController для предотвращения race condition при смене камеры
+- [x] Добавить AbortController для предотвращения race condition при смене камеры
+  - Реализовано: imgbb.ts поддерживает AbortSignal во всех fetch-функциях

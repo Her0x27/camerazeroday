@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { getPhoto, getAllPhotos, createCleanImageBlob } from "@/lib/db";
+import { getPhoto, getPhotoIds, createCleanImageBlob } from "@/lib/db";
 import { usePhotoMutations } from "@/hooks/use-photo-mutations";
 import type { Photo } from "@shared/schema";
 
@@ -33,16 +33,16 @@ export default function PhotoDetailPage() {
       
       setIsLoading(true);
       try {
-        const [loadedPhoto, photos] = await Promise.all([
+        const [loadedPhoto, photoIds] = await Promise.all([
           getPhoto(photoId),
-          getAllPhotos("newest"),
+          getPhotoIds("newest"),
         ]);
         
         if (loadedPhoto) {
           setPhoto(loadedPhoto);
         }
         
-        setAllPhotoIds(photos.map((p) => p.id));
+        setAllPhotoIds(photoIds);
       } catch (error) {
         console.error("Load error:", error);
       } finally {
