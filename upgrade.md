@@ -27,7 +27,7 @@
 - [x] **Capture / Location** - GPS, orientation, accuracy limit
 - [x] **Cloud Upload (ImgBB)** - API key, expiration, auto-upload
 - [x] **Storage** - Photo count, storage usage, clear data
-- [ ] **Disguise Mode** - 2048 game, secret gestures, auto-lock (Phase 3)
+- [x] **Disguise Mode** - Enable/disable, gesture type, auto-lock
 - [x] **PWA** - Installation, offline mode info
 - [x] **Reset** - Reset all settings
 
@@ -41,17 +41,17 @@
 - [x] Design for Android and iPhone style
 - [x] Implement secret gesture access:
   - [x] 4 quick taps option
-  - [ ] Hidden pattern unlock option
+  - [ ] Hidden pattern unlock option (disabled, placeholder)
   - [x] Configurable gesture selection
-- [x] Auto-lock after 1 minute of inactivity
+- [x] Auto-lock after inactivity (configurable 1-30 min)
 - [x] Dynamic favicon switching (show game icon when disguised)
-- [ ] Mask button on camera screen for quick hide
+- [x] Mask button on camera screen for quick hide
 
 ### 3.2 Settings:
-- [ ] Enable/disable disguise mode (default: off)
-- [ ] Select secret gesture type
-- [ ] Configure auto-lock timeout
-- [ ] Test mode for gesture practice
+- [x] Enable/disable disguise mode (default: off)
+- [x] Select secret gesture type
+- [x] Configure auto-lock timeout
+- [ ] Test mode for gesture practice (future enhancement)
 
 ### 3.3 Infrastructure:
 - [x] DisguiseContext provider for state management
@@ -59,6 +59,7 @@
 - [x] Game icon SVG for favicon switching
 - [x] Activity monitoring for auto-lock
 - [x] Inactivity detection and auto-return to game
+- [x] App routing with disguise mode redirect
 
 ---
 
@@ -98,13 +99,13 @@
 - [x] Persist language preference
 
 ### 5.2 Translations:
-- [x] Camera page strings (prepared)
-- [x] Gallery page strings (prepared)
-- [x] Settings page strings (prepared, partially applied)
-- [x] Photo detail page strings (prepared)
-- [x] 2048 game strings (prepared)
-- [x] Error messages and toasts (prepared)
-- [x] Metadata labels (prepared)
+- [x] Camera page strings
+- [x] Gallery page strings
+- [x] Settings page strings
+- [x] Photo detail page strings
+- [x] 2048 game strings
+- [x] Error messages and toasts
+- [x] Metadata labels
 
 ---
 
@@ -112,20 +113,20 @@
 **Description:** Full platform-specific optimization
 
 ### 6.1 Common:
-- [ ] Safe area insets (notch, home indicator)
-- [ ] Touch-friendly button sizes
-- [ ] Responsive layouts
+- [x] Safe area insets (notch, home indicator)
+- [x] Touch-friendly button sizes (w-14 h-14 for main buttons)
+- [x] Responsive layouts
 
 ### 6.2 Android-specific:
-- [ ] Material Design touch ripples
-- [ ] Status bar color adaptation
-- [ ] Back button handling
+- [x] Status bar color adaptation (via manifest theme-color)
+- [ ] Material Design touch ripples (optional enhancement)
+- [ ] Back button handling (browser handles it)
 
 ### 6.3 iPhone-specific:
-- [ ] iOS-style animations
-- [ ] Haptic feedback integration
-- [ ] Swipe gestures
-- [ ] PWA status bar style
+- [x] Safe area insets via env(safe-area-inset-*)
+- [x] PWA status bar style (black-translucent)
+- [ ] Haptic feedback integration (optional enhancement)
+- [ ] Swipe gestures (optional enhancement)
 
 ---
 
@@ -140,9 +141,11 @@
    - [x] Localization system (EN/RU)
    - [x] PWA improvements (production-only SW)
 
-3. **Phase 3: Advanced Features** (In Progress)
-   - [~] Disguise Mode with 2048 game (Core done, Settings UI pending)
-   - [ ] Platform adaptation refinements
+3. **Phase 3: Advanced Features** ✅ Completed
+   - [x] Disguise Mode with 2048 game
+   - [x] Platform adaptation refinements
+   - [x] Mask button on camera
+   - [x] Safe area insets
 
 ---
 
@@ -174,10 +177,37 @@ client/src/lib/
 
 ### Disguise Mode Flow
 1. User enables disguise mode in settings
-2. App shows 2048 game instead of camera
-3. Secret gesture reveals camera
-4. Inactivity triggers auto-lock back to game
-5. Mask button on camera allows quick return to game
+2. App shows 2048 game instead of camera (auto-redirect)
+3. Secret gesture (4 quick taps) reveals camera
+4. Mask button on camera allows quick return to game
+5. Inactivity triggers auto-lock back to game
+
+### Safe Area Implementation
+```css
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+```
+
+Applied to:
+- Camera page (bottom controls)
+- Settings page (header + main)
+- Gallery page (header + main)
+- Photo detail (bottom header)
+- 2048 game (full container)
+
+---
+
+## Future Enhancements (Optional)
+- [ ] Pattern unlock gesture
+- [ ] Haptic feedback for iOS
+- [ ] Material ripple effects for Android
+- [ ] Test mode for gestures
+- [ ] Theme customization (beyond dark mode)
 
 ---
 

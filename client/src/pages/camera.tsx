@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText, Cloud } from "lucide-react";
+import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText, Cloud, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { useCamera } from "@/hooks/use-camera";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
+import { useDisguise } from "@/lib/disguise-context";
 import { Reticle, getContrastingColor } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
 import { savePhoto, getPhotoCounts, getLatestPhoto, updatePhoto } from "@/lib/db";
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function CameraPage() {
   const [, navigate] = useLocation();
   const { settings } = useSettings();
+  const { settings: disguiseSettings, hideCamera, resetInactivityTimer } = useDisguise();
   const { toast } = useToast();
   
   const [photoCount, setPhotoCount] = useState(0);
@@ -99,6 +101,19 @@ export default function CameraPage() {
       await requestOrientationPermission();
     }
   }, [settings.orientationEnabled, orientationSupported, requestOrientationPermission]);
+
+  // Handle mask button - hide camera and show game
+  const handleMask = useCallback(() => {
+    hideCamera();
+    navigate("/disguise-game");
+  }, [hideCamera, navigate]);
+
+  // Reset inactivity timer on any interaction
+  useEffect(() => {
+    if (disguiseSettings.enabled) {
+      resetInactivityTimer();
+    }
+  }, [disguiseSettings.enabled, resetInactivityTimer]);
 
   // Auto-color sampling for reticle
   useEffect(() => {
@@ -412,8 +427,21 @@ export default function CameraPage() {
             </Button>
           </div>
 
-          {/* Right side - Note and Settings (absolute) */}
+          {/* Right side - Mask, Note and Settings (absolute) */}
           <div className="absolute right-4 flex items-center gap-2">
+            {/* Mask button - only show when disguise mode is enabled */}
+            {disguiseSettings.enabled && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-md bg-amber-500/30 text-amber-400 hover:bg-amber-500/50 aspect-square w-14 h-14"
+                onClick={handleMask}
+                data-testid="button-mask"
+              >
+                <Gamepad2 className="w-7 h-7" />
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon"

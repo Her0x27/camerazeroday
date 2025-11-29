@@ -31,7 +31,7 @@ import {
   WifiOff,
   Share2,
   Gamepad2,
-  Finger,
+  Hand,
   Clock3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -750,7 +750,7 @@ export default function SettingsPage() {
                 {/* Secret Gesture */}
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
-                    <Finger className="w-4 h-4" />
+                    <Hand className="w-4 h-4" />
                     {t.settings.disguise.secretGesture}
                   </Label>
                   <Select

@@ -289,7 +289,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', onActivit
   return (
     <div 
       ref={containerRef}
-      className="flex flex-col items-center justify-center min-h-screen bg-background p-4 select-none touch-none"
+      className="flex flex-col items-center justify-center min-h-screen bg-background p-4 select-none touch-none safe-top safe-bottom"
       onClick={handleSecretTap}
       data-testid="game-2048-container"
     >

@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Switch, Route } from "wouter";
+import { useState, useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/lib/settings-context";
 import { I18nProvider } from "@/lib/i18n";
-import { DisguiseProvider } from "@/lib/disguise-context";
+import { DisguiseProvider, useDisguise } from "@/lib/disguise-context";
 import { SplashScreen } from "@/components/splash-screen";
 
 import CameraPage from "@/pages/camera";
@@ -16,16 +16,31 @@ import SettingsPage from "@/pages/settings";
 import DisguiseGamePage from "@/pages/disguise-game";
 import NotFound from "@/pages/not-found";
 
+function DisguiseRedirect({ children }: { children: React.ReactNode }) {
+  const [location, navigate] = useLocation();
+  const { settings, isDisguised } = useDisguise();
+  
+  useEffect(() => {
+    if (settings.enabled && isDisguised && location === "/") {
+      navigate("/disguise-game");
+    }
+  }, [settings.enabled, isDisguised, location, navigate]);
+  
+  return <>{children}</>;
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={CameraPage} />
-      <Route path="/gallery" component={GalleryPage} />
-      <Route path="/photo/:id" component={PhotoDetailPage} />
-      <Route path="/settings" component={SettingsPage} />
-      <Route path="/disguise-game" component={DisguiseGamePage} />
-      <Route component={NotFound} />
-    </Switch>
+    <DisguiseRedirect>
+      <Switch>
+        <Route path="/" component={CameraPage} />
+        <Route path="/gallery" component={GalleryPage} />
+        <Route path="/photo/:id" component={PhotoDetailPage} />
+        <Route path="/settings" component={SettingsPage} />
+        <Route path="/disguise-game" component={DisguiseGamePage} />
+        <Route component={NotFound} />
+      </Switch>
+    </DisguiseRedirect>
   );
 }
 
