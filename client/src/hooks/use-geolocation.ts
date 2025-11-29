@@ -32,7 +32,6 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   const [error, setError] = useState<string | null>(null);
   const [isWatching, setIsWatching] = useState(false);
   const watchIdRef = useRef<number | null>(null);
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSuccess = useCallback((position: GeolocationPosition) => {
     setData({
@@ -67,7 +66,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
 
   const positionOptions: PositionOptions = {
     enableHighAccuracy: true,
-    timeout: 300000,
+    timeout: 10000,
     maximumAge: 0,
   };
 
@@ -77,7 +76,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
       return;
     }
 
-    if (watchIdRef.current !== null || intervalIdRef.current !== null) return;
+    if (watchIdRef.current !== null) return;
 
     setIsLoading(true);
     setIsWatching(true);
@@ -87,24 +86,12 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
       handleError,
       positionOptions
     );
-
-    intervalIdRef.current = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        handleSuccess,
-        handleError,
-        positionOptions
-      );
-    }, 1000);
   }, [enabled, handleSuccess, handleError]);
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
-    }
-    if (intervalIdRef.current !== null) {
-      clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
     }
     setIsWatching(false);
   }, []);
