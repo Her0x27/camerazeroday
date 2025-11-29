@@ -148,21 +148,14 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   };
 }
 
-// Format coordinates for display in DMS (degrees, minutes, seconds) format
+// Format coordinates for display in decimal degrees format
 export function formatCoordinate(value: number | null, type: "lat" | "lon"): string {
   if (value === null) return "---°--'--\"";
   
-  const abs = Math.abs(value);
-  const degrees = Math.floor(abs);
-  const minutesDecimal = (abs - degrees) * 60;
-  const minutes = Math.floor(minutesDecimal);
-  const seconds = ((minutesDecimal - minutes) * 60).toFixed(2);
+  const formatted = value.toFixed(5);
+  const sign = value >= 0 ? "+" : "";
   
-  const direction = type === "lat" 
-    ? (value >= 0 ? "N" : "S")
-    : (value >= 0 ? "E" : "W");
-  
-  return `${degrees}°${minutes.toString().padStart(2, '0')}'${seconds.padStart(5, '0')}"${direction}`;
+  return `${sign}${formatted}`;
 }
 
 // Format altitude for display with precision
