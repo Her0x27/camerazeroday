@@ -359,13 +359,6 @@ export default function PhotoDetailPage() {
             </p>
           )}
         </Card>
-
-        {/* Reticle info if available */}
-        {photo.reticleType && photo.reticleType !== "none" && (
-          <div className="text-xs text-muted-foreground">
-            Captured with {photo.reticleType} reticle
-          </div>
-        )}
       </div>
 
       {/* Delete confirmation dialog */}
