@@ -65,7 +65,7 @@ export const MetadataOverlay = memo(function MetadataOverlay({
 
   return (
     <>
-      <div className="absolute below-topbar left-4 z-20" style={scaleStyle}>
+      <div className="absolute top-4 left-4 z-20 safe-top" style={scaleStyle}>
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           <div className="flex items-center gap-2">
             <MapPin className={`w-3.5 h-3.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
@@ -111,7 +111,7 @@ export const MetadataOverlay = memo(function MetadataOverlay({
         </div>
       </div>
 
-      <div className="absolute below-topbar right-4 z-20" style={scaleStyleRight}>
+      <div className="absolute top-4 right-4 z-20 safe-top" style={scaleStyleRight}>
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           <div className="flex items-center gap-2">
             <Compass className={`w-3.5 h-3.5 ${hasOrientation ? "text-primary" : "text-muted-foreground"}`} />

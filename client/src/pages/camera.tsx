@@ -292,64 +292,32 @@ export default function CameraPage() {
             accuracyLimit={settings.accuracyLimit || 20}
           />
         )}
-
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 safe-top z-10">
-          <div className="flex items-center justify-center gap-4 px-4 py-3">
-            {/* App branding */}
-            <div className="flex items-center gap-2">
-              <Crosshair className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-white text-sm tracking-wide">ZERODAY</span>
-            </div>
-
-            {/* Status indicators */}
-            <div className="flex items-center gap-3">
-              {/* Online/Offline indicator */}
-              {isOnline ? (
-                <Wifi className="w-4 h-4 text-primary" />
-              ) : (
-                <WifiOff className="w-4 h-4 text-muted-foreground" />
-              )}
-
-              {/* Settings button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-9 h-9 bg-black/40 backdrop-blur-sm text-white hover:bg-black/60"
-                onClick={() => navigate("/settings")}
-                data-testid="button-settings"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Bottom controls */}
       <div className="bg-black/80 backdrop-blur-sm safe-bottom z-10">
-        <div className="flex items-center justify-center gap-[5%] px-[5%] py-2 h-20">
-          {/* Gallery button */}
+        <div className="flex items-center justify-between px-[5%] py-2 h-20">
+          {/* Left side - Gallery */}
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square flex-1 max-w-[22%]"
+            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
             onClick={() => navigate("/gallery")}
             data-testid="button-gallery"
           >
-            <Image className="w-[50%] h-[50%]" />
+            <Image className="w-7 h-7" />
             {photoCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-[20%] min-w-5 h-[20%] min-h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center px-1">
                 {photoCount > 99 ? "99+" : photoCount}
               </span>
             )}
           </Button>
 
-          {/* Capture button */}
+          {/* Center - Capture button */}
           <button
             onClick={handleCapture}
             disabled={!isReady || isCapturing || accuracyBlocked}
-            className={`aspect-square flex-1 max-w-20 rounded-full border-3 flex items-center justify-center transition-all overflow-hidden ${
+            className={`aspect-square w-16 h-16 rounded-full border-3 flex items-center justify-center transition-all overflow-hidden ${
               accuracyBlocked
                 ? "border-red-500/50 bg-red-500/10"
                 : isReady && !isCapturing
@@ -381,19 +349,31 @@ export default function CameraPage() {
             )}
           </button>
 
-          {/* Note button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square flex-1 max-w-[22%]"
-            onClick={() => setShowNoteDialog(true)}
-            data-testid="button-note"
-          >
-            <FileText className="w-[50%] h-[50%]" />
-            {currentNote && (
-              <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
-            )}
-          </Button>
+          {/* Right side - Note and Settings */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
+              onClick={() => setShowNoteDialog(true)}
+              data-testid="button-note"
+            >
+              <FileText className="w-7 h-7" />
+              {currentNote && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-md bg-card/50 text-white hover:bg-card aspect-square w-14 h-14"
+              onClick={() => navigate("/settings")}
+              data-testid="button-settings"
+            >
+              <Settings className="w-7 h-7" />
+            </Button>
+          </div>
         </div>
       </div>
 
