@@ -277,9 +277,24 @@ export default function CameraPage() {
         {/* Reticle overlay */}
         {isReady && <Reticle config={settings.reticle} dynamicColor={reticleColor} />}
 
-        {/* Top bar and metadata container */}
+        {/* Metadata overlay */}
+        {isReady && (
+          <MetadataOverlay
+            latitude={geoData.latitude}
+            longitude={geoData.longitude}
+            altitude={geoData.altitude}
+            accuracy={geoData.accuracy}
+            heading={orientationData.heading}
+            tilt={orientationData.tilt}
+            showMetadata={settings.reticle.showMetadata}
+            lastUpdate={geoData.lastUpdate}
+            scale={settings.watermarkScale || 100}
+            accuracyLimit={settings.accuracyLimit || 20}
+          />
+        )}
+
+        {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 safe-top z-10">
-          {/* Top bar */}
           <div className="flex items-center justify-center gap-4 px-4 py-3">
             {/* App branding */}
             <div className="flex items-center gap-2">
@@ -308,22 +323,6 @@ export default function CameraPage() {
               </Button>
             </div>
           </div>
-
-          {/* Metadata overlay - positioned relative to top bar */}
-          {isReady && (
-            <MetadataOverlay
-              latitude={geoData.latitude}
-              longitude={geoData.longitude}
-              altitude={geoData.altitude}
-              accuracy={geoData.accuracy}
-              heading={orientationData.heading}
-              tilt={orientationData.tilt}
-              showMetadata={settings.reticle.showMetadata}
-              lastUpdate={geoData.lastUpdate}
-              scale={settings.watermarkScale || 100}
-              accuracyLimit={settings.accuracyLimit || 20}
-            />
-          )}
         </div>
       </div>
 

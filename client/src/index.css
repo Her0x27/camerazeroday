@@ -276,6 +276,11 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   
+  /* Position below top bar with safe-area consideration */
+  .below-topbar {
+    top: calc(env(safe-area-inset-top, 0px) + 3.25rem);
+  }
+  
   /* Camera viewfinder styling */
   .viewfinder-overlay {
     background: linear-gradient(
