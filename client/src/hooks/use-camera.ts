@@ -4,7 +4,7 @@ interface UseCameraOptions {
   facingMode?: "user" | "environment";
 }
 
-interface CapturePhotoOptions {
+interface PhotoMetadata {
   latitude?: number | null;
   longitude?: number | null;
   altitude?: number | null;
@@ -23,7 +23,7 @@ interface UseCameraReturn {
   error: string | null;
   startCamera: () => Promise<void>;
   stopCamera: () => void;
-  capturePhoto: (options?: CapturePhotoOptions) => Promise<{ imageData: string; thumbnailData: string } | null>;
+  capturePhoto: (metadata?: PhotoMetadata) => Promise<{ imageData: string; thumbnailData: string } | null>;
   switchCamera: () => Promise<void>;
   currentFacing: "user" | "environment";
 }
@@ -102,7 +102,69 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     }
   }, [currentFacing]);
 
-  const capturePhoto = useCallback(async (options?: CapturePhotoOptions): Promise<{ imageData: string; thumbnailData: string } | null> => {
+  const drawMetadata = (ctx: CanvasRenderingContext2D, width: number, height: number, metadata?: PhotoMetadata) => {
+    if (!metadata) return;
+    
+    const padding = Math.ceil(width * 0.02);
+    const fontSize = Math.ceil(height * 0.035);
+    const lineHeight = fontSize * 1.3;
+    
+    ctx.font = `bold ${fontSize}px monospace`;
+    ctx.fillStyle = "rgba(34, 197, 94, 0.85)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+    ctx.lineWidth = 2.5;
+    ctx.textBaseline = "top";
+    
+    let y = padding;
+    
+    if (metadata.timestamp) {
+      const date = new Date(metadata.timestamp);
+      const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      ctx.strokeText(timeStr, padding, y);
+      ctx.fillText(timeStr, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.latitude !== null && metadata.latitude !== undefined && metadata.longitude !== null && metadata.longitude !== undefined) {
+      ctx.strokeText(`LAT: ${metadata.latitude.toFixed(6)}°`, padding, y);
+      ctx.fillText(`LAT: ${metadata.latitude.toFixed(6)}°`, padding, y);
+      y += lineHeight;
+      ctx.strokeText(`LON: ${metadata.longitude.toFixed(6)}°`, padding, y);
+      ctx.fillText(`LON: ${metadata.longitude.toFixed(6)}°`, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.altitude !== null && metadata.altitude !== undefined) {
+      ctx.strokeText(`ALT: ${Math.round(metadata.altitude)}m`, padding, y);
+      ctx.fillText(`ALT: ${Math.round(metadata.altitude)}m`, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.accuracy !== null && metadata.accuracy !== undefined) {
+      ctx.strokeText(`ACC: ${Math.round(metadata.accuracy)}m`, padding, y);
+      ctx.fillText(`ACC: ${Math.round(metadata.accuracy)}m`, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.heading !== null && metadata.heading !== undefined) {
+      ctx.strokeText(`HDG: ${Math.round(metadata.heading)}°`, padding, y);
+      ctx.fillText(`HDG: ${Math.round(metadata.heading)}°`, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.tilt !== null && metadata.tilt !== undefined) {
+      ctx.strokeText(`TILT: ${Math.round(metadata.tilt)}°`, padding, y);
+      ctx.fillText(`TILT: ${Math.round(metadata.tilt)}°`, padding, y);
+      y += lineHeight;
+    }
+    
+    if (metadata.note && metadata.note.trim()) {
+      ctx.strokeText(`NOTE: ${metadata.note}`, padding, y);
+      ctx.fillText(`NOTE: ${metadata.note}`, padding, y);
+    }
+  };
+
+  const capturePhoto = useCallback(async (metadata?: PhotoMetadata): Promise<{ imageData: string; thumbnailData: string } | null> => {
     if (!videoRef.current || !canvasRef.current || !isReady) {
       return null;
     }
@@ -113,91 +175,14 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
     if (!ctx) return null;
 
-    // Set canvas to video dimensions
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Draw video frame to canvas
     ctx.drawImage(video, 0, 0);
+    drawMetadata(ctx, canvas.width, canvas.height, metadata);
 
-    // Draw metadata text if provided
-    if (options) {
-      const padding = Math.ceil(canvas.width * 0.02);
-      const fontSize = Math.ceil(canvas.height * 0.04);
-      const lineHeight = Math.ceil(fontSize * 1.2);
-      
-      ctx.font = `${fontSize}px monospace`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.lineWidth = 2;
-      ctx.textBaseline = "top";
-      
-      let y = padding;
-      
-      // Timestamp
-      if (options.timestamp) {
-        const date = new Date(options.timestamp);
-        const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        ctx.strokeText(timeStr, padding, y);
-        ctx.fillText(timeStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // GPS Coordinates
-      if (options.latitude !== null && options.latitude !== undefined && options.longitude !== null && options.longitude !== undefined) {
-        const latStr = `LAT: ${options.latitude.toFixed(6)}°`;
-        const lonStr = `LON: ${options.longitude.toFixed(6)}°`;
-        ctx.strokeText(latStr, padding, y);
-        ctx.fillText(latStr, padding, y);
-        y += lineHeight;
-        ctx.strokeText(lonStr, padding, y);
-        ctx.fillText(lonStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // Altitude
-      if (options.altitude !== null && options.altitude !== undefined) {
-        const altStr = `ALT: ${Math.round(options.altitude)} m`;
-        ctx.strokeText(altStr, padding, y);
-        ctx.fillText(altStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // GPS Accuracy
-      if (options.accuracy !== null && options.accuracy !== undefined) {
-        const accStr = `ACC: ${Math.round(options.accuracy)} m`;
-        ctx.strokeText(accStr, padding, y);
-        ctx.fillText(accStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // Heading
-      if (options.heading !== null && options.heading !== undefined) {
-        const headStr = `HDG: ${Math.round(options.heading)}°`;
-        ctx.strokeText(headStr, padding, y);
-        ctx.fillText(headStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // Tilt
-      if (options.tilt !== null && options.tilt !== undefined) {
-        const tiltStr = `TILT: ${Math.round(options.tilt)}°`;
-        ctx.strokeText(tiltStr, padding, y);
-        ctx.fillText(tiltStr, padding, y);
-        y += lineHeight;
-      }
-      
-      // Note
-      if (options.note && options.note.trim()) {
-        ctx.strokeText(`NOTE: ${options.note}`, padding, y);
-        ctx.fillText(`NOTE: ${options.note}`, padding, y);
-      }
-    }
-
-    // Get full resolution image
     const imageData = canvas.toDataURL("image/jpeg", 0.92);
 
-    // Create thumbnail
     const thumbCanvas = document.createElement("canvas");
     const thumbCtx = thumbCanvas.getContext("2d");
     const thumbSize = 300;
@@ -213,6 +198,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
     if (thumbCtx) {
       thumbCtx.drawImage(video, 0, 0, thumbCanvas.width, thumbCanvas.height);
+      drawMetadata(thumbCtx, thumbCanvas.width, thumbCanvas.height, metadata);
     }
 
     const thumbnailData = thumbCanvas.toDataURL("image/jpeg", 0.7);
