@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { formatCoordinate, formatAltitude, formatAccuracy } from "./use-geolocation";
 import { formatHeading, getCardinalDirection, formatTilt } from "./use-orientation";
+import type { ReticleConfig } from "@shared/schema";
 
 interface UseCameraOptions {
   facingMode?: "user" | "environment";
@@ -15,6 +16,7 @@ interface PhotoMetadata {
   tilt?: number | null;
   note?: string;
   timestamp?: number;
+  reticleConfig?: ReticleConfig;
 }
 
 interface UseCameraReturn {
@@ -104,86 +106,431 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     }
   }, [currentFacing]);
 
+  // Icon drawing helper functions
+  const drawMapPinIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = size * 0.12;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const r = size * 0.35;
+    
+    // Draw pin body (teardrop shape)
+    ctx.beginPath();
+    ctx.arc(cx, cy - size * 0.1, r, Math.PI * 0.2, Math.PI * 0.8, true);
+    ctx.lineTo(cx, cy + size * 0.4);
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Draw inner circle
+    ctx.beginPath();
+    ctx.arc(cx, cy - size * 0.1, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  const drawMountainIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.12;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.1, y + size * 0.8);
+    ctx.lineTo(x + size * 0.4, y + size * 0.2);
+    ctx.lineTo(x + size * 0.55, y + size * 0.45);
+    ctx.lineTo(x + size * 0.7, y + size * 0.25);
+    ctx.lineTo(x + size * 0.9, y + size * 0.8);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const drawSignalIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.fillStyle = color;
+    
+    const barWidth = size * 0.18;
+    const gap = size * 0.08;
+    const heights = [0.3, 0.5, 0.7, 0.9];
+    
+    heights.forEach((h, i) => {
+      const barX = x + i * (barWidth + gap) + size * 0.1;
+      const barHeight = size * h;
+      const barY = y + size - barHeight - size * 0.05;
+      ctx.fillRect(barX, barY, barWidth, barHeight);
+    });
+    ctx.restore();
+  };
+
+  const drawCompassIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = size * 0.1;
+    
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const r = size * 0.4;
+    
+    // Draw circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Draw north arrow
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 0.7);
+    ctx.lineTo(cx - r * 0.25, cy + r * 0.3);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + r * 0.25, cy + r * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  };
+
+  const drawTargetIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.1;
+    ctx.lineCap = "round";
+    
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const r = size * 0.35;
+    
+    // Draw circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Draw crosshair
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 1.3, cy);
+    ctx.lineTo(cx + r * 1.3, cy);
+    ctx.moveTo(cx, cy - r * 1.3);
+    ctx.lineTo(cx, cy + r * 1.3);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const drawFileTextIcon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.1;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    // Draw file outline
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.2, y + size * 0.1);
+    ctx.lineTo(x + size * 0.6, y + size * 0.1);
+    ctx.lineTo(x + size * 0.8, y + size * 0.3);
+    ctx.lineTo(x + size * 0.8, y + size * 0.9);
+    ctx.lineTo(x + size * 0.2, y + size * 0.9);
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Draw fold
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.6, y + size * 0.1);
+    ctx.lineTo(x + size * 0.6, y + size * 0.3);
+    ctx.lineTo(x + size * 0.8, y + size * 0.3);
+    ctx.stroke();
+    
+    // Draw lines
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.3, y + size * 0.5);
+    ctx.lineTo(x + size * 0.7, y + size * 0.5);
+    ctx.moveTo(x + size * 0.3, y + size * 0.7);
+    ctx.lineTo(x + size * 0.7, y + size * 0.7);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const drawRoundedRectPath = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+  };
+
   const drawMetadata = (ctx: CanvasRenderingContext2D, width: number, height: number, metadata?: PhotoMetadata) => {
     if (!metadata) return;
     
-    const padding = Math.ceil(width * 0.02);
-    const fontSize = Math.ceil(height * 0.028);
-    const lineHeight = fontSize * 1.4;
-    const topOffset = Math.ceil(height * 0.08);
+    const reticleConfig = metadata.reticleConfig;
+    const minDimension = Math.min(width, height);
+    const padding = Math.ceil(minDimension * 0.015);
+    const fontSize = Math.ceil(minDimension * 0.022);
+    const lineHeight = fontSize * 1.6;
+    const topOffset = Math.ceil(minDimension * 0.08);
+    const iconSize = Math.ceil(fontSize * 1.1);
+    const iconGap = Math.ceil(fontSize * 0.5);
     
-    // Draw crosshair in center
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const reticleSize = Math.ceil(Math.min(width, height) * 0.08);
-    
-    ctx.strokeStyle = "rgba(34, 197, 94, 0.7)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(centerX - reticleSize, centerY);
-    ctx.lineTo(centerX + reticleSize, centerY);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY - reticleSize);
-    ctx.lineTo(centerX, centerY + reticleSize);
-    ctx.stroke();
-    
-    ctx.font = `${fontSize}px monospace`;
-    ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.lineWidth = 1.5;
-    ctx.textBaseline = "top";
-    
-    // LEFT PANEL - GPS Data
-    let yLeft = topOffset;
-    const leftX = padding;
-    
-    if (metadata.latitude !== null && metadata.latitude !== undefined && metadata.longitude !== null && metadata.longitude !== undefined) {
-      ctx.strokeText(formatCoordinate(metadata.latitude, "lat"), leftX, yLeft);
-      ctx.fillText(formatCoordinate(metadata.latitude, "lat"), leftX, yLeft);
-      yLeft += lineHeight;
-      ctx.strokeText(formatCoordinate(metadata.longitude, "lon"), leftX, yLeft);
-      ctx.fillText(formatCoordinate(metadata.longitude, "lon"), leftX, yLeft);
-      yLeft += lineHeight;
+    // Draw crosshair in center - using reticle config settings
+    if (reticleConfig?.enabled !== false) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const baseSize = reticleConfig?.size || 120;
+      const sizeRatio = baseSize / 120;
+      const reticleSize = Math.ceil(minDimension * 0.08 * sizeRatio);
+      
+      const opacity = reticleConfig?.opacity ? reticleConfig.opacity / 100 : 0.7;
+      const greenColor = `rgba(34, 197, 94, ${opacity})`;
+      
+      ctx.strokeStyle = greenColor;
+      ctx.lineWidth = Math.max(2, Math.ceil(minDimension * 0.002));
+      ctx.lineCap = "round";
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX - reticleSize, centerY);
+      ctx.lineTo(centerX + reticleSize, centerY);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - reticleSize);
+      ctx.lineTo(centerX, centerY + reticleSize);
+      ctx.stroke();
     }
     
-    if (metadata.altitude !== null && metadata.altitude !== undefined) {
-      ctx.strokeText(formatAltitude(metadata.altitude), leftX, yLeft);
-      ctx.fillText(formatAltitude(metadata.altitude), leftX, yLeft);
-      yLeft += lineHeight;
+    // Draw metadata only if enabled in reticle config
+    if (reticleConfig?.showMetadata !== false) {
+      const greenColor = "rgba(34, 197, 94, 0.9)";
+      const dimColor = "rgba(107, 114, 128, 0.9)";
+      const bgColor = "rgba(0, 0, 0, 0.6)";
+      const separatorColor = "rgba(255, 255, 255, 0.1)";
+      const boxPadding = Math.ceil(fontSize * 0.6);
+      const boxRadius = Math.ceil(fontSize * 0.35);
+      
+      ctx.font = `${fontSize}px monospace`;
+      ctx.textBaseline = "top";
+      
+      const hasLocation = metadata.latitude !== null && metadata.latitude !== undefined && 
+                         metadata.longitude !== null && metadata.longitude !== undefined;
+      const hasAltitude = metadata.altitude !== null && metadata.altitude !== undefined;
+      const hasAccuracy = metadata.accuracy !== null && metadata.accuracy !== undefined;
+      const hasHeading = metadata.heading !== null && metadata.heading !== undefined;
+      const hasTilt = metadata.tilt !== null && metadata.tilt !== undefined;
+      
+      // LEFT PANEL - GPS Data
+      const leftItems: { icon: (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => void; lines: string[]; hasData: boolean; separator?: boolean }[] = [];
+      
+      if (true) { // Always show coordinates section
+        const coordLines = [];
+        if (hasLocation) {
+          coordLines.push(formatCoordinate(metadata.latitude, "lat"));
+          coordLines.push(formatCoordinate(metadata.longitude, "lon"));
+        } else {
+          coordLines.push("---°--'--\"");
+          coordLines.push("---°--'--\"");
+        }
+        leftItems.push({ icon: drawMapPinIcon, lines: coordLines, hasData: hasLocation });
+      }
+      
+      if (true) { // Always show altitude
+        leftItems.push({ 
+          icon: drawMountainIcon, 
+          lines: [hasAltitude ? formatAltitude(metadata.altitude) : "--- m"], 
+          hasData: hasAltitude,
+          separator: true 
+        });
+      }
+      
+      if (true) { // Always show GPS accuracy
+        leftItems.push({ 
+          icon: drawSignalIcon, 
+          lines: [`GPS: ${hasAccuracy ? formatAccuracy(metadata.accuracy) : "---"}`], 
+          hasData: hasAccuracy || hasLocation 
+        });
+      }
+      
+      // Calculate left panel dimensions
+      let maxLeftWidth = 0;
+      for (const item of leftItems) {
+        for (const line of item.lines) {
+          const textWidth = ctx.measureText(line).width;
+          maxLeftWidth = Math.max(maxLeftWidth, iconSize + iconGap + textWidth);
+        }
+      }
+      
+      let totalLeftHeight = boxPadding * 2;
+      for (let i = 0; i < leftItems.length; i++) {
+        totalLeftHeight += leftItems[i].lines.length * lineHeight;
+        if (leftItems[i].separator && i < leftItems.length - 1) {
+          totalLeftHeight += fontSize * 0.3; // separator space
+        }
+      }
+      
+      const leftBoxWidth = maxLeftWidth + boxPadding * 2;
+      const leftBoxHeight = totalLeftHeight;
+      
+      // Draw left panel background
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      drawRoundedRectPath(ctx, padding, topOffset, leftBoxWidth, leftBoxHeight, boxRadius);
+      ctx.fill();
+      
+      // Draw left panel content
+      let yLeft = topOffset + boxPadding;
+      for (let i = 0; i < leftItems.length; i++) {
+        const item = leftItems[i];
+        const iconColor = item.hasData ? greenColor : dimColor;
+        
+        // Draw separator line before item if needed
+        if (item.separator && i > 0) {
+          ctx.strokeStyle = separatorColor;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(padding + boxPadding, yLeft - fontSize * 0.15);
+          ctx.lineTo(padding + leftBoxWidth - boxPadding, yLeft - fontSize * 0.15);
+          ctx.stroke();
+          yLeft += fontSize * 0.3;
+        }
+        
+        // Draw icon
+        item.icon(ctx, padding + boxPadding, yLeft, iconSize, iconColor);
+        
+        // Draw text lines
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        for (let j = 0; j < item.lines.length; j++) {
+          ctx.fillText(item.lines[j], padding + boxPadding + iconSize + iconGap, yLeft + j * lineHeight);
+        }
+        yLeft += item.lines.length * lineHeight;
+      }
+      
+      // RIGHT PANEL - Orientation Data
+      const rightItems: { icon: (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => void; lines: string[]; hasData: boolean; separator?: boolean; cardinalDir?: string }[] = [];
+      
+      if (true) { // Always show heading
+        const headingText = hasHeading ? formatHeading(metadata.heading) : "---°";
+        const cardinal = hasHeading ? getCardinalDirection(metadata.heading) : "";
+        rightItems.push({ 
+          icon: drawCompassIcon, 
+          lines: [headingText], 
+          hasData: hasHeading,
+          cardinalDir: cardinal
+        });
+      }
+      
+      if (true) { // Always show tilt
+        rightItems.push({ 
+          icon: drawTargetIcon, 
+          lines: [`TILT: ${hasTilt ? formatTilt(metadata.tilt) : "---°"}`], 
+          hasData: hasTilt,
+          separator: true 
+        });
+      }
+      
+      // Calculate right panel dimensions
+      let maxRightWidth = 0;
+      for (const item of rightItems) {
+        for (const line of item.lines) {
+          let textWidth = ctx.measureText(line).width;
+          if (item.cardinalDir) {
+            textWidth += ctx.measureText(" " + item.cardinalDir).width;
+          }
+          maxRightWidth = Math.max(maxRightWidth, iconSize + iconGap + textWidth);
+        }
+      }
+      
+      let totalRightHeight = boxPadding * 2;
+      for (let i = 0; i < rightItems.length; i++) {
+        totalRightHeight += rightItems[i].lines.length * lineHeight;
+        if (rightItems[i].separator && i < rightItems.length - 1) {
+          totalRightHeight += fontSize * 0.3;
+        }
+      }
+      
+      const rightBoxWidth = maxRightWidth + boxPadding * 2;
+      const rightBoxHeight = totalRightHeight;
+      const rightX = width - padding - rightBoxWidth;
+      
+      // Draw right panel background
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      drawRoundedRectPath(ctx, rightX, topOffset, rightBoxWidth, rightBoxHeight, boxRadius);
+      ctx.fill();
+      
+      // Draw right panel content
+      let yRight = topOffset + boxPadding;
+      for (let i = 0; i < rightItems.length; i++) {
+        const item = rightItems[i];
+        const iconColor = item.hasData ? greenColor : dimColor;
+        
+        // Draw separator line before item if needed
+        if (item.separator && i > 0) {
+          ctx.strokeStyle = separatorColor;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(rightX + boxPadding, yRight - fontSize * 0.15);
+          ctx.lineTo(rightX + rightBoxWidth - boxPadding, yRight - fontSize * 0.15);
+          ctx.stroke();
+          yRight += fontSize * 0.3;
+        }
+        
+        // Draw icon
+        item.icon(ctx, rightX + boxPadding, yRight, iconSize, iconColor);
+        
+        // Draw text
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        const textX = rightX + boxPadding + iconSize + iconGap;
+        ctx.fillText(item.lines[0], textX, yRight);
+        
+        // Draw cardinal direction in green if exists
+        if (item.cardinalDir) {
+          const mainTextWidth = ctx.measureText(item.lines[0] + " ").width;
+          ctx.fillStyle = greenColor;
+          ctx.fillText(item.cardinalDir, textX + mainTextWidth, yRight);
+        }
+        
+        yRight += item.lines.length * lineHeight;
+      }
     }
     
-    if (metadata.accuracy !== null && metadata.accuracy !== undefined) {
-      ctx.strokeText(`GPS: ${formatAccuracy(metadata.accuracy)}`, leftX, yLeft);
-      ctx.fillText(`GPS: ${formatAccuracy(metadata.accuracy)}`, leftX, yLeft);
-    }
-    
-    // RIGHT PANEL - Orientation Data
-    let yRight = topOffset;
-    const rightX = width - padding - Math.ceil(width * 0.15);
-    
-    if (metadata.heading !== null && metadata.heading !== undefined) {
-      const heading = `${formatHeading(metadata.heading)} ${getCardinalDirection(metadata.heading)}`;
-      ctx.strokeText(heading, rightX, yRight);
-      ctx.fillText(heading, rightX, yRight);
-      yRight += lineHeight;
-    }
-    
-    if (metadata.tilt !== null && metadata.tilt !== undefined) {
-      ctx.strokeText(`TILT: ${formatTilt(metadata.tilt)}`, rightX, yRight);
-      ctx.fillText(`TILT: ${formatTilt(metadata.tilt)}`, rightX, yRight);
-    }
-    
-    // NOTE - Bottom center
+    // NOTE - Bottom center with background box and icon
     if (metadata.note && metadata.note.trim()) {
-      const smallFontSize = Math.ceil(fontSize * 0.75);
-      ctx.font = `${smallFontSize}px monospace`;
-      const noteText = `NOTE: ${metadata.note}`;
+      const noteFontSize = Math.ceil(fontSize * 0.9);
+      const noteIconSize = Math.ceil(noteFontSize * 1.1);
+      const noteIconGap = Math.ceil(noteFontSize * 0.4);
+      const noteBoxPadding = Math.ceil(noteFontSize * 0.5);
+      const noteRadius = Math.ceil(noteFontSize * 0.3);
+      
+      ctx.font = `${noteFontSize}px monospace`;
+      const noteText = metadata.note.trim();
       const textMetrics = ctx.measureText(noteText);
-      const noteX = Math.max(padding, (width - textMetrics.width) / 2);
-      const noteY = height - padding - smallFontSize;
-      ctx.strokeText(noteText, noteX, noteY);
-      ctx.fillText(noteText, noteX, noteY);
+      const noteBoxWidth = noteIconSize + noteIconGap + textMetrics.width + noteBoxPadding * 2;
+      const noteBoxHeight = Math.max(noteIconSize, noteFontSize) + noteBoxPadding * 2;
+      const noteX = (width - noteBoxWidth) / 2;
+      const noteY = height - padding * 2 - noteBoxHeight;
+      
+      // Draw background box
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.beginPath();
+      drawRoundedRectPath(ctx, noteX, noteY, noteBoxWidth, noteBoxHeight, noteRadius);
+      ctx.fill();
+      
+      // Draw file/note icon
+      drawFileTextIcon(ctx, noteX + noteBoxPadding, noteY + noteBoxPadding, noteIconSize, "rgba(34, 197, 94, 0.9)");
+      
+      // Draw note text
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.textBaseline = "top";
+      ctx.fillText(noteText, noteX + noteBoxPadding + noteIconSize + noteIconGap, noteY + noteBoxPadding + (noteIconSize - noteFontSize) / 2);
     }
   };
 

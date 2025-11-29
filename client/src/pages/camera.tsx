@@ -113,6 +113,7 @@ export default function CameraPage() {
         tilt: orientationData.tilt,
         note: noteText || undefined,
         timestamp,
+        reticleConfig: settings.reticle,
       });
       if (!result) {
         throw new Error("Failed to capture photo");
