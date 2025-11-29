@@ -66,7 +66,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
 
   const positionOptions: PositionOptions = {
     enableHighAccuracy: true,
-    timeout: 30000,
+    timeout: 120000,
     maximumAge: 0,
   };
 
