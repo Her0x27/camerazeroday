@@ -164,12 +164,13 @@ export function formatCoordinatesWithAccuracy(latitude: number | null, longitude
     return "---.------ ---.------ (±--m)";
   }
   
-  const latFormatted = latitude.toFixed(5);
-  const lonFormatted = longitude.toFixed(5);
+  const latFormatted = Math.abs(latitude).toFixed(5);
+  const lonFormatted = Math.abs(longitude).toFixed(5);
   const accuracyFormatted = accuracy !== null ? Math.round(accuracy) : "--";
   
   return `${latFormatted} ${lonFormatted} (±${accuracyFormatted}m)`;
 }
+
 
 // Format altitude for display with precision
 export function formatAltitude(altitude: number | null): string {
