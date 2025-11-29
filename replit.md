@@ -10,6 +10,15 @@ The application targets use cases requiring precision photography with environme
 
 Preferred communication style: Simple, everyday language.
 
+## Environment Configuration
+
+### Disguise Mode
+- **Variable**: `VITE_DISGUISE_MODE`
+- **Values**: `'true'` or `'false'`
+- **Description**: When set to `'true'`, forces the application to start in disguise mode (2048 game). The camera interface is hidden, and users cannot disable disguise mode from settings.
+- **Use Case**: Deploy disguised version on shared devices where you want to hide the camera application by default.
+- **Default**: `'false'` (disguise mode is optional and user-controlled)
+
 ## System Architecture
 
 ### Frontend Architecture

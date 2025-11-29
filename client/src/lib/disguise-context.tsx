@@ -32,7 +32,15 @@ const defaultSettings: DisguiseSettings = {
   secretPattern: '',
 };
 
+// Check if disguise mode is forced by environment variable
+const isDisguiseModeForced = import.meta.env.VITE_DISGUISE_MODE === 'true';
+
 function loadSettings(): DisguiseSettings {
+  // If disguise mode is forced by env var, always enable it
+  if (isDisguiseModeForced) {
+    return { ...defaultSettings, enabled: true };
+  }
+  
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -44,6 +52,11 @@ function loadSettings(): DisguiseSettings {
 }
 
 function saveSettings(settings: DisguiseSettings): void {
+  // Don't save if disguise mode is forced by env var
+  if (isDisguiseModeForced) {
+    return;
+  }
+  
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch {
@@ -93,6 +106,11 @@ export function DisguiseProvider({ children }: { children: ReactNode }) {
   }, []);
   
   const updateSettings = useCallback((updates: Partial<DisguiseSettings>) => {
+    // Prevent disabling disguise if it's forced by env var
+    if (isDisguiseModeForced && 'enabled' in updates && !updates.enabled) {
+      return;
+    }
+    
     setSettings(prev => {
       const newSettings = { ...prev, ...updates };
       saveSettings(newSettings);
