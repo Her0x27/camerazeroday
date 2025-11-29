@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { CONFIG } from "@/config";
 
 export type GestureType = 'quickTaps' | 'patternUnlock';
 
@@ -32,8 +33,8 @@ const defaultSettings: DisguiseSettings = {
   secretPattern: '',
 };
 
-// Check if disguise mode is forced by environment variable
-const isDisguiseModeForced = import.meta.env.VITE_DISGUISE_MODE === 'true';
+// Check if disguise mode is forced by config
+const isDisguiseModeForced = CONFIG.DISGUISE_MODE;
 
 function loadSettings(): DisguiseSettings {
   // If disguise mode is forced by env var, always enable it
