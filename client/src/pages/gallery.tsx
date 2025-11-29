@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Camera, ArrowLeft, Trash2, Filter, SortAsc, SortDesc, MapPin, FileText, X, Folder, FolderOpen, ChevronLeft } from "lucide-react";
+import { Camera, ArrowLeft, Trash2, Filter, SortAsc, SortDesc, MapPin, FileText, X, Folder, FolderOpen, ChevronLeft, List, Grid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { getAllPhotos, deletePhoto, clearAllPhotos, getPhotosByFolder } from "@/
 import type { Photo, GalleryFilter } from "@shared/schema";
 
 type ViewMode = "folders" | "photos";
+type DisplayType = "list" | "grid";
 
 interface FolderInfo {
   name: string | null;
@@ -34,6 +35,7 @@ export default function GalleryPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("folders");
   const [selectedFolder, setSelectedFolder] = useState<string | null | undefined>(undefined);
+  const [displayType, setDisplayType] = useState<DisplayType>("list");
 
   // Calculate folders from photos
   const folders = useMemo((): FolderInfo[] => {
@@ -198,6 +200,19 @@ export default function GalleryPage() {
           <div className="flex items-center gap-2">
             {viewMode === "photos" && (
               <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDisplayType(displayType === "list" ? "grid" : "list")}
+                  data-testid="button-display-toggle"
+                >
+                  {displayType === "list" ? (
+                    <Grid className="w-5 h-5" />
+                  ) : (
+                    <List className="w-5 h-5" />
+                  )}
+                </Button>
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -370,6 +385,69 @@ export default function GalleryPage() {
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back to Folders
             </Button>
+          </div>
+        ) : displayType === "list" ? (
+          <div className="flex flex-col gap-2">
+            {filteredPhotos.map((photo) => (
+              <Card
+                key={photo.id}
+                className="group flex items-center gap-3 p-2 cursor-pointer hover-elevate"
+                onClick={() => navigate(`/photo/${photo.id}`)}
+                data-testid={`photo-card-${photo.id}`}
+              >
+                <img
+                  src={photo.thumbnailData}
+                  alt="Photo"
+                  className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                  loading="lazy"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {new Date(photo.metadata.timestamp).toLocaleDateString("ru-RU", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {photo.metadata.latitude !== null && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-[10px] px-1.5 py-0.5"
+                      >
+                        <MapPin className="w-2.5 h-2.5 mr-0.5" />
+                        GPS
+                      </Badge>
+                    )}
+                    {photo.note && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-[10px] px-1.5 py-0.5"
+                      >
+                        <FileText className="w-2.5 h-2.5 mr-0.5" />
+                        Note
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-8 h-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(photo.id);
+                  }}
+                  data-testid={`button-delete-${photo.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
