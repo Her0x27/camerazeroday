@@ -314,12 +314,6 @@ export default function CameraPage() {
               <div className="w-[70%] h-[70%] rounded-full bg-red-500/30 flex items-center justify-center">
                 <span className="text-red-500 text-xs font-bold">GPS</span>
               </div>
-            ) : lastPhotoThumb ? (
-              <img 
-                src={lastPhotoThumb} 
-                alt="Last photo" 
-                className="w-full h-full object-cover rounded-full opacity-70"
-              />
             ) : (
               <div 
                 className={`w-[70%] h-[70%] rounded-full transition-all ${
@@ -338,11 +332,19 @@ export default function CameraPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
+              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14 overflow-hidden"
               onClick={() => navigate("/gallery")}
               data-testid="button-gallery"
             >
-              <Image className="w-7 h-7" />
+              {lastPhotoThumb ? (
+                <img 
+                  src={lastPhotoThumb} 
+                  alt="Last photo" 
+                  className="w-full h-full object-cover opacity-70"
+                />
+              ) : (
+                <Image className="w-7 h-7" />
+              )}
               {photoCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center px-1">
                   {photoCount > 99 ? "99+" : photoCount}
