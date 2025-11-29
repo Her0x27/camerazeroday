@@ -27,10 +27,10 @@ const FAVICON_CAMERA = "/favicon.svg";
 const FAVICON_GAME = "/game-icon.svg";
 
 const defaultSettings: DisguiseSettings = {
-  enabled: false,
-  gestureType: 'quickTaps',
-  autoLockMinutes: 1,
-  secretPattern: '',
+  enabled: CONFIG.DISGUISE_MODE,
+  gestureType: CONFIG.UNLOCK_GESTURE,
+  autoLockMinutes: CONFIG.AUTO_LOCK_MINUTES,
+  secretPattern: CONFIG.UNLOCK_PATTERN,
 };
 
 // Check if disguise mode is forced by config
