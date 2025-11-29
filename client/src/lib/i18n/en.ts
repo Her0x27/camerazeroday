@@ -20,6 +20,10 @@ export const en = {
     off: "Off",
     never: "Never",
     seconds: "sec",
+    backToGallery: "Back to Gallery",
+    backToCamera: "Back to Camera",
+    link: "Link",
+    unknownError: "Unknown error",
   },
   
   camera: {
@@ -72,6 +76,9 @@ export const en = {
     deletePhoto: "Delete Photo",
     cloudLinks: "Cloud Links",
     copyAll: "Copy All",
+    uploadCancelled: "Upload cancelled",
+    uploadCancelledPartial: "Upload cancelled. {count} completed before cancellation.",
+    clearAllConfirmDescription: "This will permanently delete all {count} photos from your device. This action cannot be undone.",
   },
   
   photoDetail: {
@@ -94,6 +101,11 @@ export const en = {
     downloadPhoto: "Download Photo",
     sharePhoto: "Share Photo",
     openInMaps: "Open in Maps",
+    photoNotFound: "Photo Not Found",
+    mayHaveBeenDeleted: "This photo may have been deleted",
+    shareTitle: "Camera ZeroDay Photo",
+    deleteConfirmTitle: "Delete Photo?",
+    deleteConfirmDescription: "This action cannot be undone. The photo will be permanently removed from your device.",
   },
   
   settings: {
@@ -240,6 +252,11 @@ export const en = {
     invalidApiKey: "Invalid API key",
     validationError: "Key validation error",
     pleaseEnterApiKey: "Please enter API key",
+  },
+  
+  notFound: {
+    title: "Page Not Found",
+    description: "The page you're looking for doesn't exist or has been moved.",
   },
 };
 

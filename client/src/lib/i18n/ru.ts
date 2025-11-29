@@ -22,6 +22,10 @@ export const ru: Translations = {
     off: "Выкл",
     never: "Никогда",
     seconds: "сек",
+    backToGallery: "Назад в галерею",
+    backToCamera: "Назад к камере",
+    link: "Ссылка",
+    unknownError: "Неизвестная ошибка",
   },
   
   camera: {
@@ -74,6 +78,9 @@ export const ru: Translations = {
     deletePhoto: "Удалить фото",
     cloudLinks: "Облачные ссылки",
     copyAll: "Копировать все",
+    uploadCancelled: "Загрузка отменена",
+    uploadCancelledPartial: "Загрузка отменена. {count} завершено до отмены.",
+    clearAllConfirmDescription: "Это навсегда удалит все {count} фото с вашего устройства. Это действие нельзя отменить.",
   },
   
   photoDetail: {
@@ -96,6 +103,11 @@ export const ru: Translations = {
     downloadPhoto: "Скачать фото",
     sharePhoto: "Поделиться",
     openInMaps: "Открыть на карте",
+    photoNotFound: "Фото не найдено",
+    mayHaveBeenDeleted: "Это фото могло быть удалено",
+    shareTitle: "Фото Camera ZeroDay",
+    deleteConfirmTitle: "Удалить фото?",
+    deleteConfirmDescription: "Это действие нельзя отменить. Фото будет навсегда удалено с вашего устройства.",
   },
   
   settings: {
@@ -242,5 +254,10 @@ export const ru: Translations = {
     invalidApiKey: "Неверный API-ключ",
     validationError: "Ошибка проверки ключа",
     pleaseEnterApiKey: "Пожалуйста, введите API-ключ",
+  },
+  
+  notFound: {
+    title: "Страница не найдена",
+    description: "Страница, которую вы ищете, не существует или была перемещена.",
   },
 };
