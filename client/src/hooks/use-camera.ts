@@ -333,8 +333,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       if (true) { // Always show coordinates section
         const coordLines = [];
         if (hasLocation) {
-          coordLines.push(formatCoordinate(metadata.latitude, "lat"));
-          coordLines.push(formatCoordinate(metadata.longitude, "lon"));
+          coordLines.push(formatCoordinate(metadata.latitude ?? null, "lat"));
+          coordLines.push(formatCoordinate(metadata.longitude ?? null, "lon"));
         } else {
           coordLines.push("---°--'--\"");
           coordLines.push("---°--'--\"");
@@ -345,7 +345,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       if (true) { // Always show altitude
         leftItems.push({ 
           icon: drawMountainIcon, 
-          lines: [hasAltitude ? formatAltitude(metadata.altitude) : "--- m"], 
+          lines: [hasAltitude ? formatAltitude(metadata.altitude ?? null) : "--- m"], 
           hasData: hasAltitude,
           separator: true 
         });
@@ -354,7 +354,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       if (true) { // Always show GPS accuracy
         leftItems.push({ 
           icon: drawSignalIcon, 
-          lines: [`GPS: ${hasAccuracy ? formatAccuracy(metadata.accuracy) : "---"}`], 
+          lines: [`GPS: ${hasAccuracy ? formatAccuracy(metadata.accuracy ?? null) : "---"}`], 
           hasData: hasAccuracy || hasLocation 
         });
       }
@@ -417,8 +417,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       const rightItems: { icon: (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => void; lines: string[]; hasData: boolean; separator?: boolean; cardinalDir?: string }[] = [];
       
       if (true) { // Always show heading
-        const headingText = hasHeading ? formatHeading(metadata.heading) : "---°";
-        const cardinal = hasHeading ? getCardinalDirection(metadata.heading) : "";
+        const headingText = hasHeading ? formatHeading(metadata.heading ?? null) : "---°";
+        const cardinal = hasHeading ? getCardinalDirection(metadata.heading ?? null) : "";
         rightItems.push({ 
           icon: drawCompassIcon, 
           lines: [headingText], 
@@ -430,7 +430,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       if (true) { // Always show tilt
         rightItems.push({ 
           icon: drawTargetIcon, 
-          lines: [`TILT: ${hasTilt ? formatTilt(metadata.tilt) : "---°"}`], 
+          lines: [`TILT: ${hasTilt ? formatTilt(metadata.tilt ?? null) : "---°"}`], 
           hasData: hasTilt,
           separator: true 
         });

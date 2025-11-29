@@ -66,8 +66,8 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
 
   const positionOptions: PositionOptions = {
     enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 5000,
+    timeout: 30000,
+    maximumAge: 0,
   };
 
   const startWatching = useCallback(() => {
@@ -148,23 +148,27 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   };
 }
 
-// Format coordinates for display
+// Format coordinates for display in DMS (degrees, minutes, seconds) format
 export function formatCoordinate(value: number | null, type: "lat" | "lon"): string {
-  if (value === null) return "---.------";
+  if (value === null) return "---°--'--\"";
   
   const abs = Math.abs(value);
-  const degrees = abs.toFixed(6);
+  const degrees = Math.floor(abs);
+  const minutesDecimal = (abs - degrees) * 60;
+  const minutes = Math.floor(minutesDecimal);
+  const seconds = ((minutesDecimal - minutes) * 60).toFixed(2);
+  
   const direction = type === "lat" 
     ? (value >= 0 ? "N" : "S")
     : (value >= 0 ? "E" : "W");
   
-  return `${degrees}° ${direction}`;
+  return `${degrees}°${minutes.toString().padStart(2, '0')}'${seconds.padStart(5, '0')}"${direction}`;
 }
 
-// Format altitude for display
+// Format altitude for display with precision
 export function formatAltitude(altitude: number | null): string {
   if (altitude === null) return "--- m";
-  return `${Math.round(altitude)} m`;
+  return `${altitude.toFixed(1)} m`;
 }
 
 // Format accuracy for display
