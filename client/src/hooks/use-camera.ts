@@ -106,61 +106,94 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     if (!metadata) return;
     
     const padding = Math.ceil(width * 0.02);
-    const fontSize = Math.ceil(height * 0.035);
-    const lineHeight = fontSize * 1.3;
+    const fontSize = Math.ceil(height * 0.028);
+    const lineHeight = fontSize * 1.4;
+    const topOffset = Math.ceil(height * 0.08);
     
-    ctx.font = `bold ${fontSize}px monospace`;
-    ctx.fillStyle = "rgba(34, 197, 94, 0.85)";
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-    ctx.lineWidth = 2.5;
+    // Draw crosshair in center
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const reticleSize = Math.ceil(Math.min(width, height) * 0.08);
+    
+    ctx.strokeStyle = "rgba(34, 197, 94, 0.7)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(centerX - reticleSize, centerY);
+    ctx.lineTo(centerX + reticleSize, centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - reticleSize);
+    ctx.lineTo(centerX, centerY + reticleSize);
+    ctx.stroke();
+    
+    ctx.font = `${fontSize}px monospace`;
+    ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.lineWidth = 1.5;
     ctx.textBaseline = "top";
     
-    let y = padding;
-    
-    if (metadata.timestamp) {
-      const date = new Date(metadata.timestamp);
-      const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      ctx.strokeText(timeStr, padding, y);
-      ctx.fillText(timeStr, padding, y);
-      y += lineHeight;
-    }
+    // LEFT PANEL - GPS Data
+    let yLeft = topOffset;
+    const leftX = padding;
     
     if (metadata.latitude !== null && metadata.latitude !== undefined && metadata.longitude !== null && metadata.longitude !== undefined) {
-      ctx.strokeText(`LAT: ${metadata.latitude.toFixed(6)}°`, padding, y);
-      ctx.fillText(`LAT: ${metadata.latitude.toFixed(6)}°`, padding, y);
-      y += lineHeight;
-      ctx.strokeText(`LON: ${metadata.longitude.toFixed(6)}°`, padding, y);
-      ctx.fillText(`LON: ${metadata.longitude.toFixed(6)}°`, padding, y);
-      y += lineHeight;
+      ctx.strokeText(`${metadata.latitude.toFixed(6)}°`, leftX, yLeft);
+      ctx.fillText(`${metadata.latitude.toFixed(6)}°`, leftX, yLeft);
+      yLeft += lineHeight;
+      ctx.strokeText(`${metadata.longitude.toFixed(6)}°`, leftX, yLeft);
+      ctx.fillText(`${metadata.longitude.toFixed(6)}°`, leftX, yLeft);
+      yLeft += lineHeight;
     }
     
     if (metadata.altitude !== null && metadata.altitude !== undefined) {
-      ctx.strokeText(`ALT: ${Math.round(metadata.altitude)}m`, padding, y);
-      ctx.fillText(`ALT: ${Math.round(metadata.altitude)}m`, padding, y);
-      y += lineHeight;
+      ctx.strokeText(`${Math.round(metadata.altitude)} m`, leftX, yLeft);
+      ctx.fillText(`${Math.round(metadata.altitude)} m`, leftX, yLeft);
+      yLeft += lineHeight;
     }
     
     if (metadata.accuracy !== null && metadata.accuracy !== undefined) {
-      ctx.strokeText(`ACC: ${Math.round(metadata.accuracy)}m`, padding, y);
-      ctx.fillText(`ACC: ${Math.round(metadata.accuracy)}m`, padding, y);
-      y += lineHeight;
+      ctx.strokeText(`ACC: ${Math.round(metadata.accuracy)}m`, leftX, yLeft);
+      ctx.fillText(`ACC: ${Math.round(metadata.accuracy)}m`, leftX, yLeft);
     }
     
+    // RIGHT PANEL - Orientation Data
+    let yRight = topOffset;
+    const rightX = width - padding - Math.ceil(width * 0.15);
+    
     if (metadata.heading !== null && metadata.heading !== undefined) {
-      ctx.strokeText(`HDG: ${Math.round(metadata.heading)}°`, padding, y);
-      ctx.fillText(`HDG: ${Math.round(metadata.heading)}°`, padding, y);
-      y += lineHeight;
+      ctx.strokeText(`${Math.round(metadata.heading)}°`, rightX, yRight);
+      ctx.fillText(`${Math.round(metadata.heading)}°`, rightX, yRight);
+      yRight += lineHeight;
     }
     
     if (metadata.tilt !== null && metadata.tilt !== undefined) {
-      ctx.strokeText(`TILT: ${Math.round(metadata.tilt)}°`, padding, y);
-      ctx.fillText(`TILT: ${Math.round(metadata.tilt)}°`, padding, y);
-      y += lineHeight;
+      ctx.strokeText(`TILT: ${Math.round(metadata.tilt)}°`, rightX, yRight);
+      ctx.fillText(`TILT: ${Math.round(metadata.tilt)}°`, rightX, yRight);
     }
     
+    // TIMESTAMP - Bottom center
+    if (metadata.timestamp) {
+      const date = new Date(metadata.timestamp);
+      const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const smallFontSize = Math.ceil(fontSize * 0.8);
+      ctx.font = `${smallFontSize}px monospace`;
+      const textMetrics = ctx.measureText(timeStr);
+      const timeX = (width - textMetrics.width) / 2;
+      const timeY = height - padding - smallFontSize;
+      ctx.strokeText(timeStr, timeX, timeY);
+      ctx.fillText(timeStr, timeX, timeY);
+    }
+    
+    // NOTE - Below timestamp
     if (metadata.note && metadata.note.trim()) {
-      ctx.strokeText(`NOTE: ${metadata.note}`, padding, y);
-      ctx.fillText(`NOTE: ${metadata.note}`, padding, y);
+      const smallFontSize = Math.ceil(fontSize * 0.75);
+      ctx.font = `${smallFontSize}px monospace`;
+      const noteText = `NOTE: ${metadata.note}`;
+      const textMetrics = ctx.measureText(noteText);
+      const noteX = Math.max(padding, (width - textMetrics.width) / 2);
+      const noteY = height - padding - smallFontSize * 2.5;
+      ctx.strokeText(noteText, noteX, noteY);
+      ctx.fillText(noteText, noteX, noteY);
     }
   };
 
