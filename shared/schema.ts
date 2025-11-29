@@ -32,9 +32,9 @@ export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 // Reticle configuration (all values are percentages for consistency)
 export const reticleConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  size: z.number().min(5).max(50).default(20), // size as % of viewport min dimension
-  opacity: z.number().min(10).max(100).default(50), // opacity %
-  strokeWidth: z.number().min(1).max(10).default(3), // line thickness as % of reticle size
+  size: z.number().min(5).max(50).default(5), // size as % of viewport min dimension
+  opacity: z.number().min(10).max(100).default(100), // opacity %
+  strokeWidth: z.number().min(1).max(10).default(10), // line thickness as % of reticle size
   showMetadata: z.boolean().default(true),
   autoColor: z.boolean().default(true), // auto-adjust color based on background
 });
@@ -49,6 +49,8 @@ export const settingsSchema = z.object({
   autoSaveLocation: z.boolean().default(true),
   cameraFacing: z.enum(["user", "environment"]).default("environment"),
   soundEnabled: z.boolean().default(true),
+  accuracyLimit: z.number().min(5).max(100).default(20), // GPS accuracy limit in meters
+  watermarkScale: z.number().min(50).max(150).default(100), // Watermark size as percentage
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -56,9 +58,9 @@ export type Settings = z.infer<typeof settingsSchema>;
 export const defaultSettings: Settings = {
   reticle: {
     enabled: true,
-    size: 20,
-    opacity: 50,
-    strokeWidth: 3,
+    size: 5,
+    opacity: 100,
+    strokeWidth: 10,
     showMetadata: true,
     autoColor: true,
   },
@@ -67,6 +69,8 @@ export const defaultSettings: Settings = {
   autoSaveLocation: true,
   cameraFacing: "environment",
   soundEnabled: true,
+  accuracyLimit: 20, // GPS accuracy limit in meters - blocks photo if accuracy is worse
+  watermarkScale: 100, // Watermark size as percentage (50-150%)
 };
 
 // Gallery filter options

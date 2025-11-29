@@ -12,6 +12,8 @@ interface MetadataOverlayProps {
   tilt: number | null;
   showMetadata: boolean;
   lastUpdate?: number;
+  scale?: number;
+  accuracyLimit?: number;
 }
 
 function formatLastUpdate(lastUpdate: number | undefined): string {
@@ -31,6 +33,8 @@ export const MetadataOverlay = memo(function MetadataOverlay({
   tilt,
   showMetadata,
   lastUpdate,
+  scale = 100,
+  accuracyLimit = 20,
 }: MetadataOverlayProps) {
   const [, forceUpdate] = useState(0);
   
@@ -47,10 +51,21 @@ export const MetadataOverlay = memo(function MetadataOverlay({
   const hasOrientation = heading !== null;
   const updateAge = lastUpdate ? (Date.now() - lastUpdate) / 1000 : Infinity;
   const isLive = updateAge < 2;
+  const isAccuracyBlocked = accuracy !== null && accuracy > accuracyLimit;
+
+  const scaleStyle = {
+    transform: `scale(${scale / 100})`,
+    transformOrigin: 'top left',
+  };
+
+  const scaleStyleRight = {
+    transform: `scale(${scale / 100})`,
+    transformOrigin: 'top right',
+  };
 
   return (
     <>
-      <div className="absolute top-16 left-4 z-5">
+      <div className="absolute top-16 left-4 z-5" style={scaleStyle}>
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           <div className="flex items-center gap-2">
             <MapPin className={`w-3.5 h-3.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
@@ -67,18 +82,20 @@ export const MetadataOverlay = memo(function MetadataOverlay({
           
           <div className="flex items-center gap-2">
             <Signal className={`w-3.5 h-3.5 ${
+              isAccuracyBlocked ? "text-red-500 animate-pulse" :
               getAccuracyLevel(accuracy) === "high" ? "text-green-400" :
               getAccuracyLevel(accuracy) === "medium" ? "text-amber-400" :
               getAccuracyLevel(accuracy) === "low" ? "text-red-400" :
               "text-muted-foreground"
             }`} />
             <span className={`font-mono text-xs ${
+              isAccuracyBlocked ? "text-red-500" :
               getAccuracyLevel(accuracy) === "high" ? "text-green-400" :
               getAccuracyLevel(accuracy) === "medium" ? "text-amber-400" :
               getAccuracyLevel(accuracy) === "low" ? "text-red-400" :
               "text-white/90"
             }`}>
-              {formatAccuracy(accuracy)}
+              {formatAccuracy(accuracy)}{isAccuracyBlocked && ` (>${accuracyLimit}m)`}
             </span>
           </div>
           
@@ -94,7 +111,7 @@ export const MetadataOverlay = memo(function MetadataOverlay({
         </div>
       </div>
 
-      <div className="absolute top-16 right-4 z-5">
+      <div className="absolute top-16 right-4 z-5" style={scaleStyleRight}>
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           <div className="flex items-center gap-2">
             <Compass className={`w-3.5 h-3.5 ${hasOrientation ? "text-primary" : "text-muted-foreground"}`} />

@@ -18,6 +18,7 @@ interface PhotoMetadata {
   timestamp?: number;
   reticleConfig?: ReticleConfig;
   reticleColor?: string;
+  watermarkScale?: number;
 }
 
 interface UseCameraReturn {
@@ -275,11 +276,12 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     if (!metadata) return;
     
     const reticleConfig = metadata.reticleConfig;
+    const watermarkScale = (metadata.watermarkScale || 100) / 100;
     const minDimension = Math.min(width, height);
-    const padding = Math.ceil(minDimension * 0.015);
-    const fontSize = Math.ceil(minDimension * 0.022);
+    const padding = Math.ceil(minDimension * 0.015 * watermarkScale);
+    const fontSize = Math.ceil(minDimension * 0.022 * watermarkScale);
     const lineHeight = fontSize * 1.6;
-    const topOffset = Math.ceil(minDimension * 0.025);
+    const topOffset = Math.ceil(minDimension * 0.025 * watermarkScale);
     const iconSize = Math.ceil(fontSize * 1.1);
     const iconGap = Math.ceil(fontSize * 0.5);
     

@@ -11,7 +11,9 @@ import {
   RotateCcw,
   Database,
   Trash2,
-  Palette
+  Palette,
+  Target,
+  Type
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -230,6 +232,29 @@ export default function SettingsPage() {
                 data-testid="switch-show-metadata"
               />
             </div>
+
+            {/* Watermark Scale */}
+            {settings.reticle.showMetadata && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Type className="w-4 h-4" />
+                    Watermark Size
+                  </Label>
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {settings.watermarkScale || 100}%
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.watermarkScale || 100]}
+                  onValueChange={([value]) => updateSettings({ watermarkScale: value })}
+                  min={50}
+                  max={150}
+                  step={10}
+                  data-testid="slider-watermark-scale"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -258,6 +283,32 @@ export default function SettingsPage() {
                 data-testid="switch-gps"
               />
             </div>
+
+            {/* GPS Accuracy Limit */}
+            {settings.gpsEnabled && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Target className="w-4 h-4" />
+                    Accuracy Limit
+                  </Label>
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {settings.accuracyLimit || 20}m
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.accuracyLimit || 20]}
+                  onValueChange={([value]) => updateSettings({ accuracyLimit: value })}
+                  min={5}
+                  max={100}
+                  step={5}
+                  data-testid="slider-accuracy-limit"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Photo capture blocked if GPS accuracy exceeds this limit
+                </p>
+              </div>
+            )}
 
             {/* Orientation Enabled */}
             <div className="flex items-center justify-between">

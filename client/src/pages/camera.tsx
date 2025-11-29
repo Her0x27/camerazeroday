@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -161,9 +161,25 @@ export default function CameraPage() {
     };
   }, [isReady, settings.reticle.autoColor, settings.reticle.enabled, videoRef]);
 
+  // Check if GPS accuracy is acceptable - use useMemo to ensure reactivity
+  const accuracyBlocked = useMemo(() => {
+    if (!settings.gpsEnabled) return false;
+    if (geoData.accuracy === null) return false;
+    return geoData.accuracy > (settings.accuracyLimit || 20);
+  }, [settings.gpsEnabled, settings.accuracyLimit, geoData.accuracy]);
+
+  const isAccuracyAcceptable = useCallback(() => {
+    return !accuracyBlocked;
+  }, [accuracyBlocked]);
+
   // Capture and save photo directly
   const handleCapture = useCallback(async () => {
     if (!isReady || isCapturing) return;
+    
+    // Block capture if accuracy is worse than limit
+    if (!isAccuracyAcceptable()) {
+      return;
+    }
 
     setIsCapturing(true);
     const timestamp = Date.now();
@@ -181,6 +197,7 @@ export default function CameraPage() {
         timestamp,
         reticleConfig: settings.reticle,
         reticleColor: reticleColor,
+        watermarkScale: settings.watermarkScale || 100,
       });
       if (!result) {
         throw new Error("Failed to capture photo");
@@ -211,7 +228,7 @@ export default function CameraPage() {
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle, isAccuracyAcceptable]);
 
   return (
     <div 
@@ -271,6 +288,8 @@ export default function CameraPage() {
             tilt={orientationData.tilt}
             showMetadata={settings.reticle.showMetadata}
             lastUpdate={geoData.lastUpdate}
+            scale={settings.watermarkScale || 100}
+            accuracyLimit={settings.accuracyLimit || 20}
           />
         )}
 
@@ -329,15 +348,21 @@ export default function CameraPage() {
           {/* Capture button */}
           <button
             onClick={handleCapture}
-            disabled={!isReady || isCapturing}
+            disabled={!isReady || isCapturing || accuracyBlocked}
             className={`aspect-square flex-1 max-w-20 rounded-full border-3 flex items-center justify-center transition-all overflow-hidden ${
-              isReady && !isCapturing
-                ? "border-white bg-white/10 hover:bg-white/20 active:scale-95 active:bg-white/30"
-                : "border-muted-foreground/50 bg-muted/20"
+              accuracyBlocked
+                ? "border-red-500/50 bg-red-500/10"
+                : isReady && !isCapturing
+                  ? "border-white bg-white/10 hover:bg-white/20 active:scale-95 active:bg-white/30"
+                  : "border-muted-foreground/50 bg-muted/20"
             }`}
             data-testid="button-capture"
           >
-            {lastPhotoThumb ? (
+            {accuracyBlocked ? (
+              <div className="w-[70%] h-[70%] rounded-full bg-red-500/30 flex items-center justify-center">
+                <span className="text-red-500 text-xs font-bold">GPS</span>
+              </div>
+            ) : lastPhotoThumb ? (
               <img 
                 src={lastPhotoThumb} 
                 alt="Last photo" 
