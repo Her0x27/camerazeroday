@@ -278,7 +278,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     const padding = Math.ceil(minDimension * 0.015);
     const fontSize = Math.ceil(minDimension * 0.022);
     const lineHeight = fontSize * 1.6;
-    const topOffset = Math.ceil(minDimension * 0.08);
+    const topOffset = Math.ceil(minDimension * 0.025);
     const iconSize = Math.ceil(fontSize * 1.1);
     const iconGap = Math.ceil(fontSize * 0.5);
     
