@@ -11,13 +11,11 @@ import { useSettings } from "@/lib/settings-context";
 import { Reticle } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
 import { savePhoto, getPhotoCount, getLatestPhoto } from "@/lib/db";
-import { useCaptureSound } from "@/hooks/use-capture-sound";
 import type { InsertPhoto } from "@shared/schema";
 
 export default function CameraPage() {
   const [, navigate] = useLocation();
   const { settings } = useSettings();
-  const { playCapture } = useCaptureSound();
   
   const [photoCount, setPhotoCount] = useState(0);
   const [lastPhotoThumb, setLastPhotoThumb] = useState<string | null>(null);
@@ -139,17 +137,12 @@ export default function CameraPage() {
       await savePhoto(photo);
       setPhotoCount((prev) => prev + 1);
       setLastPhotoThumb(result.thumbnailData);
-
-      // Play capture sound if enabled
-      if (settings.soundEnabled) {
-        playCapture();
-      }
     } catch (error) {
       console.error("Capture error:", error);
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, settings.soundEnabled, playCapture]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote]);
 
   return (
     <div 
