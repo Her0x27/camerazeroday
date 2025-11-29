@@ -4,6 +4,17 @@ interface UseCameraOptions {
   facingMode?: "user" | "environment";
 }
 
+interface CapturePhotoOptions {
+  latitude?: number | null;
+  longitude?: number | null;
+  altitude?: number | null;
+  accuracy?: number | null;
+  heading?: number | null;
+  tilt?: number | null;
+  note?: string;
+  timestamp?: number;
+}
+
 interface UseCameraReturn {
   videoRef: React.RefObject<HTMLVideoElement>;
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -12,7 +23,7 @@ interface UseCameraReturn {
   error: string | null;
   startCamera: () => Promise<void>;
   stopCamera: () => void;
-  capturePhoto: () => Promise<{ imageData: string; thumbnailData: string } | null>;
+  capturePhoto: (options?: CapturePhotoOptions) => Promise<{ imageData: string; thumbnailData: string } | null>;
   switchCamera: () => Promise<void>;
   currentFacing: "user" | "environment";
 }
@@ -91,7 +102,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     }
   }, [currentFacing]);
 
-  const capturePhoto = useCallback(async (): Promise<{ imageData: string; thumbnailData: string } | null> => {
+  const capturePhoto = useCallback(async (options?: CapturePhotoOptions): Promise<{ imageData: string; thumbnailData: string } | null> => {
     if (!videoRef.current || !canvasRef.current || !isReady) {
       return null;
     }
@@ -106,8 +117,82 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Draw video frame to canvas (this strips EXIF metadata)
+    // Draw video frame to canvas
     ctx.drawImage(video, 0, 0);
+
+    // Draw metadata text if provided
+    if (options) {
+      const padding = Math.ceil(canvas.width * 0.02);
+      const fontSize = Math.ceil(canvas.height * 0.04);
+      const lineHeight = Math.ceil(fontSize * 1.2);
+      
+      ctx.font = `${fontSize}px monospace`;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.lineWidth = 2;
+      ctx.textBaseline = "top";
+      
+      let y = padding;
+      
+      // Timestamp
+      if (options.timestamp) {
+        const date = new Date(options.timestamp);
+        const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        ctx.strokeText(timeStr, padding, y);
+        ctx.fillText(timeStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // GPS Coordinates
+      if (options.latitude !== null && options.latitude !== undefined && options.longitude !== null && options.longitude !== undefined) {
+        const latStr = `LAT: ${options.latitude.toFixed(6)}°`;
+        const lonStr = `LON: ${options.longitude.toFixed(6)}°`;
+        ctx.strokeText(latStr, padding, y);
+        ctx.fillText(latStr, padding, y);
+        y += lineHeight;
+        ctx.strokeText(lonStr, padding, y);
+        ctx.fillText(lonStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // Altitude
+      if (options.altitude !== null && options.altitude !== undefined) {
+        const altStr = `ALT: ${Math.round(options.altitude)} m`;
+        ctx.strokeText(altStr, padding, y);
+        ctx.fillText(altStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // GPS Accuracy
+      if (options.accuracy !== null && options.accuracy !== undefined) {
+        const accStr = `ACC: ${Math.round(options.accuracy)} m`;
+        ctx.strokeText(accStr, padding, y);
+        ctx.fillText(accStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // Heading
+      if (options.heading !== null && options.heading !== undefined) {
+        const headStr = `HDG: ${Math.round(options.heading)}°`;
+        ctx.strokeText(headStr, padding, y);
+        ctx.fillText(headStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // Tilt
+      if (options.tilt !== null && options.tilt !== undefined) {
+        const tiltStr = `TILT: ${Math.round(options.tilt)}°`;
+        ctx.strokeText(tiltStr, padding, y);
+        ctx.fillText(tiltStr, padding, y);
+        y += lineHeight;
+      }
+      
+      // Note
+      if (options.note && options.note.trim()) {
+        ctx.strokeText(`NOTE: ${options.note}`, padding, y);
+        ctx.fillText(`NOTE: ${options.note}`, padding, y);
+      }
+    }
 
     // Get full resolution image
     const imageData = canvas.toDataURL("image/jpeg", 0.92);

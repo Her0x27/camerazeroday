@@ -84,9 +84,19 @@ export default function CameraPage() {
     if (!isReady || isCapturing) return;
 
     setIsCapturing(true);
+    const timestamp = Date.now();
     
     try {
-      const result = await capturePhoto();
+      const result = await capturePhoto({
+        latitude: geoData.latitude,
+        longitude: geoData.longitude,
+        altitude: geoData.altitude,
+        accuracy: geoData.accuracy,
+        heading: orientationData.heading,
+        tilt: orientationData.tilt,
+        note: currentNote.trim() ? currentNote.trim() : undefined,
+        timestamp,
+      });
       if (!result) {
         throw new Error("Failed to capture photo");
       }
@@ -102,7 +112,7 @@ export default function CameraPage() {
           accuracy: geoData.accuracy,
           heading: orientationData.heading,
           tilt: orientationData.tilt,
-          timestamp: Date.now(),
+          timestamp,
         },
         note: currentNote.trim() ? currentNote.trim() : undefined,
       };
