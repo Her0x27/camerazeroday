@@ -17,11 +17,14 @@ export const CONFIG = {
   // 'patternUnlock': Requires drawing a specific pattern on the screen (recommended)
   UNLOCK_GESTURE: 'patternUnlock' as GestureType,
 
-  // Secret pattern for 'patternUnlock' mode - sequence of grid positions to tap
-  // Grid layout: 1 2 3 / 4 5 6 / 7 8 9
-  // Example: '1357' means tap top-left → top-right → center → bottom-left
+  // Secret pattern for 'patternUnlock' mode - sequence of grid positions separated by dashes
+  // Grid layout (0-indexed):
+  //   0 1 2
+  //   3 4 5
+  //   6 7 8
+  // Example: '0-4-8' means tap top-left → center → bottom-right (diagonal)
   // Only used when UNLOCK_GESTURE is 'patternUnlock'
-  UNLOCK_PATTERN: '1357',
+  UNLOCK_PATTERN: '0-4-8',
 
   // === AUTO-LOCK CONFIGURATION ===
   // Minutes of inactivity before camera automatically hides when disguise mode is enabled

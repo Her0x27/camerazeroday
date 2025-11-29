@@ -190,10 +190,18 @@ export const en = {
       secretGestureDesc: "Gesture to access camera",
       quickTaps: "4 Quick Taps",
       patternUnlock: "Pattern Unlock",
+      quickTapsHint: "4 quick taps on game to access camera",
+      patternUnlockHint: "3 taps to show pattern, then draw to unlock",
+      setPattern: "Set Pattern",
+      changePattern: "Change Pattern",
+      setSecretPattern: "Set Secret Pattern",
+      changeSecretPattern: "Change Secret Pattern",
+      patternNotSet: "Pattern not set. Camera will not be accessible until pattern is set.",
       autoLock: "Auto Lock",
       autoLockDesc: "Lock after inactivity",
       minute: "1 minute",
       minutes: "{count} minutes",
+      min: "min",
     },
     
     pwa: {

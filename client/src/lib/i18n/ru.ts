@@ -192,10 +192,18 @@ export const ru: Translations = {
       secretGestureDesc: "Жест для доступа к камере",
       quickTaps: "4 быстрых касания",
       patternUnlock: "Графический ключ",
+      quickTapsHint: "4 быстрых касания на игре для доступа к камере",
+      patternUnlockHint: "3 касания для показа паттерна, затем нарисуйте для разблокировки",
+      setPattern: "Задать паттерн",
+      changePattern: "Изменить паттерн",
+      setSecretPattern: "Задать секретный паттерн",
+      changeSecretPattern: "Изменить секретный паттерн",
+      patternNotSet: "Паттерн не задан. Камера будет недоступна, пока паттерн не установлен.",
       autoLock: "Авто-блокировка",
       autoLockDesc: "Блокировка после бездействия",
       minute: "1 минута",
       minutes: "{count} минут",
+      min: "мин",
     },
     
     pwa: {

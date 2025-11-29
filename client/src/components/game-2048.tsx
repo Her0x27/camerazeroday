@@ -71,12 +71,22 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
   const tapTimesRef = useRef<number[]>([]);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const patternTapTimesRef = useRef<number[]>([]);
+  const lastTouchTapTimeRef = useRef<number>(0);
   
-  const handleSecretTap = useCallback(() => {
+  const handleSecretTap = useCallback((isFromTouch: boolean = false) => {
     if (!onSecretGesture) return;
     
+    const now = Date.now();
+    
+    if (isFromTouch) {
+      lastTouchTapTimeRef.current = now;
+    } else {
+      if (now - lastTouchTapTimeRef.current < 300) {
+        return;
+      }
+    }
+    
     if (gestureType === 'quickTaps') {
-      const now = Date.now();
       tapTimesRef.current = tapTimesRef.current.filter(t => now - t < TIMING.TAP_TIMEOUT_MS);
       tapTimesRef.current.push(now);
       
@@ -85,7 +95,6 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
         onSecretGesture();
       }
     } else if (gestureType === 'patternUnlock') {
-      const now = Date.now();
       patternTapTimesRef.current = patternTapTimesRef.current.filter(t => now - t < TIMING.PATTERN_TAP_TIMEOUT_MS);
       patternTapTimesRef.current.push(now);
       
@@ -153,7 +162,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
       const absDy = Math.abs(dy);
       
       if (Math.max(absDx, absDy) < GESTURE.MIN_SWIPE_DISTANCE_PX) {
-        handleSecretTap();
+        handleSecretTap(true);
         return;
       }
       
@@ -187,7 +196,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
     <div 
       ref={containerRef}
       className="flex flex-col items-center justify-center min-h-screen bg-background p-4 select-none touch-none safe-top safe-bottom"
-      onClick={handleSecretTap}
+      onClick={() => handleSecretTap(false)}
       data-testid="game-2048-container"
     >
       <Card className="w-full max-w-md">

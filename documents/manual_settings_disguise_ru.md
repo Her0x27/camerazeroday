@@ -57,7 +57,7 @@ export type GestureType = 'quickTaps' | 'patternUnlock';
 export const CONFIG = {
   DISGUISE_MODE: true,
   UNLOCK_GESTURE: 'patternUnlock' as GestureType,
-  UNLOCK_PATTERN: '1357',
+  UNLOCK_PATTERN: '0-4-8',  // Формат: цифры через дефисы
   AUTO_LOCK_MINUTES: 1,
   DEBUG_MODE: false,
 } as const;
@@ -129,9 +129,9 @@ UNLOCK_GESTURE: 'quickTaps' as GestureType,
 
 **Тип:** `string`
 
-**Описание:** Секретный паттерн для режима `'patternUnlock'`. Это последовательность цифр, представляющих точки на сетке 3x3.
+**Описание:** Секретный паттерн для режима `'patternUnlock'`. Это последовательность цифр, **разделённых дефисами**, представляющих точки на сетке 3x3.
 
-**Формат:** Строка из цифр, где каждая цифра — номер точки на сетке.
+**Формат:** Строка из цифр, разделённых дефисами (`-`), где каждая цифра — номер точки на сетке.
 
 **Сетка паттерна:**
 ```
@@ -144,14 +144,16 @@ UNLOCK_GESTURE: 'quickTaps' as GestureType,
 └───┴───┴───┘
 ```
 
-> **Внимание:** Нумерация начинается с 0, а не с 1!
+> **Важно:** 
+> - Нумерация начинается с **0**, не с 1!
+> - Цифры **обязательно** разделяются дефисами: `'0-4-8'`, НЕ `'048'`
 
 **Примеры паттернов:**
 
 | Паттерн | Визуализация | Описание |
 |---------|--------------|----------|
 | `'0-2-6-8'` | Диагональный крест | Все 4 угла |
-| `'0-1-2'` | Верхняя линия | Три точки сверху |
+| `'0-1-2'` | Верхняя линия | Три точки сверху (слишком короткий!) |
 | `'0-4-8'` | Диагональ ↘ | Из верхнего левого в нижний правый |
 | `'2-4-6'` | Диагональ ↙ | Из верхнего правого в нижний левый |
 | `'0-1-2-5-8-7-6-3'` | Буква "П" | По периметру |
@@ -161,10 +163,13 @@ UNLOCK_GESTURE: 'quickTaps' as GestureType,
 
 **Пример:**
 ```typescript
-// Z-образный паттерн: верхний левый → верхний правый → центр → нижний левый
-UNLOCK_PATTERN: '0-2-4-6',
+// Диагональ: верхний левый → центр → нижний правый
+UNLOCK_PATTERN: '0-4-8',
 
-// L-образный паттерн
+// Z-образный паттерн
+UNLOCK_PATTERN: '0-1-2-4-6-7-8',
+
+// L-образный паттерн (5 точек)
 UNLOCK_PATTERN: '0-3-6-7-8',
 ```
 
@@ -264,7 +269,7 @@ DEBUG_MODE: false,
 export const CONFIG = {
   DISGUISE_MODE: true,           // Принудительно включена маскировка
   UNLOCK_GESTURE: 'patternUnlock' as GestureType,  // Разблокировка паттерном
-  UNLOCK_PATTERN: '0-4-8-6-2',   // Сложный паттерн
+  UNLOCK_PATTERN: '0-4-8-6-2',   // Сложный паттерн (5 точек, зигзаг)
   AUTO_LOCK_MINUTES: 1,          // Быстрая автоблокировка
   DEBUG_MODE: false,             // Отладка выключена
 } as const;
@@ -276,7 +281,7 @@ export const CONFIG = {
 export const CONFIG = {
   DISGUISE_MODE: false,          // Пользователи сами решают
   UNLOCK_GESTURE: 'patternUnlock' as GestureType,
-  UNLOCK_PATTERN: '0-1-2-5-8',   // L-образный паттерн
+  UNLOCK_PATTERN: '0-3-6-7-8',   // L-образный паттерн (5 точек)
   AUTO_LOCK_MINUTES: 5,          // Более длительный таймер
   DEBUG_MODE: false,
 } as const;
@@ -288,7 +293,7 @@ export const CONFIG = {
 export const CONFIG = {
   DISGUISE_MODE: true,
   UNLOCK_GESTURE: 'patternUnlock' as GestureType,
-  UNLOCK_PATTERN: '0-1-2-3',     // Простой паттерн для тестов
+  UNLOCK_PATTERN: '0-1-2-5',     // Простой паттерн для тестов (4 точки)
   AUTO_LOCK_MINUTES: 0,          // Автоблокировка отключена
   DEBUG_MODE: true,              // Отладка включена
 } as const;

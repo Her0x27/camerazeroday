@@ -87,7 +87,7 @@ export const DisguiseSection = memo(function DisguiseSection({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {disguiseSettings.gestureType === 'quickTaps' ? '4 quick taps on game to access camera' : '3 taps to show pattern, then draw to unlock'}
+                {disguiseSettings.gestureType === 'quickTaps' ? t.settings.disguise.quickTapsHint : t.settings.disguise.patternUnlockHint}
               </p>
             </div>
 
@@ -97,7 +97,7 @@ export const DisguiseSection = memo(function DisguiseSection({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <Settings2 className="w-4 h-4" />
-                    {disguiseSettings.secretPattern ? 'Change Pattern' : 'Set Pattern'}
+                    {disguiseSettings.secretPattern ? t.settings.disguise.changePattern : t.settings.disguise.setPattern}
                   </Label>
                   <Button
                     variant="outline"
@@ -105,11 +105,11 @@ export const DisguiseSection = memo(function DisguiseSection({
                     onClick={onShowPatternSetup}
                     data-testid="button-set-pattern"
                   >
-                    {disguiseSettings.secretPattern ? 'Change Secret Pattern' : 'Set Secret Pattern'}
+                    {disguiseSettings.secretPattern ? t.settings.disguise.changeSecretPattern : t.settings.disguise.setSecretPattern}
                   </Button>
                   {!disguiseSettings.secretPattern && (
                     <p className="text-xs text-amber-500">
-                      Pattern not set. Camera will not be accessible until pattern is set.
+                      {t.settings.disguise.patternNotSet}
                     </p>
                   )}
                 </div>
@@ -125,7 +125,7 @@ export const DisguiseSection = memo(function DisguiseSection({
                   {t.settings.disguise.autoLock}
                 </Label>
                 <span className="text-sm text-muted-foreground font-mono">
-                  {disguiseSettings.autoLockMinutes} min
+                  {disguiseSettings.autoLockMinutes} {t.settings.disguise.min}
                 </span>
               </div>
               <Slider
