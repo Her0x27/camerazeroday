@@ -225,6 +225,9 @@ export const ru: Translations = {
     keepPlaying: "Продолжить",
     instructions: "Соединяйте плитки, наберите 2048!",
     swipeToMove: "Свайпните для перемещения",
+    drawPattern: "Нарисуйте ключ для разблокировки",
+    patternHint: "Соедините минимум 4 точки",
+    cancel: "Отмена",
   },
   
   errors: {

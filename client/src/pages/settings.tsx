@@ -57,6 +57,7 @@ import { usePWA } from "@/hooks/use-pwa";
 import { useDisguise } from "@/lib/disguise-context";
 import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
 import { validateApiKey } from "@/lib/imgbb";
+import { PatternLock, patternToString } from "@/components/pattern-lock";
 import {
   Select,
   SelectContent,
@@ -74,6 +75,10 @@ export default function SettingsPage() {
   
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [showPatternSetup, setShowPatternSetup] = useState(false);
+  const [patternStep, setPatternStep] = useState<'draw' | 'confirm'>('draw');
+  const [tempPattern, setTempPattern] = useState<string>('');
+  const [patternError, setPatternError] = useState(false);
   const [storageInfo, setStorageInfo] = useState<{ used: number; quota: number; photos: number } | null>(null);
   
   const [apiKeyInput, setApiKeyInput] = useState(settings.imgbb?.apiKey || "");
@@ -127,6 +132,34 @@ export default function SettingsPage() {
       console.error("Clear error:", error);
     }
     setShowClearDialog(false);
+  }, []);
+
+  const handlePatternDraw = useCallback((pattern: number[]) => {
+    const patternStr = patternToString(pattern);
+    
+    if (patternStep === 'draw') {
+      setTempPattern(patternStr);
+      setPatternStep('confirm');
+      setPatternError(false);
+    } else {
+      if (patternStr === tempPattern) {
+        updateDisguiseSettings({ secretPattern: patternStr });
+        setShowPatternSetup(false);
+        setPatternStep('draw');
+        setTempPattern('');
+        setPatternError(false);
+      } else {
+        setPatternError(true);
+        setTimeout(() => setPatternError(false), 1000);
+      }
+    }
+  }, [patternStep, tempPattern, updateDisguiseSettings]);
+
+  const handleCancelPatternSetup = useCallback(() => {
+    setShowPatternSetup(false);
+    setPatternStep('draw');
+    setTempPattern('');
+    setPatternError(false);
   }, []);
 
   const handleValidateApiKey = useCallback(async () => {
@@ -762,13 +795,39 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="quickTaps">{t.settings.disguise.quickTaps}</SelectItem>
-                      <SelectItem value="patternUnlock" disabled>{t.settings.disguise.patternUnlock}</SelectItem>
+                      <SelectItem value="patternUnlock">{t.settings.disguise.patternUnlock}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {disguiseSettings.gestureType === 'quickTaps' ? '4 quick taps on game to access camera' : 'Draw pattern to access camera'}
+                    {disguiseSettings.gestureType === 'quickTaps' ? '4 quick taps on game to access camera' : '3 taps to show pattern, then draw to unlock'}
                   </p>
                 </div>
+
+                {/* Pattern Setup */}
+                {disguiseSettings.gestureType === 'patternUnlock' && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <Label className="flex items-center gap-2">
+                        <Settings2 className="w-4 h-4" />
+                        {disguiseSettings.secretPattern ? 'Change Pattern' : 'Set Pattern'}
+                      </Label>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setShowPatternSetup(true)}
+                        data-testid="button-set-pattern"
+                      >
+                        {disguiseSettings.secretPattern ? 'Change Secret Pattern' : 'Set Secret Pattern'}
+                      </Button>
+                      {!disguiseSettings.secretPattern && (
+                        <p className="text-xs text-amber-500">
+                          Pattern not set. Camera will not be accessible until pattern is set.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <Separator />
 
@@ -961,6 +1020,66 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Pattern setup dialog */}
+      {showPatternSetup && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm safe-top safe-bottom"
+          data-testid="pattern-setup-dialog"
+        >
+          <div className="flex flex-col items-center gap-6 p-6 max-w-sm mx-auto">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">
+                {patternStep === 'draw' ? 'Draw Your Pattern' : 'Confirm Your Pattern'}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {patternStep === 'draw' 
+                  ? 'Connect at least 4 dots to create your secret pattern'
+                  : 'Draw the same pattern again to confirm'}
+              </p>
+            </div>
+            
+            <div className={`p-4 rounded-xl bg-muted/30 ${patternError ? 'animate-shake ring-2 ring-destructive' : ''}`}>
+              <PatternLock
+                onPatternComplete={handlePatternDraw}
+                size={220}
+                dotSize={18}
+                lineColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                activeDotColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+              />
+            </div>
+            
+            {patternError && (
+              <p className="text-sm text-destructive">
+                Patterns don't match. Try again.
+              </p>
+            )}
+            
+            <div className="flex gap-2">
+              {patternStep === 'confirm' && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPatternStep('draw');
+                    setTempPattern('');
+                    setPatternError(false);
+                  }}
+                  data-testid="button-pattern-back"
+                >
+                  Back
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                onClick={handleCancelPatternSetup}
+                data-testid="button-pattern-cancel"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

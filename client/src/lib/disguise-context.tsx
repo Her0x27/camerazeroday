@@ -6,6 +6,7 @@ interface DisguiseSettings {
   enabled: boolean;
   gestureType: GestureType;
   autoLockMinutes: number;
+  secretPattern: string;
 }
 
 interface DisguiseContextType {
@@ -28,6 +29,7 @@ const defaultSettings: DisguiseSettings = {
   enabled: false,
   gestureType: 'quickTaps',
   autoLockMinutes: 1,
+  secretPattern: '',
 };
 
 function loadSettings(): DisguiseSettings {

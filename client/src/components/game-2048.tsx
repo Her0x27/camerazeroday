@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
+import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { PatternLock, patternToString } from "@/components/pattern-lock";
 
 type Grid = number[][];
 
@@ -146,10 +147,11 @@ function hasWon(grid: Grid): boolean {
 interface Game2048Props {
   onSecretGesture?: () => void;
   gestureType?: 'quickTaps' | 'patternUnlock';
+  secretPattern?: string;
   onActivity?: () => void;
 }
 
-export function Game2048({ onSecretGesture, gestureType = 'quickTaps', onActivity }: Game2048Props) {
+export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPattern = '', onActivity }: Game2048Props) {
   const { t } = useI18n();
   const [grid, setGrid] = useState<Grid>(initializeGrid);
   const [score, setScore] = useState(0);
@@ -160,10 +162,13 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', onActivit
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [keepPlaying, setKeepPlaying] = useState(false);
+  const [showPatternOverlay, setShowPatternOverlay] = useState(false);
+  const [patternError, setPatternError] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const tapTimesRef = useRef<number[]>([]);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const patternTapTimesRef = useRef<number[]>([]);
   
   const handleMove = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
     if (gameOver || (won && !keepPlaying)) return;
@@ -193,17 +198,47 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', onActivit
   }, [grid, gameOver, won, keepPlaying, bestScore, onActivity]);
   
   const handleSecretTap = useCallback(() => {
-    if (gestureType !== 'quickTaps' || !onSecretGesture) return;
+    if (!onSecretGesture) return;
     
-    const now = Date.now();
-    tapTimesRef.current = tapTimesRef.current.filter(t => now - t < 1000);
-    tapTimesRef.current.push(now);
-    
-    if (tapTimesRef.current.length >= 4) {
-      tapTimesRef.current = [];
-      onSecretGesture();
+    if (gestureType === 'quickTaps') {
+      const now = Date.now();
+      tapTimesRef.current = tapTimesRef.current.filter(t => now - t < 1000);
+      tapTimesRef.current.push(now);
+      
+      if (tapTimesRef.current.length >= 4) {
+        tapTimesRef.current = [];
+        onSecretGesture();
+      }
+    } else if (gestureType === 'patternUnlock') {
+      const now = Date.now();
+      patternTapTimesRef.current = patternTapTimesRef.current.filter(t => now - t < 800);
+      patternTapTimesRef.current.push(now);
+      
+      if (patternTapTimesRef.current.length >= 3) {
+        patternTapTimesRef.current = [];
+        setShowPatternOverlay(true);
+        setPatternError(false);
+      }
     }
   }, [gestureType, onSecretGesture]);
+  
+  const handlePatternComplete = useCallback((pattern: number[]) => {
+    const enteredPattern = patternToString(pattern);
+    
+    if (enteredPattern === secretPattern) {
+      setShowPatternOverlay(false);
+      setPatternError(false);
+      onSecretGesture?.();
+    } else {
+      setPatternError(true);
+      setTimeout(() => setPatternError(false), 1000);
+    }
+  }, [secretPattern, onSecretGesture]);
+  
+  const handleClosePatternOverlay = useCallback(() => {
+    setShowPatternOverlay(false);
+    setPatternError(false);
+  }, []);
   
   const handleNewGame = useCallback(() => {
     setGrid(initializeGrid());
@@ -386,6 +421,48 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', onActivit
           </div>
         </CardContent>
       </Card>
+      
+      {showPatternOverlay && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+          onClick={handleClosePatternOverlay}
+          data-testid="pattern-overlay"
+        >
+          <div 
+            className="flex flex-col items-center gap-6 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Lock className="w-5 h-5" />
+              <span className="text-sm font-medium">{t.game2048.drawPattern}</span>
+            </div>
+            
+            <div className={`p-4 rounded-xl bg-muted/30 ${patternError ? 'animate-shake ring-2 ring-destructive' : ''}`}>
+              <PatternLock
+                onPatternComplete={handlePatternComplete}
+                size={220}
+                dotSize={18}
+                lineColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                activeDotColor={patternError ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+              />
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+              {t.game2048.patternHint}
+            </p>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClosePatternOverlay}
+              className="text-muted-foreground"
+              data-testid="button-cancel-pattern"
+            >
+              {t.game2048.cancel}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -223,6 +223,9 @@ export const en = {
     keepPlaying: "Keep Playing",
     instructions: "Join the tiles, get to 2048!",
     swipeToMove: "Swipe to move tiles",
+    drawPattern: "Draw Pattern to Unlock",
+    patternHint: "Connect at least 4 dots",
+    cancel: "Cancel",
   },
   
   errors: {

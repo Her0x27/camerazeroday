@@ -22,6 +22,7 @@ export default function DisguiseGamePage() {
     <Game2048
       onSecretGesture={handleSecretGesture}
       gestureType={settings.gestureType}
+      secretPattern={settings.secretPattern}
     />
   );
 }
