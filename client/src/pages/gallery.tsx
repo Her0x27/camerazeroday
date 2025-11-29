@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { getAllPhotos, deletePhoto, clearAllPhotos, getPhotosByFolder } from "@/lib/db";
-import { formatRelativeDate } from "@/lib/format-utils";
 import type { Photo, GalleryFilter } from "@shared/schema";
 
 type ViewMode = "folders" | "photos";
@@ -398,12 +397,6 @@ export default function GalleryPage() {
                       GPS
                     </Badge>
                   )}
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                  <span className="font-mono text-[10px] text-white/90">
-                    {formatRelativeDate(photo.metadata.timestamp)}
-                  </span>
                 </div>
 
                 <Button

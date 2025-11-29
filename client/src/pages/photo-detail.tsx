@@ -299,7 +299,6 @@ export default function PhotoDetailPage() {
           longitude={photo.metadata.longitude}
           altitude={photo.metadata.altitude}
           heading={photo.metadata.heading}
-          timestamp={photo.metadata.timestamp}
         />
 
         {/* Note section */}

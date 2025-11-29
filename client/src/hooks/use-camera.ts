@@ -174,27 +174,14 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       ctx.fillText(`TILT: ${formatTilt(metadata.tilt)}`, rightX, yRight);
     }
     
-    // TIMESTAMP - Bottom center
-    if (metadata.timestamp) {
-      const date = new Date(metadata.timestamp);
-      const timeStr = date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      const smallFontSize = Math.ceil(fontSize * 0.8);
-      ctx.font = `${smallFontSize}px monospace`;
-      const textMetrics = ctx.measureText(timeStr);
-      const timeX = (width - textMetrics.width) / 2;
-      const timeY = height - padding - smallFontSize;
-      ctx.strokeText(timeStr, timeX, timeY);
-      ctx.fillText(timeStr, timeX, timeY);
-    }
-    
-    // NOTE - Below timestamp
+    // NOTE - Bottom center
     if (metadata.note && metadata.note.trim()) {
       const smallFontSize = Math.ceil(fontSize * 0.75);
       ctx.font = `${smallFontSize}px monospace`;
       const noteText = `NOTE: ${metadata.note}`;
       const textMetrics = ctx.measureText(noteText);
       const noteX = Math.max(padding, (width - textMetrics.width) / 2);
-      const noteY = height - padding - smallFontSize * 2.5;
+      const noteY = height - padding - smallFontSize;
       ctx.strokeText(noteText, noteX, noteY);
       ctx.fillText(noteText, noteX, noteY);
     }

@@ -2,7 +2,6 @@ import { memo } from "react";
 import { MapPin, Compass, Mountain, Target, Signal } from "lucide-react";
 import { formatCoordinate, formatAltitude, formatAccuracy } from "@/hooks/use-geolocation";
 import { formatHeading, getCardinalDirection } from "@/hooks/use-orientation";
-import { formatTimeShort } from "@/lib/format-utils";
 
 interface MetadataOverlayProps {
   latitude: number | null;
@@ -73,13 +72,6 @@ export const MetadataOverlay = memo(function MetadataOverlay({
         </div>
       </div>
 
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-5">
-        <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1">
-          <span className="font-mono text-[10px] text-white/70 tracking-wider">
-            {formatTimeShort()}
-          </span>
-        </div>
-      </div>
     </>
   );
 });
@@ -90,7 +82,6 @@ interface MetadataCompactProps {
   longitude: number | null;
   altitude: number | null;
   heading: number | null;
-  timestamp: number;
   className?: string;
 }
 
@@ -99,30 +90,12 @@ export function MetadataCompact({
   longitude,
   altitude,
   heading,
-  timestamp,
   className = "",
 }: MetadataCompactProps) {
   const hasLocation = latitude !== null && longitude !== null;
-  const date = new Date(timestamp);
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Timestamp */}
-      <div className="text-sm text-muted-foreground">
-        {date.toLocaleDateString("en-US", {
-          weekday: "short",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
-        {" at "}
-        {date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </div>
-
       {/* Location */}
       <div className="flex items-start gap-3">
         <MapPin className={`w-4 h-4 mt-0.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
