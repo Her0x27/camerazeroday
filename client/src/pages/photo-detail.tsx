@@ -178,42 +178,40 @@ export default function PhotoDetailPage() {
   return (
     <div className="fixed inset-0 bg-black">
       {/* Fullscreen photo display */}
-      <div className="w-full h-full flex items-center justify-center">
-        <img
-          src={photo.imageData}
-          alt="Photo"
-          className="w-full h-full object-contain"
-          data-testid="photo-image"
-        />
+      <img
+        src={photo.imageData}
+        alt="Photo"
+        className="absolute inset-0 w-full h-full object-contain"
+        data-testid="photo-image"
+      />
 
-        {/* Navigation arrows */}
-        {hasPrevious && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60"
-            onClick={goToPrevious}
-            data-testid="button-previous"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-        )}
+      {/* Navigation arrows */}
+      {hasPrevious && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60 z-40"
+          onClick={goToPrevious}
+          data-testid="button-previous"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Button>
+      )}
 
-        {hasNext && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60"
-            onClick={goToNext}
-            data-testid="button-next"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </Button>
-        )}
-      </div>
+      {hasNext && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white hover:bg-black/60 z-40"
+          onClick={goToNext}
+          data-testid="button-next"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </Button>
+      )}
 
       {/* Transparent header at bottom */}
-      <header className="absolute bottom-0 left-0 right-0 z-50 bg-transparent safe-bottom">
+      <header className="absolute bottom-0 left-0 right-0 z-50 bg-transparent">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <Button
             variant="ghost"
