@@ -131,7 +131,7 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Crosshair size */}
+            {/* Crosshair size - % of screen */}
             {settings.reticle.enabled && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -140,21 +140,21 @@ export default function SettingsPage() {
                     Size
                   </Label>
                   <span className="text-sm text-muted-foreground font-mono">
-                    {settings.reticle.size}px
+                    {settings.reticle.size}%
                   </span>
                 </div>
                 <Slider
                   value={[settings.reticle.size]}
                   onValueChange={([value]) => updateReticle({ size: value })}
-                  min={40}
-                  max={300}
-                  step={10}
+                  min={5}
+                  max={50}
+                  step={1}
                   data-testid="slider-reticle-size"
                 />
               </div>
             )}
 
-            {/* Stroke Width */}
+            {/* Stroke Width - % of reticle size */}
             {settings.reticle.enabled && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -163,11 +163,11 @@ export default function SettingsPage() {
                     Thickness
                   </Label>
                   <span className="text-sm text-muted-foreground font-mono">
-                    {settings.reticle.strokeWidth || 2}px
+                    {settings.reticle.strokeWidth || 3}%
                   </span>
                 </div>
                 <Slider
-                  value={[settings.reticle.strokeWidth || 2]}
+                  value={[settings.reticle.strokeWidth || 3]}
                   onValueChange={([value]) => updateReticle({ strokeWidth: value })}
                   min={1}
                   max={10}

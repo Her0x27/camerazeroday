@@ -29,12 +29,12 @@ export type Photo = z.infer<typeof photoSchema>;
 export const insertPhotoSchema = photoSchema.omit({ id: true });
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 
-// Reticle configuration
+// Reticle configuration (all values are percentages for consistency)
 export const reticleConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  size: z.number().min(40).max(300).default(120), // size in pixels
-  opacity: z.number().min(10).max(100).default(50),
-  strokeWidth: z.number().min(1).max(10).default(2), // line thickness in pixels
+  size: z.number().min(5).max(50).default(20), // size as % of viewport min dimension
+  opacity: z.number().min(10).max(100).default(50), // opacity %
+  strokeWidth: z.number().min(1).max(10).default(3), // line thickness as % of reticle size
   showMetadata: z.boolean().default(true),
 });
 
@@ -55,9 +55,9 @@ export type Settings = z.infer<typeof settingsSchema>;
 export const defaultSettings: Settings = {
   reticle: {
     enabled: true,
-    size: 120,
+    size: 20,
     opacity: 50,
-    strokeWidth: 2,
+    strokeWidth: 3,
     showMetadata: true,
   },
   gpsEnabled: true,

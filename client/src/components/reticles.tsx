@@ -9,15 +9,17 @@ interface ReticleProps {
 export const Reticle = memo(function Reticle({ config, className = "" }: ReticleProps) {
   if (!config.enabled) return null;
 
+  const sizePercent = config.size || 20;
+  const strokeWidthPercent = config.strokeWidth || 3;
+
   const style = {
     opacity: config.opacity / 100,
     color: "#22c55e",
-    width: `${config.size}px`,
-    height: `${config.size}px`,
+    width: `${sizePercent}vmin`,
+    height: `${sizePercent}vmin`,
   };
 
-  const strokeWidth = config.strokeWidth || 2;
-  const svgStrokeWidth = (strokeWidth / config.size) * 100;
+  const svgStrokeWidth = strokeWidthPercent;
 
   return (
     <div 

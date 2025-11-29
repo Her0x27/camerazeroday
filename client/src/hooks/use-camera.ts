@@ -282,20 +282,19 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     const iconSize = Math.ceil(fontSize * 1.1);
     const iconGap = Math.ceil(fontSize * 0.5);
     
-    // Draw crosshair in center - using reticle config settings
+    // Draw crosshair in center - using reticle config settings (all percentages)
     if (reticleConfig?.enabled !== false) {
       const centerX = width / 2;
       const centerY = height / 2;
-      const baseSize = reticleConfig?.size || 120;
-      const sizeRatio = baseSize / 120;
-      const reticleSize = Math.ceil(minDimension * 0.08 * sizeRatio);
       
-      const opacity = reticleConfig?.opacity ? reticleConfig.opacity / 100 : 0.7;
+      const sizePercent = reticleConfig?.size || 20;
+      const reticleSize = Math.ceil(minDimension * (sizePercent / 100) / 2);
+      
+      const opacity = reticleConfig?.opacity ? reticleConfig.opacity / 100 : 0.5;
       const greenColor = `rgba(34, 197, 94, ${opacity})`;
       
-      const configStrokeWidth = reticleConfig?.strokeWidth || 2;
-      const scaleFactor = reticleSize / 50;
-      const scaledStrokeWidth = Math.max(1, Math.round(configStrokeWidth * scaleFactor));
+      const strokeWidthPercent = reticleConfig?.strokeWidth || 3;
+      const scaledStrokeWidth = Math.max(1, Math.ceil(reticleSize * 2 * (strokeWidthPercent / 100)));
       
       ctx.strokeStyle = greenColor;
       ctx.lineWidth = scaledStrokeWidth;
