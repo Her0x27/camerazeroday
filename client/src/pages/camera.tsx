@@ -242,18 +242,18 @@ export default function CameraPage() {
 
       {/* Bottom controls */}
       <div className="bg-black/80 backdrop-blur-sm safe-bottom z-10">
-        <div className="flex items-center justify-center gap-6 px-6 py-4">
+        <div className="flex items-center justify-center gap-[5%] px-[5%] py-[3%] h-32">
           {/* Gallery button */}
           <Button
             variant="ghost"
             size="icon"
-            className="w-14 h-14 rounded-md bg-card/50 text-white hover:bg-card relative flex-shrink-0"
+            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square flex-1 max-w-[22%]"
             onClick={() => navigate("/gallery")}
             data-testid="button-gallery"
           >
-            <Image className="w-6 h-6" />
+            <Image className="w-[50%] h-[50%]" />
             {photoCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-[20%] min-w-5 h-[20%] min-h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center">
                 {photoCount > 99 ? "99+" : photoCount}
               </span>
             )}
@@ -263,7 +263,7 @@ export default function CameraPage() {
           <button
             onClick={handleCapture}
             disabled={!isReady || isCapturing}
-            className={`flex-shrink-0 w-20 h-20 rounded-full border-4 flex items-center justify-center transition-all ${
+            className={`aspect-square flex-[1.5] max-w-32 rounded-full border-4 flex items-center justify-center transition-all ${
               isReady && !isCapturing
                 ? "border-white bg-white/10 hover:bg-white/20 active:scale-95 active:bg-white/30"
                 : "border-muted-foreground/50 bg-muted/20"
@@ -271,7 +271,7 @@ export default function CameraPage() {
             data-testid="button-capture"
           >
             <div 
-              className={`w-16 h-16 rounded-full transition-all ${
+              className={`w-[80%] h-[80%] rounded-full transition-all ${
                 isCapturing 
                   ? "bg-primary scale-75" 
                   : isReady 
@@ -285,11 +285,11 @@ export default function CameraPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="w-14 h-14 rounded-md bg-card/50 text-white hover:bg-card relative flex-shrink-0"
+            className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square flex-1 max-w-[22%]"
             onClick={() => setShowNoteDialog(true)}
             data-testid="button-note"
           >
-            <FileText className="w-6 h-6" />
+            <FileText className="w-[50%] h-[50%]" />
             {currentNote && (
               <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
             )}
