@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -116,121 +117,148 @@ export default function SettingsPage() {
               Crosshair
             </CardTitle>
             <CardDescription>
-              Adjust crosshair appearance
+              Customize the aiming crosshair display on camera screen
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Enable reticle */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="reticle-enabled" className="flex items-center gap-2 cursor-pointer">
-                <Eye className="w-4 h-4" />
-                Show Crosshair
-              </Label>
-              <Switch
-                id="reticle-enabled"
-                checked={settings.reticle.enabled}
-                onCheckedChange={(checked) => updateReticle({ enabled: checked })}
-                data-testid="switch-reticle-enabled"
-              />
-            </div>
-
-            {/* Crosshair size - % of screen */}
-            {settings.reticle.enabled && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <Crosshair className="w-4 h-4" />
-                    Size
-                  </Label>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {settings.reticle.size}%
-                  </span>
-                </div>
-                <Slider
-                  value={[settings.reticle.size]}
-                  onValueChange={([value]) => updateReticle({ size: value })}
-                  min={5}
-                  max={50}
-                  step={1}
-                  data-testid="slider-reticle-size"
-                />
-              </div>
-            )}
-
-            {/* Stroke Width - % of reticle size */}
-            {settings.reticle.enabled && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <Crosshair className="w-4 h-4" />
-                    Thickness
-                  </Label>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {settings.reticle.strokeWidth || 3}%
-                  </span>
-                </div>
-                <Slider
-                  value={[settings.reticle.strokeWidth || 3]}
-                  onValueChange={([value]) => updateReticle({ strokeWidth: value })}
-                  min={1}
-                  max={10}
-                  step={1}
-                  data-testid="slider-stroke-width"
-                />
-              </div>
-            )}
-
-            {/* Opacity */}
-            {settings.reticle.enabled && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Opacity
-                  </Label>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {settings.reticle.opacity}%
-                  </span>
-                </div>
-                <Slider
-                  value={[settings.reticle.opacity]}
-                  onValueChange={([value]) => updateReticle({ opacity: value })}
-                  min={10}
-                  max={100}
-                  step={5}
-                  data-testid="slider-opacity"
-                />
-              </div>
-            )}
-
-            {/* Auto color */}
-            {settings.reticle.enabled && (
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
-                  <Palette className="w-4 h-4" />
-                  Auto Color
+                <Label htmlFor="reticle-enabled" className="flex items-center gap-2 cursor-pointer">
+                  <Eye className="w-4 h-4" />
+                  Show Crosshair
                 </Label>
                 <Switch
-                  id="auto-color"
-                  checked={settings.reticle.autoColor}
-                  onCheckedChange={(checked) => updateReticle({ autoColor: checked })}
-                  data-testid="switch-auto-color"
+                  id="reticle-enabled"
+                  checked={settings.reticle.enabled}
+                  onCheckedChange={(checked) => updateReticle({ enabled: checked })}
+                  data-testid="switch-reticle-enabled"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Display crosshair overlay in camera viewfinder
+              </p>
+            </div>
+
+            {/* Crosshair appearance settings */}
+            {settings.reticle.enabled && (
+              <>
+                <Separator />
+                
+                {/* Crosshair size - % of screen */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Crosshair className="w-4 h-4" />
+                      Size
+                    </Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {settings.reticle.size}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[settings.reticle.size]}
+                    onValueChange={([value]) => updateReticle({ size: value })}
+                    min={5}
+                    max={50}
+                    step={1}
+                    data-testid="slider-reticle-size"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Crosshair size relative to screen
+                  </p>
+                </div>
+
+                {/* Stroke Width - % of reticle size */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Crosshair className="w-4 h-4" />
+                      Thickness
+                    </Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {settings.reticle.strokeWidth || 3}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[settings.reticle.strokeWidth || 3]}
+                    onValueChange={([value]) => updateReticle({ strokeWidth: value })}
+                    min={1}
+                    max={10}
+                    step={1}
+                    data-testid="slider-stroke-width"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Line thickness of crosshair
+                  </p>
+                </div>
+
+                {/* Opacity */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      Opacity
+                    </Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {settings.reticle.opacity}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[settings.reticle.opacity]}
+                    onValueChange={([value]) => updateReticle({ opacity: value })}
+                    min={10}
+                    max={100}
+                    step={5}
+                    data-testid="slider-opacity"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Crosshair transparency level
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Auto color */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
+                      <Palette className="w-4 h-4" />
+                      Auto Color
+                    </Label>
+                    <Switch
+                      id="auto-color"
+                      checked={settings.reticle.autoColor}
+                      onCheckedChange={(checked) => updateReticle({ autoColor: checked })}
+                      data-testid="switch-auto-color"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically adjust crosshair color for better contrast
+                  </p>
+                </div>
+              </>
             )}
 
+            <Separator />
+
             {/* Show metadata overlay */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-metadata" className="flex items-center gap-2 cursor-pointer">
-                <Eye className="w-4 h-4" />
-                Show Metadata
-              </Label>
-              <Switch
-                id="show-metadata"
-                checked={settings.reticle.showMetadata}
-                onCheckedChange={(checked) => updateReticle({ showMetadata: checked })}
-                data-testid="switch-show-metadata"
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="show-metadata" className="flex items-center gap-2 cursor-pointer">
+                  <Eye className="w-4 h-4" />
+                  Show Metadata
+                </Label>
+                <Switch
+                  id="show-metadata"
+                  checked={settings.reticle.showMetadata}
+                  onCheckedChange={(checked) => updateReticle({ showMetadata: checked })}
+                  data-testid="switch-show-metadata"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Display GPS coordinates, altitude and orientation on screen
+              </p>
             </div>
 
             {/* Watermark Scale */}
@@ -253,6 +281,9 @@ export default function SettingsPage() {
                   step={10}
                   data-testid="slider-watermark-scale"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Size of metadata watermarks on captured photos
+                </p>
               </div>
             )}
           </CardContent>
@@ -266,22 +297,27 @@ export default function SettingsPage() {
               Capture
             </CardTitle>
             <CardDescription>
-              Configure location and orientation tracking
+              Configure location tracking and photo capture settings
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {/* GPS Enabled */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="gps-enabled" className="flex items-center gap-2 cursor-pointer">
-                <MapPin className="w-4 h-4" />
-                GPS Location
-              </Label>
-              <Switch
-                id="gps-enabled"
-                checked={settings.gpsEnabled}
-                onCheckedChange={(checked) => updateSettings({ gpsEnabled: checked })}
-                data-testid="switch-gps"
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="gps-enabled" className="flex items-center gap-2 cursor-pointer">
+                  <MapPin className="w-4 h-4" />
+                  GPS Location
+                </Label>
+                <Switch
+                  id="gps-enabled"
+                  checked={settings.gpsEnabled}
+                  onCheckedChange={(checked) => updateSettings({ gpsEnabled: checked })}
+                  data-testid="switch-gps"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Record GPS coordinates when capturing photos
+              </p>
             </div>
 
             {/* GPS Accuracy Limit */}
@@ -310,36 +346,50 @@ export default function SettingsPage() {
               </div>
             )}
 
+            <Separator />
+
             {/* Orientation Enabled */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="orientation-enabled" className="flex items-center gap-2 cursor-pointer">
-                <Compass className="w-4 h-4" />
-                Compass & Orientation
-              </Label>
-              <Switch
-                id="orientation-enabled"
-                checked={settings.orientationEnabled}
-                onCheckedChange={(checked) => updateSettings({ orientationEnabled: checked })}
-                data-testid="switch-orientation"
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="orientation-enabled" className="flex items-center gap-2 cursor-pointer">
+                  <Compass className="w-4 h-4" />
+                  Compass & Orientation
+                </Label>
+                <Switch
+                  id="orientation-enabled"
+                  checked={settings.orientationEnabled}
+                  onCheckedChange={(checked) => updateSettings({ orientationEnabled: checked })}
+                  data-testid="switch-orientation"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Record compass heading and device tilt angle
+              </p>
             </div>
 
+            <Separator />
+
             {/* Sound Enabled */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="sound-enabled" className="flex items-center gap-2 cursor-pointer">
-                {settings.soundEnabled ? (
-                  <Volume2 className="w-4 h-4" />
-                ) : (
-                  <VolumeX className="w-4 h-4" />
-                )}
-                Capture Sound
-              </Label>
-              <Switch
-                id="sound-enabled"
-                checked={settings.soundEnabled}
-                onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
-                data-testid="switch-sound"
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="sound-enabled" className="flex items-center gap-2 cursor-pointer">
+                  {settings.soundEnabled ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <VolumeX className="w-4 h-4" />
+                  )}
+                  Capture Sound
+                </Label>
+                <Switch
+                  id="sound-enabled"
+                  checked={settings.soundEnabled}
+                  onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
+                  data-testid="switch-sound"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Play shutter sound when taking a photo
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -352,7 +402,7 @@ export default function SettingsPage() {
               Storage
             </CardTitle>
             <CardDescription>
-              Manage local photo storage
+              View and manage locally stored photos on your device
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -383,31 +433,52 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <Button
-              variant="outline"
-              className="w-full text-destructive hover:text-destructive"
-              onClick={() => setShowClearDialog(true)}
-              disabled={!storageInfo || storageInfo.photos === 0}
-              data-testid="button-clear-storage"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear All Photos
-            </Button>
+            <Separator />
+
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={() => setShowClearDialog(true)}
+                disabled={!storageInfo || storageInfo.photos === 0}
+                data-testid="button-clear-storage"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear All Photos
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Permanently delete all photos from local storage
+              </p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Reset Settings */}
         <Card>
-          <CardContent className="pt-6">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowResetDialog(true)}
-              data-testid="button-reset-settings"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset All Settings
-            </Button>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <RotateCcw className="w-5 h-5 text-primary" />
+              Reset
+            </CardTitle>
+            <CardDescription>
+              Restore all settings to factory defaults
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowResetDialog(true)}
+                data-testid="button-reset-settings"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset All Settings
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Your photos will not be affected
+              </p>
+            </div>
           </CardContent>
         </Card>
 
