@@ -177,8 +177,8 @@ export default function SettingsPage() {
     }
   }, [apiKeyInput, settings.imgbb, updateSettings]);
 
-  const handleImgbbUpdate = useCallback(async (updates: Partial<typeof settings.imgbb>) => {
-    await updateSettings({
+  const handleImgbbUpdate = useCallback((updates: Partial<typeof settings.imgbb>) => {
+    updateSettings({
       imgbb: {
         ...settings.imgbb,
         ...updates,

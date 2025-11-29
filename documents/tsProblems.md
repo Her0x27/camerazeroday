@@ -29,7 +29,7 @@
 
 - [x] Create `<LocationBadge />` component
 - [x] Create `<NoteBadge />` component
-- [ ] Refactor gallery.tsx to use the new components
+- [x] Refactor gallery.tsx to use the new components
 - [x] Add consistent sizing variants
 
 ### 1.4 Toast Notification Patterns
@@ -49,18 +49,18 @@
 
 - [x] Create `usePhotoMutations()` hook with delete, update operations
 - [x] Include cache invalidation logic in the hook
-- [ ] Refactor gallery.tsx to use the hook
-- [ ] Refactor photo-detail.tsx to use the hook
+- [x] Refactor gallery.tsx to use the hook
+- [x] Refactor photo-detail.tsx to use the hook
 
 ### 1.6 Upload Progress Tracking Duplication
 **Location:** `client/src/pages/gallery.tsx` (lines 200-250), `client/src/pages/camera.tsx` (lines 180-220)
 **Problem:** Upload progress state management and UI rendering duplicated.
 **Recommendation:** Create a shared upload progress hook and component.
 
-- [ ] Create `useUploadProgress()` hook
+- [x] Create `useUploadProgress()` hook
 - [x] Create `<UploadProgressOverlay />` component
-- [ ] Refactor gallery.tsx to use the shared components
-- [ ] Refactor camera.tsx to use the shared components
+- [x] Refactor gallery.tsx to use the shared components
+- [ ] Refactor camera.tsx to use the shared components (camera.tsx uses single upload, not batch)
 
 ---
 
@@ -304,8 +304,8 @@
 **Recommendation:** Add debounce to slider change handlers.
 
 - [x] Create `useDebouncedCallback` hook
-- [ ] Apply to all slider `onValueChange` handlers
-- [ ] Use 300-500ms debounce delay
+- [x] Apply to all slider `onValueChange` handlers
+- [x] Use 300-500ms debounce delay
 - [ ] Show pending state during debounce
 
 ### 6.4 Potential Memory Leaks in Event Listeners
@@ -478,7 +478,7 @@
 - [ ] Clean up unused imports and dead code
 - [x] Add memoization where beneficial (pattern-lock SVG, game tiles)
 - [ ] Standardize error handling patterns
-- [ ] Add debounce to settings sliders
+- [x] Add debounce to settings sliders
 - [ ] Improve folder structure organization
 
 ---
@@ -511,3 +511,30 @@
 - Added isSupported flag to useStorage for device compatibility
 - Added structured MutationResult type to usePhotoMutations for actionable error handling
 - Replaced Promise.all with Promise.allSettled in imgbb.ts for partial failure resilience
+
+### Session 2 Changes
+- `client/src/hooks/use-upload-progress.ts` - Upload progress state management hook
+- `client/src/pages/gallery.tsx` - Refactored to use LocationBadge, NoteBadge, useUploadProgress
+- `client/src/pages/photo-detail.tsx` - Refactored to use usePhotoMutations and ConfirmDialog
+- `client/src/components/upload-progress-overlay.tsx` - Added `isVisible` prop for conditional rendering
+
+### Session 3 Changes (Debounce Implementation)
+**Problem**: Initial approach debounced updateSettings at UI level, causing slider lag (300ms delay for every movement)
+
+**Solution**: Moved debounce to storage layer (SettingsContext)
+- `client/src/lib/settings-context.tsx` - Implemented debounced storage save while keeping UI updates immediate
+  - `updateSettings()` now synchronous: updates React state immediately, debounces storage write (300ms)
+  - `updateReticle()` now synchronous: delegates to updateSettings for consistency
+  - Added `saveTimeoutRef` and `pendingSettingsRef` for proper debounce management
+  - Added cleanup on unmount to save any pending changes
+  - Changed type signatures: `updateSettings`, `updateReticle` return `void` instead of `Promise<void>`
+
+**Result**: Sliders are now responsive while still preventing excessive storage writes
+- UI updates: immediate (smooth slider interaction)
+- Storage writes: debounced (300ms delay, uses TIMING.DEBOUNCE_DELAY_MS)
+- Memory safety: cleanup on unmount saves pending changes
+- Async handlers removed: no more `.then()` chains needed in components
+
+**Refactored Files**:
+- `client/src/pages/settings.tsx` - All slider handlers now use synchronous updateSettings/updateReticle
+- Removed: debounced wrapper functions that were causing issues

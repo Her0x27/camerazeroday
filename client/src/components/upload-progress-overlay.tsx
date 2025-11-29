@@ -4,16 +4,20 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 interface UploadProgressOverlayProps {
+  isVisible: boolean;
   completed: number;
   total: number;
   title?: string;
 }
 
 export const UploadProgressOverlay = memo(function UploadProgressOverlay({
+  isVisible,
   completed,
   total,
   title = "Uploading to Cloud",
 }: UploadProgressOverlayProps) {
+  if (!isVisible) return null;
+  
   const percentage = total > 0 ? (completed / total) * 100 : 0;
   
   return (

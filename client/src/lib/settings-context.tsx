@@ -1,13 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import type { Settings, ReticleConfig } from "@shared/schema";
 import { defaultSettings } from "@shared/schema";
 import { getSettings, saveSettings } from "./db";
+import { TIMING } from "./constants";
 
 interface SettingsContextType {
   settings: Settings;
   isLoading: boolean;
-  updateSettings: (updates: Partial<Settings>) => Promise<void>;
-  updateReticle: (updates: Partial<ReticleConfig>) => Promise<void>;
+  updateSettings: (updates: Partial<Settings>) => void;
+  updateReticle: (updates: Partial<ReticleConfig>) => void;
   resetSettings: () => Promise<void>;
 }
 
@@ -16,6 +17,41 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSettingsRef = useRef<Settings | null>(null);
+
+  // Debounced save to storage - updates UI immediately, saves after delay
+  const debouncedSave = useCallback((newSettings: Settings) => {
+    pendingSettingsRef.current = newSettings;
+    
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (pendingSettingsRef.current) {
+        try {
+          await saveSettings(pendingSettingsRef.current);
+        } catch (error) {
+          console.error("Failed to save settings:", error);
+        }
+        pendingSettingsRef.current = null;
+      }
+    }, TIMING.DEBOUNCE_DELAY_MS);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // Save any pending settings on unmount
+        if (pendingSettingsRef.current) {
+          saveSettings(pendingSettingsRef.current).catch(console.error);
+        }
+      }
+    };
+  }, []);
 
   // Load settings on mount
   useEffect(() => {
@@ -33,19 +69,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     loadSettings();
   }, []);
 
-  const updateSettings = useCallback(async (updates: Partial<Settings>) => {
+  const updateSettings = useCallback((updates: Partial<Settings>) => {
     const newSettings = { ...settings, ...updates };
-    setSettings(newSettings);
-    try {
-      await saveSettings(newSettings);
-    } catch (error) {
-      console.error("Failed to save settings:", error);
-    }
-  }, [settings]);
+    setSettings(newSettings);  // Update UI immediately
+    debouncedSave(newSettings); // Debounce storage save
+  }, [settings, debouncedSave]);
 
-  const updateReticle = useCallback(async (updates: Partial<ReticleConfig>) => {
+  const updateReticle = useCallback((updates: Partial<ReticleConfig>) => {
     const newReticle = { ...settings.reticle, ...updates };
-    await updateSettings({ reticle: newReticle });
+    updateSettings({ reticle: newReticle });
   }, [settings.reticle, updateSettings]);
 
   const resetSettings = useCallback(async () => {

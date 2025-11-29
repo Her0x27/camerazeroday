@@ -26,6 +26,7 @@ import { uploadMultipleToImgBB } from "@/lib/imgbb";
 import { useSettings } from "@/lib/settings-context";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoMutations } from "@/hooks/use-photo-mutations";
+import { useUploadProgress } from "@/hooks/use-upload-progress";
 import { useI18n } from "@/lib/i18n";
 import { formatDate } from "@/lib/date-utils";
 import { UploadProgressOverlay } from "@/components/upload-progress-overlay";
@@ -47,6 +48,7 @@ export default function GalleryPage() {
   const { toast } = useToast();
   const { t, language } = useI18n();
   const { deletePhotoById, clearAll } = usePhotoMutations();
+  const { isUploading, progress: uploadProgress, startUpload, updateProgress, finishUpload } = useUploadProgress();
   
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,8 +59,6 @@ export default function GalleryPage() {
   const [selectedFolder, setSelectedFolder] = useState<string | null | undefined>(undefined);
   const [displayType, setDisplayType] = useState<DisplayType>("list");
   
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [showLinksDialog, setShowLinksDialog] = useState(false);
   const [linksToShow, setLinksToShow] = useState<Array<{ id: string; url: string; deleteUrl: string }>>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -193,15 +193,14 @@ export default function GalleryPage() {
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress({ completed: 0, total: photosToUpload.length });
+    startUpload(photosToUpload.length);
 
     try {
       const results = await uploadMultipleToImgBB(
         photosToUpload.map(p => ({ id: p.id, imageData: p.imageData })),
         settings.imgbb.apiKey,
         settings.imgbb.expiration || 0,
-        (completed, total) => setUploadProgress({ completed, total })
+        updateProgress
       );
 
       let successCount = 0;
@@ -230,10 +229,9 @@ export default function GalleryPage() {
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
-      setUploadProgress({ completed: 0, total: 0 });
+      finishUpload();
     }
-  }, [settings.imgbb, toast, t]);
+  }, [settings.imgbb, toast, t, startUpload, updateProgress, finishUpload]);
 
   // Upload current folder or all photos
   const handleUploadCurrentView = useCallback(async () => {
@@ -643,24 +641,8 @@ export default function GalleryPage() {
                     {formatDate(photo.metadata.timestamp, "long")}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    {photo.metadata.latitude !== null && (
-                      <Badge 
-                        variant="secondary" 
-                        className="text-[10px] px-1.5 py-0.5"
-                      >
-                        <MapPin className="w-2.5 h-2.5 mr-0.5" />
-                        GPS
-                      </Badge>
-                    )}
-                    {photo.note && (
-                      <Badge 
-                        variant="secondary" 
-                        className="text-[10px] px-1.5 py-0.5"
-                      >
-                        <FileText className="w-2.5 h-2.5 mr-0.5" />
-                        Note
-                      </Badge>
-                    )}
+                    {photo.metadata.latitude !== null && <LocationBadge />}
+                    {photo.note && <NoteBadge />}
                   </div>
                 </div>
 
@@ -696,15 +678,8 @@ export default function GalleryPage() {
                 />
 
                 <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                  {photo.metadata.latitude !== null && (
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-black/60 text-white border-none text-[10px] px-1.5 py-0.5"
-                    >
-                      <MapPin className="w-2.5 h-2.5 mr-0.5" />
-                      GPS
-                    </Badge>
-                  )}
+                  {photo.metadata.latitude !== null && <LocationBadge variant="overlay" />}
+                  {photo.note && <NoteBadge variant="overlay" />}
                 </div>
 
                 <Button

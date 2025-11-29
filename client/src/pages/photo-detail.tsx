@@ -9,22 +9,15 @@ import {
   Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { getPhoto, getAllPhotos, deletePhoto, createCleanImageBlob } from "@/lib/db";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { getPhoto, getAllPhotos, createCleanImageBlob } from "@/lib/db";
+import { usePhotoMutations } from "@/hooks/use-photo-mutations";
 import type { Photo } from "@shared/schema";
 
 export default function PhotoDetailPage() {
   const [, params] = useRoute("/photo/:id");
   const [, navigate] = useLocation();
+  const { deletePhotoById } = usePhotoMutations();
   
   const photoId = params?.id;
   
@@ -97,9 +90,9 @@ export default function PhotoDetailPage() {
   const handleDelete = useCallback(async () => {
     if (!photoId) return;
     
-    try {
-      await deletePhoto(photoId);
-      
+    const result = await deletePhotoById(photoId);
+    
+    if (result.success) {
       // Navigate to next photo or gallery
       if (hasNext) {
         navigate(`/photo/${allPhotoIds[currentIndex + 1]}`);
@@ -108,12 +101,12 @@ export default function PhotoDetailPage() {
       } else {
         navigate("/gallery");
       }
-    } catch (error) {
-      console.error("Delete error:", error);
-    } finally {
-      setShowDeleteDialog(false);
+    } else {
+      console.error("Delete error:", result.error);
     }
-  }, [photoId, hasNext, hasPrevious, allPhotoIds, currentIndex, navigate]);
+    
+    setShowDeleteDialog(false);
+  }, [photoId, deletePhotoById, hasNext, hasPrevious, allPhotoIds, currentIndex, navigate]);
 
   // Export photo (download without EXIF)
   const handleExport = useCallback(async () => {
@@ -261,28 +254,17 @@ export default function PhotoDetailPage() {
       </header>
 
       {/* Delete confirmation dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Photo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The photo will be permanently removed from your device.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-dialog">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-              data-testid="button-confirm-delete-dialog"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Photo?"
+        description="This action cannot be undone. The photo will be permanently removed from your device."
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        variant="destructive"
+        confirmTestId="button-confirm-delete-dialog"
+        cancelTestId="button-cancel-delete-dialog"
+      />
     </div>
   );
 }
