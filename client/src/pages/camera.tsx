@@ -332,7 +332,7 @@ export default function CameraPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14 overflow-hidden"
+              className="rounded-md bg-card/50 text-white hover:bg-card relative aspect-square w-14 h-14"
               onClick={() => navigate("/gallery")}
               data-testid="button-gallery"
             >
@@ -340,7 +340,7 @@ export default function CameraPage() {
                 <img 
                   src={lastPhotoThumb} 
                   alt="Last photo" 
-                  className="w-full h-full object-cover opacity-70"
+                  className="w-full h-full object-cover opacity-70 rounded-sm"
                 />
               ) : (
                 <Image className="w-7 h-7" />
