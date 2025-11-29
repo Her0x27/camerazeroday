@@ -272,6 +272,42 @@ export async function saveSettings(settings: Settings): Promise<Settings> {
   });
 }
 
+// Get count of photos uploaded to cloud
+export async function getCloudUploadedCount(): Promise<number> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTOS_STORE, "readonly");
+    const store = tx.objectStore(PHOTOS_STORE);
+    const request = store.openCursor();
+    let count = 0;
+
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest).result;
+      if (cursor) {
+        const photo = cursor.value as Photo;
+        if (photo.cloud?.url) {
+          count++;
+        }
+        cursor.continue();
+      } else {
+        resolve(count);
+      }
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Get photo counts summary (total and cloud uploaded)
+export async function getPhotoCounts(): Promise<{ total: number; cloud: number }> {
+  const [total, cloud] = await Promise.all([
+    getPhotoCount(),
+    getCloudUploadedCount(),
+  ]);
+  return { total, cloud };
+}
+
 // Utility to get storage usage estimate
 export async function getStorageEstimate(): Promise<{ used: number; quota: number } | null> {
   if ("storage" in navigator && "estimate" in navigator.storage) {

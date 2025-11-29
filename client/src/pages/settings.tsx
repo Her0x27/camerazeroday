@@ -20,7 +20,10 @@ import {
   Upload,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  Settings2,
+  ImageIcon,
+  Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,7 +62,6 @@ export default function SettingsPage() {
     setApiKeyInput(settings.imgbb?.apiKey || "");
   }, [settings.imgbb?.apiKey]);
 
-  // Load storage info
   useEffect(() => {
     const loadStorageInfo = async () => {
       try {
@@ -83,7 +85,6 @@ export default function SettingsPage() {
     loadStorageInfo();
   }, []);
 
-  // Format bytes for display
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -91,13 +92,11 @@ export default function SettingsPage() {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
-  // Handle reset settings
   const handleReset = useCallback(async () => {
     await resetSettings();
     setShowResetDialog(false);
   }, [resetSettings]);
 
-  // Handle clear photos
   const handleClearPhotos = useCallback(async () => {
     try {
       await clearAllPhotos();
@@ -108,7 +107,6 @@ export default function SettingsPage() {
     setShowClearDialog(false);
   }, []);
 
-  // Handle ImgBB API key validation
   const handleValidateApiKey = useCallback(async () => {
     if (!apiKeyInput.trim()) {
       setValidationError("Please enter API key");
@@ -146,7 +144,6 @@ export default function SettingsPage() {
     }
   }, [apiKeyInput, settings.imgbb, updateSettings]);
 
-  // Handle ImgBB settings update
   const handleImgbbUpdate = useCallback(async (updates: Partial<typeof settings.imgbb>) => {
     await updateSettings({
       imgbb: {
@@ -173,36 +170,136 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <main className="p-4 space-y-6 max-w-2xl mx-auto safe-bottom pb-8">
+      <main className="p-4 space-y-4 max-w-2xl mx-auto safe-bottom pb-8">
+        
+        {/* General Settings */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Settings2 className="w-5 h-5 text-primary" />
+              General
+            </CardTitle>
+            <CardDescription>
+              Basic application settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Sound */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sound-enabled" className="flex items-center gap-2 cursor-pointer">
+                {settings.soundEnabled ? (
+                  <Volume2 className="w-4 h-4" />
+                ) : (
+                  <VolumeX className="w-4 h-4" />
+                )}
+                <div>
+                  <span>Capture Sound</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Play shutter sound when taking a photo
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="sound-enabled"
+                checked={settings.soundEnabled}
+                onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
+                data-testid="switch-sound"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Watermark Settings */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ImageIcon className="w-5 h-5 text-primary" />
+              Watermark
+            </CardTitle>
+            <CardDescription>
+              Metadata display on captured photos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Show metadata overlay */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-metadata" className="flex items-center gap-2 cursor-pointer">
+                <Eye className="w-4 h-4" />
+                <div>
+                  <span>Show Metadata</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Display GPS, altitude and orientation on screen
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="show-metadata"
+                checked={settings.reticle.showMetadata}
+                onCheckedChange={(checked) => updateReticle({ showMetadata: checked })}
+                data-testid="switch-show-metadata"
+              />
+            </div>
+
+            {/* Watermark Scale */}
+            {settings.reticle.showMetadata && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Type className="w-4 h-4" />
+                      Watermark Size
+                    </Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {settings.watermarkScale || 100}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[settings.watermarkScale || 100]}
+                    onValueChange={([value]) => updateSettings({ watermarkScale: value })}
+                    min={50}
+                    max={150}
+                    step={10}
+                    data-testid="slider-watermark-scale"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Size of metadata watermarks on captured photos
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Crosshair Settings */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Crosshair className="w-5 h-5 text-primary" />
               Crosshair
             </CardTitle>
             <CardDescription>
-              Customize the aiming crosshair display on camera screen
+              Aiming crosshair display on camera screen
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             {/* Enable reticle */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="reticle-enabled" className="flex items-center gap-2 cursor-pointer">
-                  <Eye className="w-4 h-4" />
-                  Show Crosshair
-                </Label>
-                <Switch
-                  id="reticle-enabled"
-                  checked={settings.reticle.enabled}
-                  onCheckedChange={(checked) => updateReticle({ enabled: checked })}
-                  data-testid="switch-reticle-enabled"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Display crosshair overlay in camera viewfinder
-              </p>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="reticle-enabled" className="flex items-center gap-2 cursor-pointer">
+                <Eye className="w-4 h-4" />
+                <div>
+                  <span>Show Crosshair</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Display crosshair overlay in viewfinder
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="reticle-enabled"
+                checked={settings.reticle.enabled}
+                onCheckedChange={(checked) => updateReticle({ enabled: checked })}
+                data-testid="switch-reticle-enabled"
+              />
             </div>
 
             {/* Crosshair appearance settings */}
@@ -210,7 +307,7 @@ export default function SettingsPage() {
               <>
                 <Separator />
                 
-                {/* Crosshair size - % of screen */}
+                {/* Crosshair size */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">
@@ -229,12 +326,9 @@ export default function SettingsPage() {
                     step={1}
                     data-testid="slider-reticle-size"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Crosshair size relative to screen
-                  </p>
                 </div>
 
-                {/* Stroke Width - % of reticle size */}
+                {/* Stroke Width */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">
@@ -253,9 +347,6 @@ export default function SettingsPage() {
                     step={1}
                     data-testid="slider-stroke-width"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Line thickness of crosshair
-                  </p>
                 </div>
 
                 {/* Opacity */}
@@ -277,29 +368,88 @@ export default function SettingsPage() {
                     step={5}
                     data-testid="slider-opacity"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Crosshair transparency level
-                  </p>
                 </div>
 
                 <Separator />
 
                 {/* Auto color */}
-                <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
+                    <Palette className="w-4 h-4" />
+                    <div>
+                      <span>Auto Color</span>
+                      <p className="text-xs text-muted-foreground font-normal">
+                        Adjust crosshair color for better contrast
+                      </p>
+                    </div>
+                  </Label>
+                  <Switch
+                    id="auto-color"
+                    checked={settings.reticle.autoColor}
+                    onCheckedChange={(checked) => updateReticle({ autoColor: checked })}
+                    data-testid="switch-auto-color"
+                  />
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Capture / Location Settings */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Camera className="w-5 h-5 text-primary" />
+              Capture / Location
+            </CardTitle>
+            <CardDescription>
+              GPS and device orientation settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* GPS Enabled */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="gps-enabled" className="flex items-center gap-2 cursor-pointer">
+                <MapPin className="w-4 h-4" />
+                <div>
+                  <span>GPS Location</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Record GPS coordinates when capturing
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="gps-enabled"
+                checked={settings.gpsEnabled}
+                onCheckedChange={(checked) => updateSettings({ gpsEnabled: checked })}
+                data-testid="switch-gps"
+              />
+            </div>
+
+            {/* GPS Accuracy Limit */}
+            {settings.gpsEnabled && (
+              <>
+                <Separator />
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="auto-color" className="flex items-center gap-2 cursor-pointer">
-                      <Palette className="w-4 h-4" />
-                      Auto Color
+                    <Label className="flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      Accuracy Limit
                     </Label>
-                    <Switch
-                      id="auto-color"
-                      checked={settings.reticle.autoColor}
-                      onCheckedChange={(checked) => updateReticle({ autoColor: checked })}
-                      data-testid="switch-auto-color"
-                    />
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {settings.accuracyLimit || 20}m
+                    </span>
                   </div>
+                  <Slider
+                    value={[settings.accuracyLimit || 20]}
+                    onValueChange={([value]) => updateSettings({ accuracyLimit: value })}
+                    min={5}
+                    max={100}
+                    step={5}
+                    data-testid="slider-accuracy-limit"
+                  />
                   <p className="text-xs text-muted-foreground">
-                    Automatically adjust crosshair color for better contrast
+                    Block photo capture if GPS accuracy exceeds this limit
                   </p>
                 </div>
               </>
@@ -307,170 +457,39 @@ export default function SettingsPage() {
 
             <Separator />
 
-            {/* Show metadata overlay */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-metadata" className="flex items-center gap-2 cursor-pointer">
-                  <Eye className="w-4 h-4" />
-                  Show Metadata
-                </Label>
-                <Switch
-                  id="show-metadata"
-                  checked={settings.reticle.showMetadata}
-                  onCheckedChange={(checked) => updateReticle({ showMetadata: checked })}
-                  data-testid="switch-show-metadata"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Display GPS coordinates, altitude and orientation on screen
-              </p>
-            </div>
-
-            {/* Watermark Scale */}
-            {settings.reticle.showMetadata && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <Type className="w-4 h-4" />
-                    Watermark Size
-                  </Label>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {settings.watermarkScale || 100}%
-                  </span>
-                </div>
-                <Slider
-                  value={[settings.watermarkScale || 100]}
-                  onValueChange={([value]) => updateSettings({ watermarkScale: value })}
-                  min={50}
-                  max={150}
-                  step={10}
-                  data-testid="slider-watermark-scale"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Size of metadata watermarks on captured photos
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Capture Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-5 h-5 text-primary" />
-              Capture
-            </CardTitle>
-            <CardDescription>
-              Configure location tracking and photo capture settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* GPS Enabled */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="gps-enabled" className="flex items-center gap-2 cursor-pointer">
-                  <MapPin className="w-4 h-4" />
-                  GPS Location
-                </Label>
-                <Switch
-                  id="gps-enabled"
-                  checked={settings.gpsEnabled}
-                  onCheckedChange={(checked) => updateSettings({ gpsEnabled: checked })}
-                  data-testid="switch-gps"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Record GPS coordinates when capturing photos
-              </p>
-            </div>
-
-            {/* GPS Accuracy Limit */}
-            {settings.gpsEnabled && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    Accuracy Limit
-                  </Label>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {settings.accuracyLimit || 20}m
-                  </span>
-                </div>
-                <Slider
-                  value={[settings.accuracyLimit || 20]}
-                  onValueChange={([value]) => updateSettings({ accuracyLimit: value })}
-                  min={5}
-                  max={100}
-                  step={5}
-                  data-testid="slider-accuracy-limit"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Photo capture blocked if GPS accuracy exceeds this limit
-                </p>
-              </div>
-            )}
-
-            <Separator />
-
             {/* Orientation Enabled */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="orientation-enabled" className="flex items-center gap-2 cursor-pointer">
-                  <Compass className="w-4 h-4" />
-                  Compass & Orientation
-                </Label>
-                <Switch
-                  id="orientation-enabled"
-                  checked={settings.orientationEnabled}
-                  onCheckedChange={(checked) => updateSettings({ orientationEnabled: checked })}
-                  data-testid="switch-orientation"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Record compass heading and device tilt angle
-              </p>
-            </div>
-
-            <Separator />
-
-            {/* Sound Enabled */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="sound-enabled" className="flex items-center gap-2 cursor-pointer">
-                  {settings.soundEnabled ? (
-                    <Volume2 className="w-4 h-4" />
-                  ) : (
-                    <VolumeX className="w-4 h-4" />
-                  )}
-                  Capture Sound
-                </Label>
-                <Switch
-                  id="sound-enabled"
-                  checked={settings.soundEnabled}
-                  onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
-                  data-testid="switch-sound"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Play shutter sound when taking a photo
-              </p>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="orientation-enabled" className="flex items-center gap-2 cursor-pointer">
+                <Compass className="w-4 h-4" />
+                <div>
+                  <span>Compass & Orientation</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Record heading and device tilt angle
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="orientation-enabled"
+                checked={settings.orientationEnabled}
+                onCheckedChange={(checked) => updateSettings({ orientationEnabled: checked })}
+                data-testid="switch-orientation"
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Cloud Upload (ImgBB) */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Cloud className="w-5 h-5 text-primary" />
               Cloud Upload (ImgBB)
             </CardTitle>
             <CardDescription>
-              Configure automatic photo upload to ImgBB cloud storage
+              Automatic photo upload to ImgBB cloud
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             {/* API Key */}
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
@@ -557,49 +576,46 @@ export default function SettingsPage() {
                 <span>0 = never expires</span>
                 <span>86400 = 24 hours</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Photo will be automatically deleted from ImgBB after expiration
-              </p>
             </div>
 
             <Separator />
 
             {/* Auto Upload */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="auto-upload" className="flex items-center gap-2 cursor-pointer">
-                  <Upload className="w-4 h-4" />
-                  Auto Upload
-                </Label>
-                <Switch
-                  id="auto-upload"
-                  checked={settings.imgbb?.autoUpload || false}
-                  onCheckedChange={(checked) => handleImgbbUpdate({ autoUpload: checked })}
-                  disabled={!settings.imgbb?.isValidated}
-                  data-testid="switch-auto-upload"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Automatically upload photos to cloud immediately after capture
-              </p>
-              {!settings.imgbb?.isValidated && settings.imgbb?.autoUpload === false && (
-                <p className="text-xs text-amber-500">
-                  Please configure and validate API key first
-                </p>
-              )}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="auto-upload" className="flex items-center gap-2 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <div>
+                  <span>Auto Upload</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    Upload photos immediately after capture
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="auto-upload"
+                checked={settings.imgbb?.autoUpload || false}
+                onCheckedChange={(checked) => handleImgbbUpdate({ autoUpload: checked })}
+                disabled={!settings.imgbb?.isValidated}
+                data-testid="switch-auto-upload"
+              />
             </div>
+            {!settings.imgbb?.isValidated && (
+              <p className="text-xs text-amber-500">
+                Configure and validate API key first
+              </p>
+            )}
           </CardContent>
         </Card>
 
         {/* Storage */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Database className="w-5 h-5 text-primary" />
               Storage
             </CardTitle>
             <CardDescription>
-              View and manage locally stored photos on your device
+              Locally stored photos on your device
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -618,7 +634,6 @@ export default function SettingsPage() {
                   <span className="font-medium">{formatBytes(storageInfo.quota - storageInfo.used)}</span>
                 </div>
                 
-                {/* Storage progress bar */}
                 <div className="h-2 bg-muted rounded-full overflow-hidden mt-2">
                   <div
                     className="h-full bg-primary transition-all"
@@ -632,50 +647,43 @@ export default function SettingsPage() {
 
             <Separator />
 
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full text-destructive hover:text-destructive"
-                onClick={() => setShowClearDialog(true)}
-                disabled={!storageInfo || storageInfo.photos === 0}
-                data-testid="button-clear-storage"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear All Photos
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Permanently delete all photos from local storage
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              className="w-full text-destructive hover:text-destructive"
+              onClick={() => setShowClearDialog(true)}
+              disabled={!storageInfo || storageInfo.photos === 0}
+              data-testid="button-clear-storage"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear All Photos
+            </Button>
           </CardContent>
         </Card>
 
         {/* Reset Settings */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <RotateCcw className="w-5 h-5 text-primary" />
               Reset
             </CardTitle>
             <CardDescription>
-              Restore all settings to factory defaults
+              Restore settings to factory defaults
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowResetDialog(true)}
-                data-testid="button-reset-settings"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset All Settings
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Your photos will not be affected
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowResetDialog(true)}
+              data-testid="button-reset-settings"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset All Settings
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Your photos will not be affected
+            </p>
           </CardContent>
         </Card>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText } from "lucide-react";
+import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
 import { Reticle, getContrastingColor } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
-import { savePhoto, getPhotoCount, getLatestPhoto, updatePhoto } from "@/lib/db";
+import { savePhoto, getPhotoCounts, getLatestPhoto, updatePhoto } from "@/lib/db";
 import { uploadToImgBB } from "@/lib/imgbb";
 import type { InsertPhoto } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,7 @@ export default function CameraPage() {
   const { toast } = useToast();
   
   const [photoCount, setPhotoCount] = useState(0);
+  const [cloudCount, setCloudCount] = useState(0);
   const [lastPhotoThumb, setLastPhotoThumb] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -52,14 +53,15 @@ export default function CameraPage() {
     requestPermission: requestOrientationPermission,
   } = useOrientation(settings.orientationEnabled);
 
-  // Load photo count and last photo thumb
+  // Load photo counts and last photo thumb
   useEffect(() => {
     const loadPhotos = async () => {
       try {
-        const count = await getPhotoCount();
-        setPhotoCount(count);
+        const counts = await getPhotoCounts();
+        setPhotoCount(counts.total);
+        setCloudCount(counts.cloud);
         
-        if (count > 0) {
+        if (counts.total > 0) {
           const latest = await getLatestPhoto();
           if (latest) {
             setLastPhotoThumb(latest.thumbnailData);
@@ -243,6 +245,7 @@ export default function CameraPage() {
             );
             if (uploadResult.success && uploadResult.cloudData) {
               await updatePhoto(savedPhoto.id, { cloud: uploadResult.cloudData });
+              setCloudCount((prev) => prev + 1);
               toast({
                 title: "Uploaded",
                 description: "Photo uploaded to cloud",
@@ -386,9 +389,24 @@ export default function CameraPage() {
               ) : (
                 <Image className="w-7 h-7" />
               )}
+              {/* Top badge - Camera icon with photo count */}
               {photoCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center justify-center px-1">
+                <span 
+                  className="absolute -top-1.5 -right-1.5 min-w-5 h-5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full flex items-center justify-center gap-0.5 px-1"
+                  data-testid="badge-photo-count"
+                >
+                  <Camera className="w-2.5 h-2.5" />
                   {photoCount > 99 ? "99+" : photoCount}
+                </span>
+              )}
+              {/* Bottom badge - Cloud icon with uploaded count */}
+              {cloudCount > 0 && (
+                <span 
+                  className="absolute -bottom-1.5 -right-1.5 min-w-5 h-5 bg-green-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center gap-0.5 px-1"
+                  data-testid="badge-cloud-count"
+                >
+                  <Cloud className="w-2.5 h-2.5" />
+                  {cloudCount > 99 ? "99+" : cloudCount}
                 </span>
               )}
             </Button>
