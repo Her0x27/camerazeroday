@@ -1,0 +1,16 @@
+# Exported from Render on 2025-11-29T23:40:15Z
+version: "1"
+services:
+- type: web
+  name: camerazeroday
+  runtime: static
+  repo: https://github.com/Her0x27/camerazeroday
+  envVars:
+  - key: VITE_DISGUISE_MODE
+    sync: false
+  - key: NODE_ENV
+    sync: false
+  buildCommand: npm install; npm run build
+  staticPublishPath: ./
+  autoDeployTrigger: commit
+  rootDir: ./
