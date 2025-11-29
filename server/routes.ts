@@ -1,16 +1,13 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { type Server } from "http";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
-
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
-
+  // Camera ZeroDay is a client-only PWA application
+  // No API routes are needed - all data is stored in IndexedDB
+  // The server only serves static files
+  
   return httpServer;
 }

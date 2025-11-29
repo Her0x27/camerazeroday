@@ -1,0 +1,27 @@
+{
+  "name": "Camera ZeroDay",
+  "short_name": "ZeroDay",
+  "description": "Tactical camera PWA with geotagged photos, GPS coordinates, device orientation, and customizable reticles",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["photography", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

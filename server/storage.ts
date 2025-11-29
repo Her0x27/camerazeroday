@@ -1,37 +1,14 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+// Camera ZeroDay is a client-only application
+// All data is stored in IndexedDB on the client side
+// This file is kept minimal as the server only serves static files
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // No server-side storage needed for this PWA
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
   constructor() {
-    this.users = new Map();
-  }
-
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    // No initialization needed
   }
 }
 
