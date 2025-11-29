@@ -1,0 +1,9 @@
+export { GeneralSettingsSection } from "./GeneralSettingsSection";
+export { WatermarkSection } from "./WatermarkSection";
+export { ReticleSection } from "./ReticleSection";
+export { CaptureLocationSection } from "./CaptureLocationSection";
+export { CloudUploadSection } from "./CloudUploadSection";
+export { StorageSection } from "./StorageSection";
+export { DisguiseSection } from "./DisguiseSection";
+export { PWASection } from "./PWASection";
+export { ResetSection } from "./ResetSection";
