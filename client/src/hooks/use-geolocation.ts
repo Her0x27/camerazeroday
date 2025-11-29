@@ -32,6 +32,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   const [error, setError] = useState<string | null>(null);
   const [isWatching, setIsWatching] = useState(false);
   const watchIdRef = useRef<number | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSuccess = useCallback((position: GeolocationPosition) => {
     setData({
@@ -86,12 +87,25 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
       handleError,
       positionOptions
     );
+
+    // Добавляем полинг каждые 500мс для частых обновлений
+    pollIntervalRef.current = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        handleError,
+        positionOptions
+      );
+    }, 500);
   }, [enabled, handleSuccess, handleError]);
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
+    }
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
     setIsWatching(false);
   }, []);
