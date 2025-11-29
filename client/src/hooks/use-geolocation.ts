@@ -7,6 +7,7 @@ interface GeolocationData {
   accuracy: number | null;
   timestamp: number;
   lastUpdate: number;
+  isAcquiring: boolean;
 }
 
 interface UseGeolocationReturn {
@@ -26,7 +27,10 @@ const defaultData: GeolocationData = {
   accuracy: null,
   timestamp: Date.now(),
   lastUpdate: Date.now(),
+  isAcquiring: true,
 };
+
+const ACCURACY_THRESHOLD = 100;
 
 export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   const [data, setData] = useState<GeolocationData>(defaultData);
@@ -34,27 +38,55 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
   const [error, setError] = useState<string | null>(null);
   const [isWatching, setIsWatching] = useState(false);
   const watchIdRef = useRef<number | null>(null);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const bestAccuracyRef = useRef<number>(Infinity);
 
   const positionOptions: PositionOptions = useMemo(() => ({
     enableHighAccuracy: true,
-    timeout: 5000,
+    timeout: 30000,
     maximumAge: 0,
   }), []);
 
   const handleSuccess = useCallback((position: GeolocationPosition) => {
     const now = Date.now();
-    setData({
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      altitude: position.coords.altitude,
-      accuracy: position.coords.accuracy,
-      timestamp: position.timestamp,
-      lastUpdate: now,
-    });
+    const newAccuracy = position.coords.accuracy;
+    
+    const isBetterFix = newAccuracy < bestAccuracyRef.current;
+    const isGoodEnough = newAccuracy <= ACCURACY_THRESHOLD;
+    const hasNoData = data.latitude === null;
+    
+    if (isBetterFix || hasNoData) {
+      bestAccuracyRef.current = Math.min(bestAccuracyRef.current, newAccuracy);
+      
+      setData({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        altitude: position.coords.altitude,
+        accuracy: newAccuracy,
+        timestamp: position.timestamp,
+        lastUpdate: now,
+        isAcquiring: !isGoodEnough,
+      });
+    } else if (isGoodEnough) {
+      setData(prev => ({
+        ...prev,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        altitude: position.coords.altitude,
+        accuracy: newAccuracy,
+        timestamp: position.timestamp,
+        lastUpdate: now,
+        isAcquiring: false,
+      }));
+    } else {
+      setData(prev => ({
+        ...prev,
+        lastUpdate: now,
+      }));
+    }
+    
     setError(null);
     setIsLoading(false);
-  }, []);
+  }, [data.latitude]);
 
   const handleError = useCallback((err: GeolocationPositionError) => {
     let errorMessage: string;
@@ -91,24 +123,14 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
       handleError,
       positionOptions
     );
-
-    pollIntervalRef.current = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        handleSuccess,
-        handleError,
-        positionOptions
-      );
-    }, 300);
+    
+    bestAccuracyRef.current = Infinity;
   }, [enabled, handleSuccess, handleError, positionOptions]);
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
-    }
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
     }
     setIsWatching(false);
   }, []);
@@ -130,6 +152,7 @@ export function useGeolocation(enabled: boolean = true): UseGeolocationReturn {
             accuracy: position.coords.accuracy,
             timestamp: position.timestamp,
             lastUpdate: now,
+            isAcquiring: position.coords.accuracy > ACCURACY_THRESHOLD,
           };
           setData(geoData);
           resolve(geoData);
@@ -197,10 +220,16 @@ export function formatAltitude(altitude: number | null): string {
   return `${altitude.toFixed(1)} m`;
 }
 
-// Format accuracy for display
+// Format accuracy for display with meters
 export function formatAccuracy(accuracy: number | null): string {
-  if (accuracy === null) return "---";
-  if (accuracy < 10) return "HIGH";
-  if (accuracy < 50) return "MED";
-  return "LOW";
+  if (accuracy === null) return "--- m";
+  return `±${Math.round(accuracy)} m`;
+}
+
+// Get accuracy quality level
+export function getAccuracyLevel(accuracy: number | null): "high" | "medium" | "low" | "none" {
+  if (accuracy === null) return "none";
+  if (accuracy < 10) return "high";
+  if (accuracy < 50) return "medium";
+  return "low";
 }

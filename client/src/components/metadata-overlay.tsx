@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { MapPin, Compass, Mountain, Target, Signal, Clock } from "lucide-react";
-import { formatCoordinate, formatAltitude, formatAccuracy } from "@/hooks/use-geolocation";
+import { formatCoordinate, formatAltitude, formatAccuracy, getAccuracyLevel } from "@/hooks/use-geolocation";
 import { formatHeading, getCardinalDirection } from "@/hooks/use-orientation";
 
 interface MetadataOverlayProps {
@@ -66,9 +66,19 @@ export const MetadataOverlay = memo(function MetadataOverlay({
           </div>
           
           <div className="flex items-center gap-2">
-            <Signal className={`w-3.5 h-3.5 ${hasLocation ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="font-mono text-xs text-white/90">
-              GPS: {formatAccuracy(accuracy)}
+            <Signal className={`w-3.5 h-3.5 ${
+              getAccuracyLevel(accuracy) === "high" ? "text-green-400" :
+              getAccuracyLevel(accuracy) === "medium" ? "text-amber-400" :
+              getAccuracyLevel(accuracy) === "low" ? "text-red-400" :
+              "text-muted-foreground"
+            }`} />
+            <span className={`font-mono text-xs ${
+              getAccuracyLevel(accuracy) === "high" ? "text-green-400" :
+              getAccuracyLevel(accuracy) === "medium" ? "text-amber-400" :
+              getAccuracyLevel(accuracy) === "low" ? "text-red-400" :
+              "text-white/90"
+            }`}>
+              {formatAccuracy(accuracy)}
             </span>
           </div>
           
