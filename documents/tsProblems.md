@@ -954,3 +954,45 @@ Verified actual completion status of marked items:
 - Vite chunk splitting config (3.6)
 - Bundle size analysis (7.1)
 - Unused imports cleanup via ESLint (7.2)
+
+---
+
+## Session 10 Summary (Additional Dead Code Cleanup)
+**Completed in this session:**
+
+### 1. Hook Usage Audit
+Analyzed all custom hooks for usage across the codebase:
+- `use-camera`: 1 import ✅
+- `use-capture-sound`: 1 import ✅
+- `use-debounced-callback`: **0 imports** ❌ (dead code)
+- `use-game-2048`: 1 import ✅
+- `use-geolocation`: 3 imports ✅
+- `use-mobile`: 1 import ✅
+- `use-orientation`: 3 imports ✅
+- `use-photo-mutations`: 2 imports ✅
+- `use-pwa`: 1 import ✅
+- `use-storage`: 1 import ✅
+- `use-toast`: 3 imports ✅
+- `use-upload-progress`: 1 import ✅
+
+### 2. Dead Code Removed
+- **Removed `client/src/hooks/use-debounced-callback.ts`** - Created but never imported
+  - Note: Debounce logic moved to SettingsContext in Session 3, hook became obsolete
+
+### 3. Types Cleanup
+- **Cleaned `client/src/lib/types.ts`**:
+  - Removed unused exports: `WebkitDeviceOrientationEvent`, `DeviceOrientationEventStatic`, `DeviceOrientationEventWithPermission`
+  - These types were duplicated in `client/src/types/global.d.ts` which is the correct location
+  - Kept only `getAudioContext()` function which is used by `use-capture-sound.ts`
+
+### Files Removed:
+- `client/src/hooks/use-debounced-callback.ts`
+
+### Files Modified:
+- `client/src/lib/types.ts` - Removed unused type exports (24 → 11 lines)
+- `documents/tsProblems.md` - Added Session 10 summary
+
+### Verification:
+✅ No LSP errors
+✅ Application running on port 5000
+✅ All navigation tests passed (Camera, Settings, Gallery pages)
