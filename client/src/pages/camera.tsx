@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCamera } from "@/hooks/use-camera";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useOrientation } from "@/hooks/use-orientation";
+import { useCaptureSound } from "@/hooks/use-capture-sound";
 import { useSettings } from "@/lib/settings-context";
 import { useDisguise } from "@/lib/disguise-context";
 import { Reticle, getContrastingColor } from "@/components/reticles";
@@ -54,6 +55,9 @@ export default function CameraPage() {
     isSupported: orientationSupported,
     requestPermission: requestOrientationPermission,
   } = useOrientation(settings.orientationEnabled);
+
+  // Capture sound hook
+  const { playCapture } = useCaptureSound();
 
   // Load photo counts and last photo thumb
   useEffect(() => {
@@ -201,6 +205,11 @@ export default function CameraPage() {
       return;
     }
 
+    // Play capture sound if enabled
+    if (settings.soundEnabled) {
+      playCapture();
+    }
+
     setIsCapturing(true);
     const timestamp = Date.now();
     const noteText = currentNote.trim();
@@ -287,7 +296,7 @@ export default function CameraPage() {
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle, settings.imgbb, isAccuracyAcceptable, toast]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle, settings.imgbb, settings.soundEnabled, playCapture, isAccuracyAcceptable, toast]);
 
   return (
     <div 

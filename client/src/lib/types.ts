@@ -1,9 +1,3 @@
-declare global {
-  interface Window {
-    webkitAudioContext: typeof AudioContext;
-  }
-}
-
 export interface WebkitDeviceOrientationEvent extends DeviceOrientationEvent {
   webkitCompassHeading?: number;
 }
