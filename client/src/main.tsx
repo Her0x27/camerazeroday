@@ -2,6 +2,29 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
+// Global unhandled rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  // Prevent default browser behavior (console error)
+  event.preventDefault();
+  
+  // In development, log detailed error info
+  if (import.meta.env.DEV) {
+    console.error('Stack trace:', event.reason?.stack);
+  }
+});
+
+// Global error handler for uncaught exceptions
+window.addEventListener('error', (event) => {
+  console.error('Uncaught error:', event.error);
+  
+  // In development, log detailed error info
+  if (import.meta.env.DEV) {
+    console.error('Stack trace:', event.error?.stack);
+  }
+});
+
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
