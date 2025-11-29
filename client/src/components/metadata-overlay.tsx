@@ -28,8 +28,8 @@ export function MetadataOverlay({
 
   return (
     <>
-      {/* Top-left: GPS data */}
-      <div className="absolute top-4 left-4 safe-top">
+      {/* Top-left: GPS data - below header */}
+      <div className="absolute top-16 left-4 z-5">
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           {/* Coordinates */}
           <div className="flex items-center gap-2">
@@ -56,8 +56,8 @@ export function MetadataOverlay({
         </div>
       </div>
 
-      {/* Top-right: Orientation data */}
-      <div className="absolute top-4 right-4 safe-top">
+      {/* Top-right: Orientation data - below header */}
+      <div className="absolute top-16 right-4 z-5">
         <div className="bg-black/60 backdrop-blur-sm rounded-md px-3 py-2 space-y-1">
           {/* Compass heading */}
           <div className="flex items-center gap-2">
@@ -78,8 +78,8 @@ export function MetadataOverlay({
         </div>
       </div>
 
-      {/* Bottom center: Timestamp */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2">
+      {/* Center bottom: Timestamp - above bottom controls */}
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-5">
         <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1">
           <span className="font-mono text-[10px] text-white/70 tracking-wider">
             {new Date().toLocaleTimeString("en-US", { 
