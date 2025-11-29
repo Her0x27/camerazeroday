@@ -37,14 +37,14 @@
 **Description:** Hide camera behind a fully functional 2048 game
 
 ### 3.1 Core Features:
-- [ ] Create fully functional 2048 game component
-- [ ] Design for Android and iPhone style
-- [ ] Implement secret gesture access:
-  - [ ] 4 quick taps option
+- [x] Create fully functional 2048 game component
+- [x] Design for Android and iPhone style
+- [x] Implement secret gesture access:
+  - [x] 4 quick taps option
   - [ ] Hidden pattern unlock option
-  - [ ] Configurable gesture selection
-- [ ] Auto-lock after 1 minute of inactivity
-- [ ] Dynamic favicon switching (show game icon when disguised)
+  - [x] Configurable gesture selection
+- [x] Auto-lock after 1 minute of inactivity
+- [x] Dynamic favicon switching (show game icon when disguised)
 - [ ] Mask button on camera screen for quick hide
 
 ### 3.2 Settings:
@@ -52,6 +52,13 @@
 - [ ] Select secret gesture type
 - [ ] Configure auto-lock timeout
 - [ ] Test mode for gesture practice
+
+### 3.3 Infrastructure:
+- [x] DisguiseContext provider for state management
+- [x] DisguiseGamePage for game routing
+- [x] Game icon SVG for favicon switching
+- [x] Activity monitoring for auto-lock
+- [x] Inactivity detection and auto-return to game
 
 ---
 
@@ -133,8 +140,8 @@
    - [x] Localization system (EN/RU)
    - [x] PWA improvements (production-only SW)
 
-3. **Phase 3: Advanced Features** (Current)
-   - [ ] Disguise Mode with 2048 game
+3. **Phase 3: Advanced Features** (In Progress)
+   - [~] Disguise Mode with 2048 game (Core done, Settings UI pending)
    - [ ] Platform adaptation refinements
 
 ---

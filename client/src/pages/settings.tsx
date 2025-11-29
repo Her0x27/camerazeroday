@@ -29,7 +29,10 @@ import {
   Download,
   Wifi,
   WifiOff,
-  Share2
+  Share2,
+  Gamepad2,
+  Finger,
+  Clock3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +54,7 @@ import {
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { usePWA } from "@/hooks/use-pwa";
+import { useDisguise } from "@/lib/disguise-context";
 import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
 import { validateApiKey } from "@/lib/imgbb";
 import {
@@ -66,6 +70,7 @@ export default function SettingsPage() {
   const { settings, updateSettings, updateReticle, resetSettings } = useSettings();
   const { language, setLanguage, availableLanguages, t } = useI18n();
   const { canInstall, isInstalled, isInstalling, install, isIOS, showIOSInstructions } = usePWA();
+  const { settings: disguiseSettings, updateSettings: updateDisguiseSettings } = useDisguise();
   
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -704,6 +709,94 @@ export default function SettingsPage() {
               <Trash2 className="w-4 h-4 mr-2" />
               Clear All Photos
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Disguise Mode */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gamepad2 className="w-5 h-5 text-primary" />
+              {t.settings.disguise.title}
+            </CardTitle>
+            <CardDescription>
+              {t.settings.disguise.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Enable Disguise Mode */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="disguise-enabled" className="flex items-center gap-2 cursor-pointer">
+                <Eye className="w-4 h-4" />
+                <div>
+                  <span>{t.settings.disguise.enabled}</span>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {t.settings.disguise.enabledDesc}
+                  </p>
+                </div>
+              </Label>
+              <Switch
+                id="disguise-enabled"
+                checked={disguiseSettings.enabled}
+                onCheckedChange={(checked) => updateDisguiseSettings({ enabled: checked })}
+                data-testid="switch-disguise-enabled"
+              />
+            </div>
+
+            {disguiseSettings.enabled && (
+              <>
+                <Separator />
+
+                {/* Secret Gesture */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <Finger className="w-4 h-4" />
+                    {t.settings.disguise.secretGesture}
+                  </Label>
+                  <Select
+                    value={disguiseSettings.gestureType}
+                    onValueChange={(value) => updateDisguiseSettings({ gestureType: value as 'quickTaps' | 'patternUnlock' })}
+                  >
+                    <SelectTrigger data-testid="select-gesture-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="quickTaps">{t.settings.disguise.quickTaps}</SelectItem>
+                      <SelectItem value="patternUnlock" disabled>{t.settings.disguise.patternUnlock}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {disguiseSettings.gestureType === 'quickTaps' ? '4 quick taps on game to access camera' : 'Draw pattern to access camera'}
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Auto Lock */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Clock3 className="w-4 h-4" />
+                      {t.settings.disguise.autoLock}
+                    </Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {disguiseSettings.autoLockMinutes} min
+                    </span>
+                  </div>
+                  <Slider
+                    value={[disguiseSettings.autoLockMinutes]}
+                    onValueChange={([value]) => updateDisguiseSettings({ autoLockMinutes: value })}
+                    min={1}
+                    max={30}
+                    step={1}
+                    data-testid="slider-auto-lock"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t.settings.disguise.autoLockDesc}
+                  </p>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
