@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Camera, ArrowLeft, Trash2, Filter, SortAsc, SortDesc, MapPin, FileText, X, Folder, FolderOpen, ChevronLeft, List, Grid } from "lucide-react";
+import { Camera, ArrowLeft, Trash2, Filter, SortAsc, SortDesc, MapPin, FileText, X, Folder, FolderOpen, ChevronLeft, List, Grid, Cloud, Link, Upload, Loader2, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -12,9 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { getAllPhotos, deletePhoto, clearAllPhotos, getPhotosByFolder } from "@/lib/db";
-import type { Photo, GalleryFilter } from "@shared/schema";
+import { getAllPhotos, deletePhoto, clearAllPhotos, getPhotosByFolder, updatePhoto, getPhoto } from "@/lib/db";
+import { uploadToImgBB, uploadMultipleToImgBB } from "@/lib/imgbb";
+import { useSettings } from "@/lib/settings-context";
+import { useToast } from "@/hooks/use-toast";
+import type { Photo, GalleryFilter, CloudData } from "@shared/schema";
 
 type ViewMode = "folders" | "photos";
 type DisplayType = "list" | "grid";
@@ -27,6 +38,8 @@ interface FolderInfo {
 
 export default function GalleryPage() {
   const [, navigate] = useLocation();
+  const { settings } = useSettings();
+  const { toast } = useToast();
   
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +49,12 @@ export default function GalleryPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("folders");
   const [selectedFolder, setSelectedFolder] = useState<string | null | undefined>(undefined);
   const [displayType, setDisplayType] = useState<DisplayType>("list");
+  
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
+  const [showLinksDialog, setShowLinksDialog] = useState(false);
+  const [linksToShow, setLinksToShow] = useState<Array<{ id: string; url: string }>>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Calculate folders from photos
   const folders = useMemo((): FolderInfo[] => {
@@ -148,6 +167,135 @@ export default function GalleryPage() {
       setShowClearDialog(false);
     }
   }, []);
+
+  // Upload photos to ImgBB
+  const handleUploadPhotos = useCallback(async (photos: Photo[]) => {
+    if (!settings.imgbb?.apiKey || !settings.imgbb.isValidated) {
+      toast({
+        title: "Error",
+        description: "Please configure ImgBB API key first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const photosToUpload = photos.filter(p => !p.cloud);
+    if (photosToUpload.length === 0) {
+      toast({
+        title: "Info",
+        description: "All photos are already uploaded to cloud",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({ completed: 0, total: photosToUpload.length });
+
+    try {
+      const results = await uploadMultipleToImgBB(
+        photosToUpload.map(p => ({ id: p.id, imageData: p.imageData })),
+        settings.imgbb.apiKey,
+        settings.imgbb.expiration || 0,
+        (completed, total) => setUploadProgress({ completed, total })
+      );
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const [photoId, result] of Array.from(results.entries())) {
+        if (result.success && result.cloudData) {
+          await updatePhoto(photoId, { cloud: result.cloudData });
+          setAllPhotos(prev => 
+            prev.map(p => p.id === photoId ? { ...p, cloud: result.cloudData } : p)
+          );
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: "Upload Complete",
+        description: `Uploaded: ${successCount}, errors: ${errorCount}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Error",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({ completed: 0, total: 0 });
+    }
+  }, [settings.imgbb, toast]);
+
+  // Upload current folder or all photos
+  const handleUploadCurrentView = useCallback(async () => {
+    const photosToUpload = viewMode === "photos" ? filteredPhotos : allPhotos;
+    await handleUploadPhotos(photosToUpload);
+  }, [viewMode, filteredPhotos, allPhotos, handleUploadPhotos]);
+
+  // Get links for uploaded photos
+  const handleGetLinks = useCallback(() => {
+    const photosWithLinks = (viewMode === "photos" ? filteredPhotos : allPhotos)
+      .filter(p => p.cloud?.url);
+    
+    if (photosWithLinks.length === 0) {
+      toast({
+        title: "No Links",
+        description: "Upload photos to cloud first",
+      });
+      return;
+    }
+
+    setLinksToShow(
+      photosWithLinks.map(p => ({
+        id: p.id,
+        url: p.cloud!.url,
+      }))
+    );
+    setShowLinksDialog(true);
+  }, [viewMode, filteredPhotos, allPhotos, toast]);
+
+  // Copy link to clipboard
+  const handleCopyLink = useCallback(async (url: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Copy all links
+  const handleCopyAllLinks = useCallback(async () => {
+    const allLinks = linksToShow.map(l => l.url).join("\n");
+    try {
+      await navigator.clipboard.writeText(allLinks);
+      toast({
+        title: "Copied",
+        description: `${linksToShow.length} links copied to clipboard`,
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to copy links",
+        variant: "destructive",
+      });
+    }
+  }, [linksToShow, toast]);
+
+  // Count photos with cloud links
+  const uploadedCount = useMemo(() => {
+    const photos = viewMode === "photos" ? filteredPhotos : allPhotos;
+    return photos.filter(p => p.cloud?.url).length;
+  }, [viewMode, filteredPhotos, allPhotos]);
 
   // Toggle sort order
   const toggleSortOrder = useCallback(() => {
@@ -273,6 +421,45 @@ export default function GalleryPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
+            )}
+
+            {allPhotos.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    disabled={isUploading}
+                    data-testid="button-cloud-menu"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Cloud className="w-5 h-5" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>ImgBB Cloud</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleUploadCurrentView}
+                    disabled={isUploading || !settings.imgbb?.isValidated}
+                    data-testid="button-upload-to-cloud"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload {viewMode === "photos" ? "folder" : "all photos"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleGetLinks}
+                    disabled={uploadedCount === 0}
+                    data-testid="button-get-links"
+                  >
+                    <Link className="w-4 h-4 mr-2" />
+                    Get Links ({uploadedCount})
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {allPhotos.length > 0 && (
@@ -561,6 +748,77 @@ export default function GalleryPage() {
         confirmTestId="button-confirm-clear"
         cancelTestId="button-cancel-clear"
       />
+
+      {isUploading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-80 p-6">
+            <div className="flex flex-col items-center gap-4">
+              <Cloud className="w-12 h-12 text-primary animate-pulse" />
+              <div className="text-center">
+                <h3 className="font-semibold">Uploading to Cloud</h3>
+                <p className="text-sm text-muted-foreground">
+                  {uploadProgress.completed} of {uploadProgress.total}
+                </p>
+              </div>
+              <Progress 
+                value={(uploadProgress.completed / uploadProgress.total) * 100} 
+                className="w-full"
+              />
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <Dialog open={showLinksDialog} onOpenChange={setShowLinksDialog}>
+        <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link className="w-5 h-5" />
+              Photo Links ({linksToShow.length})
+            </DialogTitle>
+            <DialogDescription>
+              Click on a link to copy it to clipboard
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto space-y-2 my-4">
+            {linksToShow.map((item, index) => (
+              <div 
+                key={item.id}
+                className="flex items-center gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted cursor-pointer group"
+                onClick={() => handleCopyLink(item.url, item.id)}
+                data-testid={`link-item-${index}`}
+              >
+                <span className="flex-1 text-sm truncate font-mono">
+                  {item.url}
+                </span>
+                {copiedId === item.id ? (
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                ) : (
+                  <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowLinksDialog(false)}
+              data-testid="button-close-links"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={handleCopyAllLinks}
+              data-testid="button-copy-all-links"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copy All
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

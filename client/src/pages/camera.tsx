@@ -10,12 +10,15 @@ import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
 import { Reticle, getContrastingColor } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
-import { savePhoto, getPhotoCount, getLatestPhoto } from "@/lib/db";
+import { savePhoto, getPhotoCount, getLatestPhoto, updatePhoto } from "@/lib/db";
+import { uploadToImgBB } from "@/lib/imgbb";
 import type { InsertPhoto } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CameraPage() {
   const [, navigate] = useLocation();
   const { settings } = useSettings();
+  const { toast } = useToast();
   
   const [photoCount, setPhotoCount] = useState(0);
   const [lastPhotoThumb, setLastPhotoThumb] = useState<string | null>(null);
@@ -220,15 +223,40 @@ export default function CameraPage() {
         folder: noteText || undefined,
       };
 
-      await savePhoto(photo);
+      const savedPhoto = await savePhoto(photo);
       setPhotoCount((prev) => prev + 1);
       setLastPhotoThumb(result.thumbnailData);
+
+      // Auto-upload to ImgBB if enabled
+      if (settings.imgbb?.autoUpload && settings.imgbb?.isValidated && settings.imgbb?.apiKey) {
+        try {
+          const uploadResult = await uploadToImgBB(
+            result.imageData,
+            settings.imgbb.apiKey,
+            settings.imgbb.expiration || 0
+          );
+          if (uploadResult.success && uploadResult.cloudData) {
+            await updatePhoto(savedPhoto.id, { cloud: uploadResult.cloudData });
+            toast({
+              title: "Uploaded",
+              description: "Photo uploaded to cloud",
+            });
+          }
+        } catch (uploadError) {
+          console.error("Auto-upload error:", uploadError);
+          toast({
+            title: "Upload Failed",
+            description: "Photo saved locally, cloud upload failed",
+            variant: "destructive",
+          });
+        }
+      }
     } catch (error) {
       console.error("Capture error:", error);
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle, isAccuracyAcceptable]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, currentNote, reticleColor, settings.reticle, settings.imgbb, isAccuracyAcceptable, toast]);
 
   return (
     <div 

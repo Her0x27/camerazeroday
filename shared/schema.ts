@@ -13,6 +13,17 @@ export const photoMetadataSchema = z.object({
 
 export type PhotoMetadata = z.infer<typeof photoMetadataSchema>;
 
+// Cloud upload data from ImgBB
+export const cloudDataSchema = z.object({
+  url: z.string(), // direct image URL
+  viewerUrl: z.string(), // viewer page URL
+  deleteUrl: z.string(), // URL to delete the image
+  uploadedAt: z.number(), // timestamp when uploaded
+  expiresAt: z.number().nullable(), // null means no expiration
+});
+
+export type CloudData = z.infer<typeof cloudDataSchema>;
+
 // Main photo object stored in IndexedDB
 export const photoSchema = z.object({
   id: z.string(),
@@ -21,6 +32,7 @@ export const photoSchema = z.object({
   metadata: photoMetadataSchema,
   note: z.string().optional(),
   folder: z.string().optional(), // folder name derived from note
+  cloud: cloudDataSchema.optional(), // ImgBB cloud data
 });
 
 export type Photo = z.infer<typeof photoSchema>;
@@ -41,6 +53,16 @@ export const reticleConfigSchema = z.object({
 
 export type ReticleConfig = z.infer<typeof reticleConfigSchema>;
 
+// ImgBB cloud upload settings
+export const imgbbSettingsSchema = z.object({
+  apiKey: z.string().default(""),
+  expiration: z.number().min(0).default(0), // 0 = no expiration
+  autoUpload: z.boolean().default(false),
+  isValidated: z.boolean().default(false), // whether API key has been validated
+});
+
+export type ImgbbSettings = z.infer<typeof imgbbSettingsSchema>;
+
 // App settings stored in IndexedDB
 export const settingsSchema = z.object({
   reticle: reticleConfigSchema,
@@ -51,6 +73,12 @@ export const settingsSchema = z.object({
   soundEnabled: z.boolean().default(true),
   accuracyLimit: z.number().min(5).max(100).default(20), // GPS accuracy limit in meters
   watermarkScale: z.number().min(50).max(150).default(100), // Watermark size as percentage
+  imgbb: imgbbSettingsSchema.default({
+    apiKey: "",
+    expiration: 0,
+    autoUpload: false,
+    isValidated: false,
+  }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -71,6 +99,12 @@ export const defaultSettings: Settings = {
   soundEnabled: true,
   accuracyLimit: 20, // GPS accuracy limit in meters - blocks photo if accuracy is worse
   watermarkScale: 100, // Watermark size as percentage (50-150%)
+  imgbb: {
+    apiKey: "",
+    expiration: 0,
+    autoUpload: false,
+    isValidated: false,
+  },
 };
 
 // Gallery filter options

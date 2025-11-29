@@ -13,7 +13,14 @@ import {
   Trash2,
   Palette,
   Target,
-  Type
+  Type,
+  Cloud,
+  Key,
+  Clock,
+  Upload,
+  CheckCircle,
+  XCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSettings } from "@/lib/settings-context";
 import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
+import { validateApiKey } from "@/lib/imgbb";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
@@ -41,6 +50,14 @@ export default function SettingsPage() {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [storageInfo, setStorageInfo] = useState<{ used: number; quota: number; photos: number } | null>(null);
+  
+  const [apiKeyInput, setApiKeyInput] = useState(settings.imgbb?.apiKey || "");
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setApiKeyInput(settings.imgbb?.apiKey || "");
+  }, [settings.imgbb?.apiKey]);
 
   // Load storage info
   useEffect(() => {
@@ -90,6 +107,54 @@ export default function SettingsPage() {
     }
     setShowClearDialog(false);
   }, []);
+
+  // Handle ImgBB API key validation
+  const handleValidateApiKey = useCallback(async () => {
+    if (!apiKeyInput.trim()) {
+      setValidationError("Введите API ключ");
+      return;
+    }
+
+    setIsValidating(true);
+    setValidationError(null);
+
+    try {
+      const result = await validateApiKey(apiKeyInput.trim());
+      
+      if (result.valid) {
+        await updateSettings({
+          imgbb: {
+            ...settings.imgbb,
+            apiKey: apiKeyInput.trim(),
+            isValidated: true,
+          },
+        });
+        setValidationError(null);
+      } else {
+        setValidationError(result.error || "Неверный API ключ");
+        await updateSettings({
+          imgbb: {
+            ...settings.imgbb,
+            isValidated: false,
+          },
+        });
+      }
+    } catch (error) {
+      setValidationError("Ошибка проверки ключа");
+    } finally {
+      setIsValidating(false);
+    }
+  }, [apiKeyInput, settings.imgbb, updateSettings]);
+
+  // Handle ImgBB settings update
+  const handleImgbbUpdate = useCallback(async (updates: Partial<typeof settings.imgbb>) => {
+    await updateSettings({
+      imgbb: {
+        ...settings.imgbb,
+        ...updates,
+      },
+    });
+  }, [settings.imgbb, updateSettings]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -390,6 +455,138 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground">
                 Play shutter sound when taking a photo
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cloud Upload (ImgBB) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Cloud className="w-5 h-5 text-primary" />
+              Cloud Upload (ImgBB)
+            </CardTitle>
+            <CardDescription>
+              Configure automatic photo upload to ImgBB cloud storage
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* API Key */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                API Token
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  placeholder="Enter ImgBB API key"
+                  value={apiKeyInput}
+                  onChange={(e) => {
+                    setApiKeyInput(e.target.value);
+                    if (settings.imgbb?.isValidated) {
+                      handleImgbbUpdate({ isValidated: false });
+                    }
+                  }}
+                  data-testid="input-imgbb-api-key"
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleValidateApiKey}
+                  disabled={isValidating || !apiKeyInput.trim()}
+                  data-testid="button-validate-api-key"
+                >
+                  {isValidating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : settings.imgbb?.isValidated ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    "Validate"
+                  )}
+                </Button>
+              </div>
+              {validationError && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <XCircle className="w-3 h-3" />
+                  {validationError}
+                </p>
+              )}
+              {settings.imgbb?.isValidated && !validationError && (
+                <p className="text-xs text-green-500 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  API key validated
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Get a free API key at{" "}
+                <a 
+                  href="https://api.imgbb.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  api.imgbb.com
+                </a>
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Expiration */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Photo Expiration
+                </Label>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {(settings.imgbb?.expiration || 0) === 0 
+                    ? "Never" 
+                    : `${settings.imgbb?.expiration} sec`}
+                </span>
+              </div>
+              <Slider
+                value={[settings.imgbb?.expiration || 0]}
+                onValueChange={([value]) => handleImgbbUpdate({ expiration: value })}
+                min={0}
+                max={86400}
+                step={60}
+                data-testid="slider-imgbb-expiration"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0 = never expires</span>
+                <span>86400 = 24 hours</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Photo will be automatically deleted from ImgBB after expiration
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Auto Upload */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="auto-upload" className="flex items-center gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  Auto Upload
+                </Label>
+                <Switch
+                  id="auto-upload"
+                  checked={settings.imgbb?.autoUpload || false}
+                  onCheckedChange={(checked) => handleImgbbUpdate({ autoUpload: checked })}
+                  disabled={!settings.imgbb?.isValidated}
+                  data-testid="switch-auto-upload"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Automatically upload photos to cloud immediately after capture
+              </p>
+              {!settings.imgbb?.isValidated && settings.imgbb?.autoUpload === false && (
+                <p className="text-xs text-amber-500">
+                  Please configure and validate API key first
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
