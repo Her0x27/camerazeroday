@@ -24,7 +24,7 @@ export const CONFIG = {
   //   6 7 8
   // Example: '0-4-8' means tap top-left → center → bottom-right (diagonal)
   // Only used when UNLOCK_GESTURE is 'patternUnlock'
-  UNLOCK_PATTERN: '0-4-8',
+  UNLOCK_PATTERN: '0-4-8-5',
 
   // === AUTO-LOCK CONFIGURATION ===
   // Minutes of inactivity before camera automatically hides when disguise mode is enabled
