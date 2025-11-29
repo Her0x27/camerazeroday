@@ -161,11 +161,11 @@ export function formatCoordinate(value: number | null, type: "lat" | "lon"): str
 // Format coordinates with accuracy
 export function formatCoordinatesWithAccuracy(latitude: number | null, longitude: number | null, accuracy: number | null): string {
   if (latitude === null || longitude === null) {
-    return "---.------ ---.------ (±--m)";
+    return "---.------- ---.------- (±--m)";
   }
   
-  const latFormatted = Math.abs(latitude).toFixed(5);
-  const lonFormatted = Math.abs(longitude).toFixed(5);
+  const latFormatted = Math.abs(latitude).toFixed(7);
+  const lonFormatted = Math.abs(longitude).toFixed(7);
   const accuracyFormatted = accuracy !== null ? Math.round(accuracy) : "--";
   
   return `${latFormatted} ${lonFormatted} (±${accuracyFormatted}m)`;
