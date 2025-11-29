@@ -16,6 +16,9 @@ export const Reticle = memo(function Reticle({ config, className = "" }: Reticle
     height: `${config.size}px`,
   };
 
+  const strokeWidth = config.strokeWidth || 2;
+  const svgStrokeWidth = (strokeWidth / config.size) * 100;
+
   return (
     <div 
       className={`absolute inset-0 pointer-events-none flex items-center justify-center ${className}`}
@@ -26,8 +29,8 @@ export const Reticle = memo(function Reticle({ config, className = "" }: Reticle
         style={style}
         className="drop-shadow-lg"
       >
-        <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="50" y1="0" x2="50" y2="100" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth={svgStrokeWidth} />
+        <line x1="50" y1="0" x2="50" y2="100" stroke="currentColor" strokeWidth={svgStrokeWidth} />
       </svg>
     </div>
   );

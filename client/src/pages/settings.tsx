@@ -154,6 +154,29 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* Stroke Width */}
+            {settings.reticle.enabled && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Crosshair className="w-4 h-4" />
+                    Thickness
+                  </Label>
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {settings.reticle.strokeWidth || 2}px
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.reticle.strokeWidth || 2]}
+                  onValueChange={([value]) => updateReticle({ strokeWidth: value })}
+                  min={1}
+                  max={10}
+                  step={1}
+                  data-testid="slider-stroke-width"
+                />
+              </div>
+            )}
+
             {/* Opacity */}
             {settings.reticle.enabled && (
               <div className="space-y-3">

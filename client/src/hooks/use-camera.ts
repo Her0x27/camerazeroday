@@ -293,8 +293,12 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       const opacity = reticleConfig?.opacity ? reticleConfig.opacity / 100 : 0.7;
       const greenColor = `rgba(34, 197, 94, ${opacity})`;
       
+      const configStrokeWidth = reticleConfig?.strokeWidth || 2;
+      const scaleFactor = reticleSize / 50;
+      const scaledStrokeWidth = Math.max(1, Math.round(configStrokeWidth * scaleFactor));
+      
       ctx.strokeStyle = greenColor;
-      ctx.lineWidth = Math.max(2, Math.ceil(minDimension * 0.002));
+      ctx.lineWidth = scaledStrokeWidth;
       ctx.lineCap = "round";
       
       ctx.beginPath();
