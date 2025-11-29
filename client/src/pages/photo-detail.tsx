@@ -176,16 +176,14 @@ export default function PhotoDetailPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black overflow-auto">
+    <div className="fixed inset-0 bg-black">
       {/* Fullscreen photo display */}
-      <div className="min-h-full flex items-center justify-center">
-        <img
-          src={photo.imageData}
-          alt="Photo"
-          className="w-full h-auto"
-          data-testid="photo-image"
-        />
-      </div>
+      <img
+        src={photo.imageData}
+        alt="Photo"
+        className="w-full h-full object-cover"
+        data-testid="photo-image"
+      />
 
       {/* Navigation arrows */}
       {hasPrevious && (
