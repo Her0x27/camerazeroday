@@ -640,13 +640,7 @@ export default function GalleryPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">
-                    {new Date(photo.metadata.timestamp).toLocaleDateString("ru-RU", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
+                    {formatDate(photo.metadata.timestamp, "long")}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     {photo.metadata.latitude !== null && (
@@ -734,9 +728,9 @@ export default function GalleryPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={() => setDeleteTarget(null)}
-        title="Delete Photo?"
-        description="This action cannot be undone. The photo will be permanently removed from your device."
-        confirmText="Delete"
+        title={t.gallery.deletePhoto}
+        description={t.photoDetail.noNote}
+        confirmText={t.common.delete}
         onConfirm={handleDelete}
         variant="destructive"
         confirmTestId="button-confirm-delete"
@@ -746,44 +740,30 @@ export default function GalleryPage() {
       <ConfirmDialog
         open={showClearDialog}
         onOpenChange={setShowClearDialog}
-        title="Clear All Photos?"
+        title={t.gallery.clearAll}
         description={`This will permanently delete all ${allPhotos.length} photos from your device. This action cannot be undone.`}
-        confirmText="Clear All"
+        confirmText={t.gallery.clearAll}
         onConfirm={handleClearAll}
         variant="destructive"
         confirmTestId="button-confirm-clear"
         cancelTestId="button-cancel-clear"
       />
 
-      {isUploading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <Card className="w-80 p-6">
-            <div className="flex flex-col items-center gap-4">
-              <Cloud className="w-12 h-12 text-primary animate-pulse" />
-              <div className="text-center">
-                <h3 className="font-semibold">Uploading to Cloud</h3>
-                <p className="text-sm text-muted-foreground">
-                  {uploadProgress.completed} of {uploadProgress.total}
-                </p>
-              </div>
-              <Progress 
-                value={(uploadProgress.completed / uploadProgress.total) * 100} 
-                className="w-full"
-              />
-            </div>
-          </Card>
-        </div>
-      )}
+      <UploadProgressOverlay 
+        isVisible={isUploading}
+        completed={uploadProgress.completed}
+        total={uploadProgress.total}
+      />
 
       <Dialog open={showLinksDialog} onOpenChange={setShowLinksDialog}>
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Link className="w-5 h-5" />
-              Photo Links ({linksToShow.length})
+              {t.gallery.cloudLinks} ({linksToShow.length})
             </DialogTitle>
             <DialogDescription>
-              Click on a link to copy it to clipboard
+              {t.gallery.getLinks}
             </DialogDescription>
           </DialogHeader>
           
@@ -798,7 +778,7 @@ export default function GalleryPage() {
                   className="flex items-center gap-2 hover:bg-muted cursor-pointer rounded p-1 group"
                   onClick={() => handleCopyLink(item.url, item.id)}
                 >
-                  <span className="text-xs text-muted-foreground w-12">Image:</span>
+                  <span className="text-xs text-muted-foreground w-12">Link:</span>
                   <span className="flex-1 text-sm truncate font-mono">
                     {item.url}
                   </span>
