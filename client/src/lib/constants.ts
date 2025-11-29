@@ -10,7 +10,7 @@ export const GESTURE = {
   MIN_PATTERN_LENGTH: 4,
   MIN_SWIPE_DISTANCE_PX: 30,
   QUICK_TAP_COUNT: 4,
-  PATTERN_UNLOCK_TAP_COUNT: 3,
+  PATTERN_UNLOCK_TAP_COUNT: 5,
 } as const;
 
 export const GAME = {

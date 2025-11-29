@@ -193,7 +193,7 @@ export const ru: Translations = {
       quickTaps: "4 быстрых касания",
       patternUnlock: "Графический ключ",
       quickTapsHint: "4 быстрых касания на игре для доступа к камере",
-      patternUnlockHint: "3 касания для показа паттерна, затем нарисуйте для разблокировки",
+      patternUnlockHint: "5 касаний для показа паттерна, затем нарисуйте для разблокировки",
       setPattern: "Задать паттерн",
       changePattern: "Изменить паттерн",
       setSecretPattern: "Задать секретный паттерн",

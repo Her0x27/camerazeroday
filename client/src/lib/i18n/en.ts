@@ -191,7 +191,7 @@ export const en = {
       quickTaps: "4 Quick Taps",
       patternUnlock: "Pattern Unlock",
       quickTapsHint: "4 quick taps on game to access camera",
-      patternUnlockHint: "3 taps to show pattern, then draw to unlock",
+      patternUnlockHint: "5 taps to show pattern, then draw to unlock",
       setPattern: "Set Pattern",
       changePattern: "Change Pattern",
       setSecretPattern: "Set Secret Pattern",
