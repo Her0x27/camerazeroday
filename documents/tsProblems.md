@@ -449,18 +449,17 @@
 **Location:** Various files
 **Problem:** Some UI strings are hardcoded despite having i18n system.
 
-| Location | Hardcoded String |
-|----------|-----------------|
-| gallery.tsx:596 | "photo" / "photos" |
-| settings.tsx:809 | "4 quick taps on game..." |
-| settings.tsx:628 | "API key validated" |
-| confirm-dialog.tsx:31 | "Confirm" / "Cancel" |
+| Location | Hardcoded String | Status |
+|----------|-----------------|--------|
+| gallery.tsx:596 | "photo" / "photos" | Already uses t.gallery.photo/photos |
+| settings.tsx (cloud section) | Multiple strings | Fixed - now uses t.settings.cloud.* |
+| confirm-dialog.tsx:31 | "Confirm" / "Cancel" | Default props, overridden by callers with i18n |
 
 **Recommendation:** Move all strings to i18n.
 
-- [ ] Audit all user-visible strings
-- [ ] Add missing translation keys
-- [ ] Update both en.ts and ru.ts
+- [x] Audit all user-visible strings
+- [x] Add missing translation keys (added t.common.seconds)
+- [x] Update both en.ts and ru.ts
 - [ ] Add linting rule to detect hardcoded strings
 
 ### 8.5 Potentially Dead Code
@@ -488,9 +487,9 @@
 ## Summary Checklist
 
 ### High Priority (Performance & Stability)
-- [x] Add code splitting for routes
+- [x] Add code splitting for routes (App.tsx uses React.lazy + Suspense)
 - [ ] Implement virtualized list for gallery
-- [x] Fix potential memory leaks in event listeners (pattern-lock, game-2048)
+- [x] Fix potential memory leaks in event listeners (pattern-lock, game-2048, camera)
 - [ ] Add proper error handling to all async operations
 - [x] Implement parallel uploads with concurrency limit
 
@@ -498,12 +497,12 @@
 - [ ] Split oversized components into smaller modules
 - [x] Extract duplicated logic into shared hooks (useStorage, usePhotoMutations, useDebouncedCallback)
 - [x] Replace magic numbers with named constants
-- [x] Add missing TypeScript types and remove `any`
-- [ ] Move hardcoded strings to i18n
+- [x] Add missing TypeScript types and remove `any` (except Safari-specific casts in use-orientation.ts)
+- [x] Move hardcoded strings to i18n (Cloud section in settings.tsx fixed)
 
 ### Low Priority (Maintainability)
 - [x] Clean up unused imports and dead code (removed format-utils.ts)
-- [x] Add memoization where beneficial (pattern-lock SVG, game tiles, gallery filters)
+- [x] Add memoization where beneficial (pattern-lock SVG, game tiles, gallery filters, game-2048 mutations)
 - [ ] Standardize error handling patterns
 - [x] Add debounce to settings sliders
 - [ ] Improve folder structure organization
@@ -581,6 +580,17 @@
 - 3.5 useCallback: Complex handlers already use useCallback, simple inline handlers don't need it
 - 4.1 IndexedDB.databases(): Type defined but not used in code, no `as any` cast exists
 - 4.2 navigator.connection: Type defined but not used in code, no runtime guards needed
+- 5.1 Game mutations: rotateGrid() and moveLeft() already immutable
+- 6.5 Camera cleanup: use-camera.ts already has proper stream cleanup on unmount
+- 7.3 Lazy loading: App.tsx already uses React.lazy() with Suspense
+
+**i18n Fixes**:
+- Added `t.common.seconds` ("sec"/"сек") translation to en.ts and ru.ts
+- Fixed hardcoded strings in settings.tsx Cloud Upload section:
+  - API Token, Enter API Key, Validate, API key validated
+  - Photo Expiration, Never, seconds, neverExpires, hours24
+  - Auto Upload, Auto Upload description
+  - Get free API key message
 
 **Type Issues Found**:
 - `use-orientation.ts` has `as any` casts for DeviceOrientationEvent (Safari compatibility)
