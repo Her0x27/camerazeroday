@@ -41,7 +41,7 @@
 - [x] Design for Android and iPhone style
 - [x] Implement secret gesture access:
   - [x] 4 quick taps option
-  - [ ] Hidden pattern unlock option (disabled, placeholder)
+  - [x] Pattern unlock option (fully functional with setup UI)
   - [x] Configurable gesture selection
 - [x] Auto-lock after inactivity (configurable 1-30 min)
 - [x] Dynamic favicon switching (show game icon when disguised)
@@ -203,11 +203,25 @@ Applied to:
 ---
 
 ## Future Enhancements (Optional)
-- [ ] Pattern unlock gesture
 - [ ] Haptic feedback for iOS
 - [ ] Material ripple effects for Android
 - [ ] Test mode for gestures
 - [ ] Theme customization (beyond dark mode)
+- [ ] Additional reticle types
+
+---
+
+## 7. Pattern Unlock (Completed)
+**Description:** Draw pattern gesture for revealing disguise mode
+
+- [x] Create PatternLock component with 3x3 grid
+- [x] Gesture recognition (touch tracking)
+- [x] Pattern encoding (dot sequence to string)
+- [x] Pattern setup UI in settings with confirmation
+- [x] Visual feedback (error shake animation)
+- [x] Pattern verification in game-2048 disguise mode
+- [x] Two unlock methods (4 taps + pattern drawing)
+- [x] Settings integration (enable/select unlock method)
 
 ---
 
