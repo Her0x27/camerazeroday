@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { formatCoordinate, formatAltitude, formatAccuracy } from "./use-geolocation";
+import { formatCoordinate, formatAltitude, formatAccuracy, formatCoordinatesWithAccuracy } from "./use-geolocation";
 import { formatHeading, getCardinalDirection, formatTilt } from "./use-orientation";
 import type { ReticleConfig } from "@shared/schema";
 
@@ -331,15 +331,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       const leftItems: { icon: (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) => void; lines: string[]; hasData: boolean; separator?: boolean }[] = [];
       
       if (true) { // Always show coordinates section
-        const coordLines = [];
-        if (hasLocation) {
-          coordLines.push(formatCoordinate(metadata.latitude ?? null, "lat"));
-          coordLines.push(formatCoordinate(metadata.longitude ?? null, "lon"));
-        } else {
-          coordLines.push("---°--'--\"");
-          coordLines.push("---°--'--\"");
-        }
-        leftItems.push({ icon: drawMapPinIcon, lines: coordLines, hasData: hasLocation });
+        const coordLine = formatCoordinatesWithAccuracy(metadata.latitude ?? null, metadata.longitude ?? null, metadata.accuracy ?? null);
+        leftItems.push({ icon: drawMapPinIcon, lines: [coordLine], hasData: hasLocation });
       }
       
       if (true) { // Always show altitude
