@@ -109,14 +109,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
     // Draw video frame to canvas (this strips EXIF metadata)
     ctx.drawImage(video, 0, 0);
 
-    // Add watermark to full resolution image
-    ctx.font = `bold ${Math.ceil(canvas.height * 0.08)}px Arial`;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "bottom";
-    ctx.fillText("ZERODAY", canvas.width - Math.ceil(canvas.width * 0.03), canvas.height - Math.ceil(canvas.height * 0.03));
-
-    // Get full resolution image with watermark
+    // Get full resolution image
     const imageData = canvas.toDataURL("image/jpeg", 0.92);
 
     // Create thumbnail
@@ -135,13 +128,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
     if (thumbCtx) {
       thumbCtx.drawImage(video, 0, 0, thumbCanvas.width, thumbCanvas.height);
-      
-      // Add watermark to thumbnail
-      thumbCtx.font = `bold ${Math.ceil(thumbCanvas.height * 0.08)}px Arial`;
-      thumbCtx.fillStyle = "rgba(255, 255, 255, 0.6)";
-      thumbCtx.textAlign = "right";
-      thumbCtx.textBaseline = "bottom";
-      thumbCtx.fillText("ZERODAY", thumbCanvas.width - Math.ceil(thumbCanvas.width * 0.03), thumbCanvas.height - Math.ceil(thumbCanvas.height * 0.03));
     }
 
     const thumbnailData = thumbCanvas.toDataURL("image/jpeg", 0.7);
