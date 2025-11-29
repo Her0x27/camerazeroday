@@ -17,7 +17,9 @@ export const CONFIG = {
   // 'patternUnlock': Requires drawing a specific pattern on the screen
   UNLOCK_GESTURE: 'quickTaps' as GestureType,
 
-  // Pattern for pattern unlock mode (e.g., "1234" means tap positions 1,2,3,4)
+  // Secret pattern for 'patternUnlock' mode - sequence of grid positions to tap
+  // Grid layout: 1 2 3 / 4 5 6 / 7 8 9
+  // Example: '1357' means tap top-left → top-right → center → bottom-left
   // Only used when UNLOCK_GESTURE is 'patternUnlock'
   UNLOCK_PATTERN: '1357',
 
