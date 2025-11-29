@@ -51,6 +51,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { usePWA } from "@/hooks/use-pwa";
@@ -134,7 +141,7 @@ export default function SettingsPage() {
     setShowClearDialog(false);
   }, []);
 
-  const handlePatternDraw = useCallback((pattern: number[]) => {
+  const handlePatternDraw = (pattern: number[]) => {
     const patternStr = patternToString(pattern);
     
     if (patternStep === 'draw') {
@@ -153,14 +160,14 @@ export default function SettingsPage() {
         setTimeout(() => setPatternError(false), 1000);
       }
     }
-  }, [patternStep, tempPattern, updateDisguiseSettings]);
+  };
 
-  const handleCancelPatternSetup = useCallback(() => {
+  const handleCancelPatternSetup = () => {
     setShowPatternSetup(false);
     setPatternStep('draw');
     setTempPattern('');
     setPatternError(false);
-  }, []);
+  };
 
   const handleValidateApiKey = useCallback(async () => {
     if (!apiKeyInput.trim()) {
@@ -1022,23 +1029,20 @@ export default function SettingsPage() {
       </AlertDialog>
 
       {/* Pattern setup dialog */}
-      {showPatternSetup && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm safe-top safe-bottom"
-          data-testid="pattern-setup-dialog"
-        >
-          <div className="flex flex-col items-center gap-6 p-6 max-w-sm mx-auto">
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">
-                {patternStep === 'draw' ? 'Draw Your Pattern' : 'Confirm Your Pattern'}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {patternStep === 'draw' 
-                  ? 'Connect at least 4 dots to create your secret pattern'
-                  : 'Draw the same pattern again to confirm'}
-              </p>
-            </div>
-            
+      <Dialog open={showPatternSetup} onOpenChange={setShowPatternSetup}>
+        <DialogContent data-testid="pattern-setup-dialog" className="w-full max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {patternStep === 'draw' ? 'Draw Your Pattern' : 'Confirm Your Pattern'}
+            </DialogTitle>
+            <DialogDescription>
+              {patternStep === 'draw' 
+                ? 'Connect at least 4 dots to create your secret pattern'
+                : 'Draw the same pattern again to confirm'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center gap-6 py-4">
             <div className={`p-4 rounded-xl bg-muted/30 ${patternError ? 'animate-shake ring-2 ring-destructive' : ''}`}>
               <PatternLock
                 onPatternComplete={handlePatternDraw}
@@ -1054,32 +1058,32 @@ export default function SettingsPage() {
                 Patterns don't match. Try again.
               </p>
             )}
-            
-            <div className="flex gap-2">
-              {patternStep === 'confirm' && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setPatternStep('draw');
-                    setTempPattern('');
-                    setPatternError(false);
-                  }}
-                  data-testid="button-pattern-back"
-                >
-                  Back
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                onClick={handleCancelPatternSetup}
-                data-testid="button-pattern-cancel"
-              >
-                Cancel
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+          
+          <div className="flex gap-2 justify-end">
+            {patternStep === 'confirm' && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPatternStep('draw');
+                  setTempPattern('');
+                  setPatternError(false);
+                }}
+                data-testid="button-pattern-back"
+              >
+                Back
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={handleCancelPatternSetup}
+              data-testid="button-pattern-cancel"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
