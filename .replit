@@ -1,9 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16", "go-1.22"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["go"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -37,6 +38,10 @@ externalPort = 8000
 [[ports]]
 localPort = 36335
 externalPort = 5000
+
+[[ports]]
+localPort = 36749
+externalPort = 8080
 
 [[ports]]
 localPort = 36829
