@@ -1,11 +1,10 @@
-import { createRoot } from "react-dom/client";
+import { createRoot, Root } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
 // Service Worker management
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
-    // Register service worker only in production
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
         .then((registration) => {
@@ -16,7 +15,6 @@ if ('serviceWorker' in navigator) {
         });
     });
   } else {
-    // Unregister any existing service workers in development
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => {
         registration.unregister();
@@ -45,7 +43,6 @@ window.addEventListener('appinstalled', () => {
   window.dispatchEvent(new CustomEvent('pwaInstalled'));
 });
 
-// Export functions for components to use
 export function canInstallPWA(): boolean {
   return deferredInstallPrompt !== null;
 }
@@ -68,4 +65,23 @@ export function isStandalone(): boolean {
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Store root instance on window to persist across HMR updates
+declare global {
+  interface Window {
+    __REACT_ROOT__?: Root;
+  }
+}
+
+const container = document.getElementById("root");
+if (container) {
+  // Reuse existing root if available (HMR case)
+  if (!window.__REACT_ROOT__) {
+    window.__REACT_ROOT__ = createRoot(container);
+  }
+  window.__REACT_ROOT__.render(<App />);
+}
+
+// Accept HMR updates
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
