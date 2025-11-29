@@ -112,6 +112,185 @@ npm run build
 
 ---
 
+## 🌐 Deployment to Render
+
+Camera ZeroDay can be deployed to [Render.com](https://render.com) as a static site with Node.js backend. This is perfect for sharing the app publicly.
+
+### Prerequisites
+- GitHub account with the repository pushed
+- Render.com account (free tier available)
+- Node.js 18+ (Render default)
+
+### Step-by-Step Deployment
+
+#### 1. Prepare Your Repository
+```bash
+# Make sure everything is committed and pushed to GitHub
+git add .
+git commit -m "Ready for deployment to Render"
+git push origin main
+```
+
+#### 2. Create a Render Service
+1. Log in to [Render Dashboard](https://dashboard.render.com)
+2. Click **"New +"** → Select **"Web Service"**
+3. Connect your GitHub repository:
+   - Authorize Render to access your GitHub account
+   - Select the Camera ZeroDay repository
+   - Click **"Connect"**
+
+#### 3. Configure Build Settings
+Fill in the following settings:
+
+| Setting | Value |
+|---------|-------|
+| **Name** | `camera-zeroday` (or your preferred name) |
+| **Environment** | `Node` |
+| **Region** | Select closest to your users |
+| **Branch** | `main` (or your deployment branch) |
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `npm start` |
+| **Instance Type** | `Free` (or upgrade as needed) |
+
+#### 4. Add Environment Variables
+In the **"Environment"** section, add:
+
+```env
+NODE_ENV=production
+VITE_DISGUISE_MODE=true
+```
+
+**Optional environment variables:**
+```env
+VITE_PATTERN_CODE=0-4-8            # Custom unlock pattern
+VITE_DEBUG_MODE=false               # Disable debug logs
+```
+
+#### 5. Deploy
+1. Click **"Create Web Service"**
+2. Render will automatically start building
+3. Monitor the deployment in the **"Logs"** tab
+4. Once deployed, you'll get a URL like: `https://camera-zeroday.onrender.com`
+
+### Build Output
+The build process creates:
+- **`dist/`** — Production frontend bundle (Vite output)
+- **`dist/index.cjs`** — Production server bundle (Express + static serving)
+
+### Deployment Verification
+After deployment completes:
+
+✅ **Check Frontend**
+- Open `https://your-app-name.onrender.com`
+- Verify the 2048 game loads
+- Test PWA install banner
+- Try the camera permissions prompt
+
+✅ **Check Features**
+1. **Camera Interface** — Tap 5-tap pattern to unlock from game
+2. **2048 Game** — Should be fully playable
+3. **PWA Banner** — Should appear on game screen
+4. **Settings** — All collapsible sections should work
+
+### Important Deployment Notes
+
+#### Free Tier Considerations
+- **Spin-down** — Render puts free apps to sleep after 15 mins of inactivity
+  - First request after sleep takes ~30 seconds to spin up
+  - Consider upgrading to Starter plan for production
+- **Storage** — IndexedDB data stored locally in browser, not affected by spin-down
+- **Bandwidth** — 100 GB/month free (generous for this app)
+
+#### HTTPS & Security
+- Render automatically provides HTTPS
+- Camera and Geolocation APIs require HTTPS
+- All traffic is encrypted end-to-end
+
+#### Data Privacy
+- All photos stored locally in browser's IndexedDB
+- No data sent to Render servers
+- App works completely offline after first load
+- Service Worker caches all assets
+
+#### Custom Domain
+To use a custom domain:
+1. Go to **"Settings"** → **"Custom Domain"**
+2. Add your domain name
+3. Follow DNS configuration instructions
+4. SSL certificate automatically provisioned by Render
+
+### Troubleshooting Deployment
+
+#### Build Fails
+```bash
+# Check for TypeScript errors
+npm run check
+
+# Ensure Node version compatibility
+node --version  # Should be 18+
+
+# Clean install and rebuild
+rm -rf node_modules dist
+npm install
+npm run build
+```
+
+#### App Won't Start
+- Check logs: Render Dashboard → Logs tab
+- Ensure `npm start` command is correct: `NODE_ENV=production node dist/index.cjs`
+- Verify `package.json` has build and start scripts
+
+#### Camera/GPS Not Working
+- Camera API requires HTTPS (Render provides this)
+- Check browser console for permission errors
+- Verify device has camera hardware
+- Try in different browser if issues persist
+
+#### PWA Won't Install
+- App must be served over HTTPS ✅ (Render handles this)
+- Manifest file must be valid
+- Service Worker must register successfully
+- Check browser console for SW errors
+
+### Continuous Deployment
+Render automatically redeploys when you push to GitHub:
+1. Make changes locally
+2. Commit and push to main branch
+3. Render automatically rebuilds and redeploys
+4. No manual steps required
+
+To disable auto-deploy:
+- Go to **"Settings"** → **"Auto-Deploy"** → Toggle off
+
+### Monitoring & Logs
+View deployment logs:
+1. Dashboard → Your Service
+2. Click **"Logs"** tab
+3. View real-time output
+4. Search for errors
+
+### Environment-Specific Configuration
+The app detects deployment environment:
+```javascript
+// This is handled automatically
+const isProduction = import.meta.env.MODE === 'production';
+const disguiseMode = import.meta.env.VITE_DISGUISE_MODE === 'true';
+```
+
+### Upgrading Beyond Free Tier
+
+When ready to upgrade from free tier:
+1. Dashboard → Your Service → **"Settings"**
+2. Under **"Plan"** → Choose appropriate tier
+3. Changes take effect immediately
+
+**Recommended plans:**
+- **Starter**: $7/month — Good for testing, occasional use
+- **Standard**: $12/month — Recommended for production
+- **Pro**: $19/month — For high traffic
+
+---
+
 ## 📖 Usage Guide
 
 ### Taking Photos
