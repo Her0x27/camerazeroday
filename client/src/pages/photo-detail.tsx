@@ -25,7 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 import { MetadataCompact } from "@/components/metadata-overlay";
 import { getPhoto, getAllPhotos, updatePhoto, deletePhoto, createCleanImageBlob } from "@/lib/db";
 import type { Photo } from "@shared/schema";
@@ -33,7 +32,6 @@ import type { Photo } from "@shared/schema";
 export default function PhotoDetailPage() {
   const [, params] = useRoute("/photo/:id");
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   
   const photoId = params?.id;
   
@@ -63,18 +61,14 @@ export default function PhotoDetailPage() {
         
         setAllPhotoIds(photos.map((p) => p.id));
       } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Load Failed",
-          description: "Failed to load photo",
-        });
+        console.error("Load error:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadPhoto();
-  }, [photoId, toast]);
+  }, [photoId]);
 
   // Get current index and navigation
   const currentIndex = photoId ? allPhotoIds.indexOf(photoId) : -1;
@@ -117,10 +111,6 @@ export default function PhotoDetailPage() {
     
     try {
       await deletePhoto(photoId);
-      toast({
-        title: "Photo Deleted",
-        description: "Photo has been removed",
-      });
       
       // Navigate to next photo or gallery
       if (hasNext) {
@@ -131,15 +121,11 @@ export default function PhotoDetailPage() {
         navigate("/gallery");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Delete Failed",
-        description: "Failed to delete photo",
-      });
+      console.error("Delete error:", error);
     } finally {
       setShowDeleteDialog(false);
     }
-  }, [photoId, hasNext, hasPrevious, allPhotoIds, currentIndex, navigate, toast]);
+  }, [photoId, hasNext, hasPrevious, allPhotoIds, currentIndex, navigate]);
 
   // Export photo (download without EXIF)
   const handleExport = useCallback(async () => {
@@ -155,19 +141,10 @@ export default function PhotoDetailPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Photo Exported",
-        description: "Photo saved without metadata",
-      });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: "Failed to export photo",
-      });
+      console.error("Export error:", error);
     }
-  }, [photo, toast]);
+  }, [photo]);
 
   // Share photo
   const handleShare = useCallback(async () => {
@@ -183,14 +160,10 @@ export default function PhotoDetailPage() {
       });
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
-        toast({
-          variant: "destructive",
-          title: "Share Failed",
-          description: "Failed to share photo",
-        });
+        console.error("Share error:", error);
       }
     }
-  }, [photo, toast]);
+  }, [photo]);
 
   // Save edited note
   const handleSaveNote = useCallback(async () => {
@@ -201,19 +174,10 @@ export default function PhotoDetailPage() {
       await updatePhoto(photoId, { note: updatedNote });
       setPhoto((prev) => prev ? { ...prev, note: updatedNote } : null);
       setIsEditingNote(false);
-      
-      toast({
-        title: "Note Updated",
-        description: updatedNote ? "Note saved successfully" : "Note removed",
-      });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Save Failed",
-        description: "Failed to save note",
-      });
+      console.error("Save error:", error);
     }
-  }, [photoId, editedNote, toast]);
+  }, [photoId, editedNote]);
 
   // Cancel note editing
   const handleCancelEdit = useCallback(() => {

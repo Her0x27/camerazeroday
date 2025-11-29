@@ -22,13 +22,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 import { getAllPhotos, deletePhoto, clearAllPhotos } from "@/lib/db";
 import type { Photo, GalleryFilter } from "@shared/schema";
 
 export default function GalleryPage() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,15 +50,11 @@ export default function GalleryPage() {
       
       setPhotos(allPhotos);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Load Failed",
-        description: "Failed to load photos",
-      });
+      console.error("Load error:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [filter, toast]);
+  }, [filter]);
 
   useEffect(() => {
     loadPhotos();
@@ -73,40 +67,24 @@ export default function GalleryPage() {
     try {
       await deletePhoto(deleteTarget);
       setPhotos((prev) => prev.filter((p) => p.id !== deleteTarget));
-      toast({
-        title: "Photo Deleted",
-        description: "Photo has been removed",
-      });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Delete Failed",
-        description: "Failed to delete photo",
-      });
+      console.error("Delete error:", error);
     } finally {
       setDeleteTarget(null);
     }
-  }, [deleteTarget, toast]);
+  }, [deleteTarget]);
 
   // Clear all photos
   const handleClearAll = useCallback(async () => {
     try {
       await clearAllPhotos();
       setPhotos([]);
-      toast({
-        title: "Gallery Cleared",
-        description: "All photos have been removed",
-      });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Clear Failed",
-        description: "Failed to clear gallery",
-      });
+      console.error("Clear error:", error);
     } finally {
       setShowClearDialog(false);
     }
-  }, [toast]);
+  }, []);
 
   // Toggle sort order
   const toggleSortOrder = useCallback(() => {

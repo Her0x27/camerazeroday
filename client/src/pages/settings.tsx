@@ -27,13 +27,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/lib/settings-context";
 import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const { settings, updateSettings, updateReticle, resetSettings } = useSettings();
   
   const [showResetDialog, setShowResetDialog] = useState(false);
@@ -75,31 +73,19 @@ export default function SettingsPage() {
   // Handle reset settings
   const handleReset = useCallback(async () => {
     await resetSettings();
-    toast({
-      title: "Settings Reset",
-      description: "All settings have been restored to defaults",
-    });
     setShowResetDialog(false);
-  }, [resetSettings, toast]);
+  }, [resetSettings]);
 
   // Handle clear photos
   const handleClearPhotos = useCallback(async () => {
     try {
       await clearAllPhotos();
       setStorageInfo((prev) => prev ? { ...prev, photos: 0 } : null);
-      toast({
-        title: "Photos Cleared",
-        description: "All photos have been removed",
-      });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Clear Failed",
-        description: "Failed to clear photos",
-      });
+      console.error("Clear error:", error);
     }
     setShowClearDialog(false);
-  }, [toast]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

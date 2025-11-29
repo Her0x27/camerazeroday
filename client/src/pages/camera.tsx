@@ -4,7 +4,6 @@ import { Camera, Settings, Image, Crosshair, Wifi, WifiOff, FileText } from "luc
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { useCamera } from "@/hooks/use-camera";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useOrientation } from "@/hooks/use-orientation";
@@ -16,7 +15,6 @@ import type { InsertPhoto } from "@shared/schema";
 
 export default function CameraPage() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const { settings } = useSettings();
   
   const [photoCount, setPhotoCount] = useState(0);
@@ -119,11 +117,6 @@ export default function CameraPage() {
 
       await savePhoto(photo);
       setPhotoCount((prev) => prev + 1);
-      
-      toast({
-        title: "Photo Saved",
-        description: "Photo saved successfully",
-      });
 
       // Play capture sound if enabled
       if (settings.soundEnabled) {
@@ -147,15 +140,11 @@ export default function CameraPage() {
         }
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Capture Failed",
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
+      console.error("Capture error:", error);
     } finally {
       setIsCapturing(false);
     }
-  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, settings, toast]);
+  }, [isReady, isCapturing, capturePhoto, geoData, orientationData, settings]);
 
   return (
     <div 
