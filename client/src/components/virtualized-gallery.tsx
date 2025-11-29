@@ -53,7 +53,7 @@ const PhotoListItem = memo(function PhotoListItem({
   const { t } = useI18n();
   const photo = photos[index];
 
-  if (!photo) return null;
+  if (!photo) return <div style={{ ...style, paddingBottom: 8 }} />;
 
   return (
     <div style={{ ...style, paddingBottom: 8 }}>
@@ -107,10 +107,11 @@ const PhotoGridCell = memo(function PhotoGridCell({
   onPhotoClick,
   onDeleteClick,
 }: PhotoGridCellProps) {
+  const { t } = useI18n();
   const photoIndex = rowIndex * columnCount + columnIndex;
   const photo = photos[photoIndex];
 
-  if (!photo) return null;
+  if (!photo) return <div style={{ ...style, padding: GRID_GAP / 2 }} />;
 
   return (
     <div style={{ ...style, padding: GRID_GAP / 2 }}>
@@ -121,7 +122,7 @@ const PhotoGridCell = memo(function PhotoGridCell({
       >
         <img
           src={photo.thumbnailData}
-          alt="Photo"
+          alt={t.components.gallery.photo}
           className="w-full h-full object-cover"
           loading="lazy"
         />
