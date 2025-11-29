@@ -198,21 +198,21 @@ export default function GalleryPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDisplayType(displayType === "list" ? "grid" : "list")}
+              data-testid="button-display-toggle"
+            >
+              {displayType === "list" ? (
+                <Grid className="w-5 h-5" />
+              ) : (
+                <List className="w-5 h-5" />
+              )}
+            </Button>
+
             {viewMode === "photos" && (
               <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDisplayType(displayType === "list" ? "grid" : "list")}
-                  data-testid="button-display-toggle"
-                >
-                  {displayType === "list" ? (
-                    <Grid className="w-5 h-5" />
-                  ) : (
-                    <List className="w-5 h-5" />
-                  )}
-                </Button>
-
                 <Button
                   variant="ghost"
                   size="icon"
@@ -333,42 +333,85 @@ export default function GalleryPage() {
             </Button>
           </div>
         ) : viewMode === "folders" ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {folders.map((folder) => (
-              <Card
-                key={folder.name ?? "__uncategorized__"}
-                className="group relative aspect-square overflow-hidden cursor-pointer hover-elevate"
-                onClick={() => handleFolderSelect(folder.name)}
-                data-testid={`folder-card-${folder.name ?? "uncategorized"}`}
-              >
-                {folder.latestThumb ? (
-                  <img
-                    src={folder.latestThumb}
-                    alt={folder.name ?? "Uncategorized"}
-                    className="w-full h-full object-cover opacity-60"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-card" />
-                )}
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                  <Folder className="w-10 h-10 text-primary mb-2" />
-                  <span className="font-semibold text-white text-center text-sm line-clamp-2">
-                    {folder.name ?? "Uncategorized"}
-                  </span>
-                  <Badge 
-                    variant="secondary" 
-                    className="mt-2 bg-black/60 text-white border-none text-xs"
-                  >
-                    {folder.count} {folder.count === 1 ? "photo" : "photos"}
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
+          displayType === "list" ? (
+            <div className="flex flex-col gap-2">
+              {folders.map((folder) => (
+                <Card
+                  key={folder.name ?? "__uncategorized__"}
+                  className="group flex items-center gap-3 p-2 cursor-pointer hover-elevate"
+                  onClick={() => handleFolderSelect(folder.name)}
+                  data-testid={`folder-card-${folder.name ?? "uncategorized"}`}
+                >
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-card">
+                    {folder.latestThumb ? (
+                      <img
+                        src={folder.latestThumb}
+                        alt={folder.name ?? "Uncategorized"}
+                        className="w-full h-full object-cover opacity-70"
+                        loading="lazy"
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <Folder className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {folder.name ?? "Uncategorized"}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge 
+                        variant="secondary" 
+                        className="text-[10px] px-1.5 py-0.5"
+                      >
+                        {folder.count} {folder.count === 1 ? "photo" : "photos"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {folders.map((folder) => (
+                <Card
+                  key={folder.name ?? "__uncategorized__"}
+                  className="group relative aspect-square overflow-hidden cursor-pointer hover-elevate"
+                  onClick={() => handleFolderSelect(folder.name)}
+                  data-testid={`folder-card-${folder.name ?? "uncategorized"}`}
+                >
+                  {folder.latestThumb ? (
+                    <img
+                      src={folder.latestThumb}
+                      alt={folder.name ?? "Uncategorized"}
+                      className="w-full h-full object-cover opacity-60"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-card" />
+                  )}
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
+                    <Folder className="w-10 h-10 text-primary mb-2" />
+                    <span className="font-semibold text-white text-center text-sm line-clamp-2">
+                      {folder.name ?? "Uncategorized"}
+                    </span>
+                    <Badge 
+                      variant="secondary" 
+                      className="mt-2 bg-black/60 text-white border-none text-xs"
+                    >
+                      {folder.count} {folder.count === 1 ? "photo" : "photos"}
+                    </Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )
         ) : filteredPhotos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center mb-4">
