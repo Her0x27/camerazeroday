@@ -262,6 +262,35 @@ export const en = {
     title: "Page Not Found",
     description: "The page you're looking for doesn't exist or has been moved.",
   },
+  
+  components: {
+    badges: {
+      note: "Note",
+      cloud: "Cloud",
+      local: "Local",
+      photo: "photo",
+      photos: "photos",
+    },
+    upload: {
+      uploadingToCloud: "Uploading to Cloud",
+      uploading: "Uploading...",
+    },
+    metadata: {
+      locationNotAvailable: "Location not available",
+      headingNotAvailable: "Heading not available",
+      live: "LIVE",
+      minutes: "m",
+    },
+    error: {
+      somethingWentWrong: "Something went wrong",
+      unexpectedError: "An unexpected error occurred. You can try refreshing the page or return to the home screen.",
+      home: "Home",
+      tryAgain: "Try Again",
+    },
+    gallery: {
+      photo: "Photo",
+    },
+  },
 };
 
 export type Translations = typeof en;

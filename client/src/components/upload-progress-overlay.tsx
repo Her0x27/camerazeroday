@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Cloud, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useI18n } from "@/lib/i18n";
 
 interface UploadProgressOverlayProps {
   isVisible: boolean;
@@ -14,10 +15,12 @@ export const UploadProgressOverlay = memo(function UploadProgressOverlay({
   isVisible,
   completed,
   total,
-  title = "Uploading to Cloud",
+  title,
 }: UploadProgressOverlayProps) {
+  const { t } = useI18n();
   if (!isVisible) return null;
   
+  const displayTitle = title || t.components.upload.uploadingToCloud;
   const percentage = total > 0 ? (completed / total) * 100 : 0;
   
   return (
@@ -29,7 +32,7 @@ export const UploadProgressOverlay = memo(function UploadProgressOverlay({
         <div className="flex flex-col items-center gap-4">
           <Cloud className="w-12 h-12 text-primary animate-pulse" />
           <div className="text-center">
-            <h3 className="font-semibold">{title}</h3>
+            <h3 className="font-semibold">{displayTitle}</h3>
             <p className="text-sm text-muted-foreground">
               {completed} of {total}
             </p>
@@ -48,6 +51,7 @@ interface SingleUploadIndicatorProps {
 export const SingleUploadIndicator = memo(function SingleUploadIndicator({
   isUploading,
 }: SingleUploadIndicatorProps) {
+  const { t } = useI18n();
   if (!isUploading) return null;
   
   return (
@@ -56,7 +60,7 @@ export const SingleUploadIndicator = memo(function SingleUploadIndicator({
       data-testid="upload-indicator"
     >
       <Loader2 className="w-4 h-4 animate-spin" />
-      <span>Uploading...</span>
+      <span>{t.components.upload.uploading}</span>
     </div>
   );
 });

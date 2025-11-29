@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/date-utils";
 import { LocationBadge, NoteBadge } from "@/components/photo-badges";
+import { useI18n } from "@/lib/i18n";
 import type { Photo } from "@shared/schema";
 
 interface VirtualizedListProps {
@@ -49,6 +50,7 @@ const PhotoListItem = memo(function PhotoListItem({
   onPhotoClick,
   onDeleteClick,
 }: PhotoListItemProps) {
+  const { t } = useI18n();
   const photo = photos[index];
 
   if (!photo) return null;
@@ -62,7 +64,7 @@ const PhotoListItem = memo(function PhotoListItem({
       >
         <img
           src={photo.thumbnailData}
-          alt="Photo"
+          alt={t.components.gallery.photo}
           className="w-16 h-16 object-cover rounded-md flex-shrink-0"
           loading="lazy"
         />

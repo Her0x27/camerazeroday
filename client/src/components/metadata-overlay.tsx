@@ -2,6 +2,7 @@ import { memo, useState, useEffect } from "react";
 import { MapPin, Compass, Mountain, Target, Signal, Clock } from "lucide-react";
 import { formatCoordinate, formatAltitude, formatAccuracy, getAccuracyLevel } from "@/hooks/use-geolocation";
 import { formatHeading, getCardinalDirection } from "@/hooks/use-orientation";
+import { useI18n } from "@/lib/i18n";
 
 interface MetadataOverlayProps {
   latitude: number | null;
@@ -16,12 +17,12 @@ interface MetadataOverlayProps {
   accuracyLimit?: number;
 }
 
-function formatLastUpdate(lastUpdate: number | undefined): string {
+function formatLastUpdate(lastUpdate: number | undefined, t: any): string {
   if (!lastUpdate) return "---";
   const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
-  if (seconds < 1) return "LIVE";
+  if (seconds < 1) return t.components.metadata.live;
   if (seconds < 60) return `${seconds}s`;
-  return `${Math.floor(seconds / 60)}m`;
+  return `${Math.floor(seconds / 60)}${t.components.metadata.minutes}`;
 }
 
 export const MetadataOverlay = memo(function MetadataOverlay({
@@ -36,6 +37,7 @@ export const MetadataOverlay = memo(function MetadataOverlay({
   scale = 100,
   accuracyLimit = 20,
 }: MetadataOverlayProps) {
+  const { t } = useI18n();
   const [, forceUpdate] = useState(0);
   
   useEffect(() => {
@@ -102,7 +104,7 @@ export const MetadataOverlay = memo(function MetadataOverlay({
           <div className="flex items-center gap-2">
             <Clock className={`w-3.5 h-3.5 ${isLive ? "text-green-400" : "text-amber-400"}`} />
             <span className={`font-mono text-xs ${isLive ? "text-green-400" : "text-amber-400"}`}>
-              {formatLastUpdate(lastUpdate)}
+              {formatLastUpdate(lastUpdate, t)}
             </span>
             {isLive && (
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
@@ -149,6 +151,7 @@ export function MetadataCompact({
   heading,
   className = "",
 }: MetadataCompactProps) {
+  const { t } = useI18n();
   const hasLocation = latitude !== null && longitude !== null;
 
   return (
@@ -164,7 +167,7 @@ export function MetadataCompact({
                 <div>{formatCoordinate(longitude, "lon")}</div>
               </>
             ) : (
-              <span className="text-muted-foreground">Location not available</span>
+              <span className="text-muted-foreground">{t.components.metadata.locationNotAvailable}</span>
             )}
           </div>
         </div>
@@ -185,7 +188,7 @@ export function MetadataCompact({
               {formatHeading(heading)} ({getCardinalDirection(heading)})
             </>
           ) : (
-            <span className="text-muted-foreground">Heading not available</span>
+            <span className="text-muted-foreground">{t.components.metadata.headingNotAvailable}</span>
           )}
         </span>
       </div>

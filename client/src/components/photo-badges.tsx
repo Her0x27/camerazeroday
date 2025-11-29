@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { MapPin, FileText, Cloud, CloudOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface LocationBadgeProps {
@@ -37,6 +38,7 @@ export const NoteBadge = memo(function NoteBadge({
   variant = "default",
   className 
 }: NoteBadgeProps) {
+  const { t } = useI18n();
   const baseClasses = variant === "overlay" 
     ? "bg-black/60 text-white border-none" 
     : "";
@@ -48,7 +50,7 @@ export const NoteBadge = memo(function NoteBadge({
       data-testid="badge-note"
     >
       <FileText className="w-2.5 h-2.5 mr-0.5" />
-      Note
+      {t.components.badges.note}
     </Badge>
   );
 });
@@ -64,6 +66,7 @@ export const CloudBadge = memo(function CloudBadge({
   variant = "default",
   className 
 }: CloudBadgeProps) {
+  const { t } = useI18n();
   const baseClasses = variant === "overlay" 
     ? "bg-black/60 text-white border-none" 
     : "";
@@ -77,7 +80,7 @@ export const CloudBadge = memo(function CloudBadge({
       data-testid="badge-cloud"
     >
       <Icon className="w-2.5 h-2.5 mr-0.5" />
-      {uploaded ? "Cloud" : "Local"}
+      {uploaded ? t.components.badges.cloud : t.components.badges.local}
     </Badge>
   );
 });
@@ -93,11 +96,12 @@ export const PhotoCountBadge = memo(function PhotoCountBadge({
   variant = "default",
   className 
 }: PhotoCountBadgeProps) {
+  const { t } = useI18n();
   const baseClasses = variant === "overlay" 
     ? "bg-black/60 text-white border-none" 
     : "";
   
-  const label = count === 1 ? "photo" : "photos";
+  const label = count === 1 ? t.components.badges.photo : t.components.badges.photos;
   
   return (
     <Badge 

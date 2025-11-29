@@ -264,4 +264,33 @@ export const ru: Translations = {
     title: "Страница не найдена",
     description: "Страница, которую вы ищете, не существует или была перемещена.",
   },
+  
+  components: {
+    badges: {
+      note: "Заметка",
+      cloud: "Облако",
+      local: "Локально",
+      photo: "фото",
+      photos: "фото",
+    },
+    upload: {
+      uploadingToCloud: "Загрузка в облако",
+      uploading: "Загрузка...",
+    },
+    metadata: {
+      locationNotAvailable: "Геолокация недоступна",
+      headingNotAvailable: "Направление недоступно",
+      live: "LIVE",
+      minutes: "м",
+    },
+    error: {
+      somethingWentWrong: "Что-то пошло не так",
+      unexpectedError: "Произошла непредвиденная ошибка. Вы можете попробовать обновить страницу или вернуться на главный экран.",
+      home: "Главная",
+      tryAgain: "Попробовать снова",
+    },
+    gallery: {
+      photo: "Фото",
+    },
+  },
 };
