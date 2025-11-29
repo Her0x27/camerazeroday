@@ -4,7 +4,6 @@
 # Usage: ./build.sh [options]
 # Options:
 #   --go           Build Go server instead of Node.js
-#   --embedded     Embed static files into Go binary (single file distribution)
 #   --obfuscate    Enable JavaScript obfuscation/scrambling
 #   --clean        Clean dist folder before build
 #   --help         Show this help message
@@ -21,7 +20,6 @@ NC='\033[0m' # No Color
 
 # Default options
 USE_GO=false
-EMBEDDED=false
 OBFUSCATE=false
 CLEAN=false
 
@@ -34,11 +32,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --go)
             USE_GO=true
-            shift
-            ;;
-        --embedded)
-            EMBEDDED=true
-            USE_GO=true  # Embedded implies Go
             shift
             ;;
         --obfuscate)
@@ -56,7 +49,6 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --go           Build Go server instead of Node.js"
-            echo "  --embedded     Embed static files into Go binary (single file)"
             echo "  --obfuscate    Enable JavaScript obfuscation/scrambling"
             echo "  --clean        Clean dist folder before build"
             echo "  --help         Show this help message"
@@ -64,7 +56,6 @@ while [[ $# -gt 0 ]]; do
             echo "Examples:"
             echo "  ./build.sh                    # Node.js build"
             echo "  ./build.sh --go               # Go server build"
-            echo "  ./build.sh --go --embedded    # Single Go binary with embedded files"
             echo "  ./build.sh --go --obfuscate   # Go build with JS obfuscation"
             exit 0
             ;;
@@ -82,12 +73,7 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 if [ "$USE_GO" = true ]; then
-    echo -e "${CYAN}Mode: Go Server${NC}"
-    if [ "$EMBEDDED" = true ]; then
-        echo -e "${CYAN}Type: Single Binary (embedded files)${NC}"
-    else
-        echo -e "${CYAN}Type: Separate binary + static files${NC}"
-    fi
+    echo -e "${CYAN}Mode: Go Server (binary + static files)${NC}"
 else
     echo -e "${CYAN}Mode: Node.js Server${NC}"
 fi
@@ -174,43 +160,24 @@ if [ "$USE_GO" = true ]; then
     # Build flags
     LDFLAGS="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
     
-    if [ "$EMBEDDED" = true ]; then
-        echo "      Building with embedded files..."
-        
-        # Copy public files to server-go for embedding
-        rm -rf public
-        cp -r ../dist/public .
-        
-        # Build with embedded files
-        CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o ../dist/server main.go
-        
-        # Clean up copied files
-        rm -rf public
-        
-        # Remove separate public folder since it's embedded
-        rm -rf ../dist/public
-        
-        echo -e "${GREEN}      ✓ Single binary with embedded files created${NC}"
-    else
-        # Build without embedding
-        CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o ../dist/server main.go
-        echo -e "${GREEN}      ✓ Go server binary created${NC}"
+    # Build Go binary
+    CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o ../dist/server main.go
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Go build failed!${NC}"
+        exit 1
     fi
     
     cd ..
     
+    echo -e "${GREEN}      ✓ Go server binary created${NC}"
+    
     # Create run script
-    if [ "$EMBEDDED" = true ]; then
-        cat > dist/run.sh << 'EOF'
+    cat > dist/run.sh << 'EOF'
 #!/bin/bash
-./server --embedded "$@"
-EOF
-    else
-        cat > dist/run.sh << 'EOF'
-#!/bin/bash
+cd "$(dirname "$0")"
 ./server --static ./public "$@"
 EOF
-    fi
     chmod +x dist/run.sh
     
 else
@@ -263,13 +230,8 @@ fi
 echo ""
 echo "To start the server:"
 if [ "$USE_GO" = true ]; then
-    if [ "$EMBEDDED" = true ]; then
-        echo "  cd dist && ./server --embedded"
-        echo "  or: cd dist && ./run.sh"
-    else
-        echo "  cd dist && ./server --static ./public"
-        echo "  or: cd dist && ./run.sh"
-    fi
+    echo "  cd dist && ./server --static ./public"
+    echo "  or: cd dist && ./run.sh"
 else
     echo "  npm run start"
     echo "  or: cd dist && node index.cjs"
