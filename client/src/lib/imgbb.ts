@@ -1,45 +1,6 @@
 import type { CloudData } from "@shared/schema";
-
-interface ImgBBResponse {
-  data: {
-    id: string;
-    title: string;
-    url_viewer: string;
-    url: string;
-    display_url: string;
-    width: string;
-    height: string;
-    size: string;
-    time: string;
-    expiration: string;
-    image: {
-      filename: string;
-      name: string;
-      mime: string;
-      extension: string;
-      url: string;
-    };
-    thumb: {
-      filename: string;
-      name: string;
-      mime: string;
-      extension: string;
-      url: string;
-    };
-    delete_url: string;
-  };
-  success: boolean;
-  status: number;
-}
-
-interface ImgBBError {
-  error: {
-    message: string;
-    code: number;
-  };
-  status_code: number;
-  status_txt: string;
-}
+import { isImgBBSuccess, isImgBBError } from "./imgbb-types";
+import { UPLOAD } from "./constants";
 
 export interface UploadResult {
   success: boolean;
@@ -66,16 +27,17 @@ export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; 
       }
     );
 
-    const result = await response.json();
+    const result: unknown = await response.json();
 
-    if (result.success) {
+    if (isImgBBSuccess(result)) {
       return { valid: true };
-    } else {
-      const errorResult = result as ImgBBError;
+    } else if (isImgBBError(result)) {
       return { 
         valid: false, 
-        error: errorResult.error?.message || "Invalid API key" 
+        error: result.error?.message || "Invalid API key" 
       };
+    } else {
+      return { valid: false, error: "Invalid API response" };
     }
   } catch (error) {
     return { 
@@ -110,16 +72,15 @@ export async function uploadToImgBB(
       body: formData,
     });
 
-    const result = await response.json();
+    const result: unknown = await response.json();
 
-    if (result.success) {
-      const data = result as ImgBBResponse;
-      const expirationTime = parseInt(data.data.expiration);
+    if (isImgBBSuccess(result)) {
+      const expirationTime = parseInt(result.data.expiration);
       
       const cloudData: CloudData = {
-        url: data.data.url,
-        viewerUrl: data.data.url_viewer,
-        deleteUrl: data.data.delete_url,
+        url: result.data.url,
+        viewerUrl: result.data.url_viewer,
+        deleteUrl: result.data.delete_url,
         uploadedAt: Date.now(),
         expiresAt: expirationTime > 0 
           ? Date.now() + (expirationTime * 1000) 
@@ -127,12 +88,13 @@ export async function uploadToImgBB(
       };
 
       return { success: true, cloudData };
-    } else {
-      const errorResult = result as ImgBBError;
+    } else if (isImgBBError(result)) {
       return { 
         success: false, 
-        error: errorResult.error?.message || "Upload error" 
+        error: result.error?.message || "Upload error" 
       };
+    } else {
+      return { success: false, error: "Invalid API response" };
     }
   } catch (error) {
     return { 
@@ -142,21 +104,52 @@ export async function uploadToImgBB(
   }
 }
 
+async function uploadWithSettled(
+  image: { id: string; imageData: string },
+  apiKey: string,
+  expiration: number
+): Promise<{ id: string; result: UploadResult }> {
+  const result = await uploadToImgBB(image.imageData, apiKey, expiration);
+  return { id: image.id, result };
+}
+
 export async function uploadMultipleToImgBB(
   images: Array<{ id: string; imageData: string }>,
   apiKey: string,
   expiration: number = 0,
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
+  concurrency: number = UPLOAD.CONCURRENT_UPLOADS
 ): Promise<Map<string, UploadResult>> {
   const results = new Map<string, UploadResult>();
   const total = images.length;
   let completed = 0;
 
-  for (const image of images) {
-    const result = await uploadToImgBB(image.imageData, apiKey, expiration);
-    results.set(image.id, result);
-    completed++;
-    onProgress?.(completed, total);
+  const chunks: Array<Array<{ id: string; imageData: string }>> = [];
+  for (let i = 0; i < images.length; i += concurrency) {
+    chunks.push(images.slice(i, i + concurrency));
+  }
+
+  for (const chunk of chunks) {
+    const settledResults = await Promise.allSettled(
+      chunk.map(image => uploadWithSettled(image, apiKey, expiration))
+    );
+    
+    for (const settledResult of settledResults) {
+      if (settledResult.status === "fulfilled") {
+        const { id, result } = settledResult.value;
+        results.set(id, result);
+      } else {
+        const failedImage = chunk[settledResults.indexOf(settledResult)];
+        if (failedImage) {
+          results.set(failedImage.id, {
+            success: false,
+            error: settledResult.reason?.message || "Upload failed",
+          });
+        }
+      }
+      completed++;
+      onProgress?.(completed, total);
+    }
   }
 
   return results;

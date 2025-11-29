@@ -1,9 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-
-interface Point {
-  row: number;
-  col: number;
-}
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
+import { PATTERN_LOCK, GESTURE, TIMING } from "@/lib/constants";
 
 interface PatternLockProps {
   onPatternComplete: (pattern: number[]) => void;
@@ -16,12 +12,10 @@ interface PatternLockProps {
   showPath?: boolean;
 }
 
-const GRID_SIZE = 3;
-
-export function PatternLock({
+export const PatternLock = memo(function PatternLock({
   onPatternComplete,
-  size = 240,
-  dotSize = 20,
+  size = PATTERN_LOCK.DEFAULT_SIZE,
+  dotSize = PATTERN_LOCK.DEFAULT_DOT_SIZE,
   lineColor = "hsl(var(--primary))",
   dotColor = "hsl(var(--muted-foreground) / 0.5)",
   activeDotColor = "hsl(var(--primary))",
@@ -33,26 +27,26 @@ export function PatternLock({
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const cellSize = size / GRID_SIZE;
+  const cellSize = size / PATTERN_LOCK.GRID_SIZE;
   
-  const getPointIndex = (row: number, col: number): number => {
-    return row * GRID_SIZE + col;
-  };
+  const getPointIndex = useCallback((row: number, col: number): number => {
+    return row * PATTERN_LOCK.GRID_SIZE + col;
+  }, []);
   
-  const getPointCoords = (index: number): { x: number; y: number } => {
-    const row = Math.floor(index / GRID_SIZE);
-    const col = index % GRID_SIZE;
+  const getPointCoords = useCallback((index: number): { x: number; y: number } => {
+    const row = Math.floor(index / PATTERN_LOCK.GRID_SIZE);
+    const col = index % PATTERN_LOCK.GRID_SIZE;
     return {
       x: col * cellSize + cellSize / 2,
       y: row * cellSize + cellSize / 2,
     };
-  };
+  }, [cellSize]);
   
-  const getPointFromCoords = (x: number, y: number): number | null => {
+  const getPointFromCoords = useCallback((x: number, y: number): number | null => {
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
     
-    if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+    if (row < 0 || row >= PATTERN_LOCK.GRID_SIZE || col < 0 || col >= PATTERN_LOCK.GRID_SIZE) {
       return null;
     }
     
@@ -60,14 +54,14 @@ export function PatternLock({
     const centerY = row * cellSize + cellSize / 2;
     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
     
-    if (distance <= cellSize * 0.4) {
+    if (distance <= cellSize * PATTERN_LOCK.HIT_RADIUS_MULTIPLIER) {
       return getPointIndex(row, col);
     }
     
     return null;
-  };
+  }, [cellSize, getPointIndex]);
   
-  const getEventCoords = (e: React.TouchEvent | React.MouseEvent): { x: number; y: number } | null => {
+  const getEventCoords = useCallback((e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>): { x: number; y: number } | null => {
     if (!containerRef.current) return null;
     
     const rect = containerRef.current.getBoundingClientRect();
@@ -86,9 +80,9 @@ export function PatternLock({
       x: clientX - rect.left,
       y: clientY - rect.top,
     };
-  };
+  }, []);
   
-  const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+  const handleStart = useCallback((e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     if (disabled) return;
     e.preventDefault();
     
@@ -101,9 +95,9 @@ export function PatternLock({
       setIsDrawing(true);
       setCurrentPos(coords);
     }
-  }, [disabled, cellSize]);
+  }, [disabled, getEventCoords, getPointFromCoords]);
   
-  const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+  const handleMove = useCallback((e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     if (!isDrawing || disabled) return;
     e.preventDefault();
     
@@ -116,7 +110,7 @@ export function PatternLock({
     if (pointIndex !== null && !pattern.includes(pointIndex)) {
       setPattern(prev => [...prev, pointIndex]);
     }
-  }, [isDrawing, disabled, pattern, cellSize]);
+  }, [isDrawing, disabled, pattern, getEventCoords, getPointFromCoords]);
   
   const handleEnd = useCallback(() => {
     if (!isDrawing) return;
@@ -124,13 +118,13 @@ export function PatternLock({
     setIsDrawing(false);
     setCurrentPos(null);
     
-    if (pattern.length >= 4) {
+    if (pattern.length >= GESTURE.MIN_PATTERN_LENGTH) {
       onPatternComplete(pattern);
     }
     
     setTimeout(() => {
       setPattern([]);
-    }, 300);
+    }, TIMING.PATTERN_CLEAR_DELAY_MS);
   }, [isDrawing, pattern, onPatternComplete]);
   
   useEffect(() => {
@@ -146,16 +140,16 @@ export function PatternLock({
     };
   }, [handleEnd]);
   
-  const renderLines = () => {
+  const lines = useMemo(() => {
     if (!showPath || pattern.length < 2) return null;
     
-    const lines: JSX.Element[] = [];
+    const lineElements: JSX.Element[] = [];
     
     for (let i = 0; i < pattern.length - 1; i++) {
       const start = getPointCoords(pattern[i]);
       const end = getPointCoords(pattern[i + 1]);
       
-      lines.push(
+      lineElements.push(
         <line
           key={`line-${i}`}
           x1={start.x}
@@ -169,36 +163,38 @@ export function PatternLock({
       );
     }
     
-    if (isDrawing && currentPos && pattern.length > 0) {
-      const lastPoint = getPointCoords(pattern[pattern.length - 1]);
-      lines.push(
-        <line
-          key="line-current"
-          x1={lastPoint.x}
-          y1={lastPoint.y}
-          x2={currentPos.x}
-          y2={currentPos.y}
-          stroke={lineColor}
-          strokeWidth={4}
-          strokeLinecap="round"
-          opacity={0.5}
-        />
-      );
-    }
-    
-    return lines;
-  };
+    return lineElements;
+  }, [showPath, pattern, getPointCoords, lineColor]);
   
-  const renderDots = () => {
-    const dots: JSX.Element[] = [];
+  const currentLine = useMemo(() => {
+    if (!isDrawing || !currentPos || pattern.length === 0) return null;
     
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
+    const lastPoint = getPointCoords(pattern[pattern.length - 1]);
+    return (
+      <line
+        key="line-current"
+        x1={lastPoint.x}
+        y1={lastPoint.y}
+        x2={currentPos.x}
+        y2={currentPos.y}
+        stroke={lineColor}
+        strokeWidth={4}
+        strokeLinecap="round"
+        opacity={0.5}
+      />
+    );
+  }, [isDrawing, currentPos, pattern, getPointCoords, lineColor]);
+  
+  const dots = useMemo(() => {
+    const dotElements: JSX.Element[] = [];
+    
+    for (let row = 0; row < PATTERN_LOCK.GRID_SIZE; row++) {
+      for (let col = 0; col < PATTERN_LOCK.GRID_SIZE; col++) {
         const index = getPointIndex(row, col);
         const isActive = pattern.includes(index);
         const coords = getPointCoords(index);
         
-        dots.push(
+        dotElements.push(
           <g key={`dot-${index}`}>
             <circle
               cx={coords.x}
@@ -224,8 +220,8 @@ export function PatternLock({
       }
     }
     
-    return dots;
-  };
+    return dotElements;
+  }, [pattern, getPointIndex, getPointCoords, dotSize, activeDotColor, dotColor]);
   
   return (
     <div
@@ -243,12 +239,13 @@ export function PatternLock({
         height={size}
         className="absolute inset-0"
       >
-        {renderLines()}
-        {renderDots()}
+        {lines}
+        {currentLine}
+        {dots}
       </svg>
     </div>
   );
-}
+});
 
 export function patternToString(pattern: number[]): string {
   return pattern.join("-");

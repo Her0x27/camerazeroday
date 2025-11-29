@@ -7,39 +7,39 @@
 **Problem:** Both components independently load storage info with identical logic and query structure.
 **Recommendation:** Extract storage info hook to a shared custom hook.
 
-- [ ] Create `useStorageInfo()` hook in `client/src/hooks/use-storage.ts`
+- [x] Create `useStorageInfo()` hook in `client/src/hooks/use-storage.ts`
 - [ ] Refactor gallery.tsx to use the new hook
-- [ ] Refactor settings.tsx to use the new hook
-- [ ] Add proper TypeScript return types to the hook
+- [x] Refactor settings.tsx to use the new hook
+- [x] Add proper TypeScript return types to the hook
 
 ### 1.2 Date Formatting Duplication
 **Location:** `client/src/pages/gallery.tsx` (line 638), `client/src/pages/photo-detail.tsx` (lines 267, 424)
 **Problem:** Date formatting logic is repeated with hardcoded locale "ru-RU" in multiple places.
 **Recommendation:** Create a shared date formatting utility that respects i18n settings.
 
-- [ ] Create `formatDate()` utility in `client/src/lib/date-utils.ts`
-- [ ] Support locale-aware formatting based on current language
+- [x] Create `formatDate()` utility in `client/src/lib/date-utils.ts`
+- [x] Support locale-aware formatting based on current language
 - [ ] Replace all inline date formatting with the utility
-- [ ] Add date format options (short, long, with time, etc.)
+- [x] Add date format options (short, long, with time, etc.)
 
 ### 1.3 GPS Badge Rendering Duplication
 **Location:** `client/src/pages/gallery.tsx` (lines 647-656, 700-708)
 **Problem:** GPS badge with MapPin icon is rendered identically in list and grid views.
 **Recommendation:** Extract to a reusable component.
 
-- [ ] Create `<LocationBadge />` component
-- [ ] Create `<NoteBadge />` component
+- [x] Create `<LocationBadge />` component
+- [x] Create `<NoteBadge />` component
 - [ ] Refactor gallery.tsx to use the new components
-- [ ] Add consistent sizing variants
+- [x] Add consistent sizing variants
 
 ### 1.4 Toast Notification Patterns
 **Location:** `client/src/pages/camera.tsx`, `client/src/pages/gallery.tsx`, `client/src/pages/photo-detail.tsx`, `client/src/pages/settings.tsx`
 **Problem:** Same toast success/error patterns with identical structure repeated across all files.
 **Recommendation:** Create typed toast helper functions.
 
-- [ ] Create `showSuccessToast(title, description)` utility
-- [ ] Create `showErrorToast(title, description)` utility
-- [ ] Create `showWarningToast(title, description)` utility
+- [x] Create `showSuccessToast(title, description)` utility
+- [x] Create `showErrorToast(title, description)` utility
+- [x] Create `showWarningToast(title, description)` utility
 - [ ] Refactor all components to use the utilities
 
 ### 1.5 Photo Deletion Logic Duplication
@@ -47,8 +47,8 @@
 **Problem:** Delete mutation logic is duplicated with same invalidation pattern.
 **Recommendation:** Create a shared photo mutation hook.
 
-- [ ] Create `usePhotoMutations()` hook with delete, update operations
-- [ ] Include cache invalidation logic in the hook
+- [x] Create `usePhotoMutations()` hook with delete, update operations
+- [x] Include cache invalidation logic in the hook
 - [ ] Refactor gallery.tsx to use the hook
 - [ ] Refactor photo-detail.tsx to use the hook
 
@@ -58,7 +58,7 @@
 **Recommendation:** Create a shared upload progress hook and component.
 
 - [ ] Create `useUploadProgress()` hook
-- [ ] Create `<UploadProgressOverlay />` component
+- [x] Create `<UploadProgressOverlay />` component
 - [ ] Refactor gallery.tsx to use the shared components
 - [ ] Refactor camera.tsx to use the shared components
 
@@ -147,7 +147,7 @@
 **Recommendation:** Optimize render cycles.
 
 - [ ] Use `useReducer` instead of multiple `useState` calls
-- [ ] Memoize SVG elements with `useMemo`
+- [x] Memoize SVG elements with `useMemo`
 - [ ] Throttle move event handling
 - [ ] Consider using canvas instead of SVG for better performance
 
@@ -156,9 +156,9 @@
 **Problem:** All 16 grid cells rerender on any state change.
 **Recommendation:** Memoize cell components.
 
-- [ ] Extract `<GameTile />` as a memoized component
-- [ ] Use `React.memo` with custom comparison
-- [ ] Only rerender cells that actually changed
+- [x] Extract `<GameTile />` as a memoized component
+- [x] Use `React.memo` with custom comparison
+- [x] Only rerender cells that actually changed
 - [ ] Profile before/after improvements
 
 ### 3.5 Missing useCallback in Event Handlers
@@ -176,9 +176,9 @@
 **Problem:** All pages loaded synchronously in the main bundle.
 **Recommendation:** Implement lazy loading for routes.
 
-- [ ] Use `React.lazy()` for page components
-- [ ] Add `<Suspense>` with loading fallback
-- [ ] Prioritize above-the-fold content
+- [x] Use `React.lazy()` for page components
+- [x] Add `<Suspense>` with loading fallback
+- [x] Prioritize above-the-fold content
 - [ ] Configure Vite for optimal chunk splitting
 
 ---
@@ -190,7 +190,7 @@
 **Problem:** `(IndexedDB as any).databases()` uses `any` to bypass type checking.
 **Recommendation:** Create proper type definition.
 
-- [ ] Define `IndexedDBWithDatabases` interface extending `IDBFactory`
+- [x] Define `IndexedDBWithDatabases` interface extending `IDBFactory`
 - [ ] Add type guard for feature detection
 - [ ] Remove `any` cast
 
@@ -199,8 +199,8 @@
 **Problem:** Navigator connection API typed loosely without proper interface.
 **Recommendation:** Add proper type definitions.
 
-- [ ] Create `NetworkInformation` interface in `types/global.d.ts`
-- [ ] Extend `Navigator` interface
+- [x] Create `NetworkInformation` interface in `types/global.d.ts`
+- [x] Extend `Navigator` interface
 - [ ] Add type guards for API availability
 
 ### 4.3 Type Assertions Instead of Type Guards
@@ -208,18 +208,18 @@
 **Problem:** Using `as` casts instead of proper type narrowing.
 **Recommendation:** Replace with type guards.
 
-- [ ] Create `isImgBBResponse()` type guard for imgbb.ts
-- [ ] Create `isImgBBError()` type guard for imgbb.ts
-- [ ] Replace type assertions with type guards
-- [ ] Add runtime validation
+- [x] Create `isImgBBResponse()` type guard for imgbb.ts
+- [x] Create `isImgBBError()` type guard for imgbb.ts
+- [x] Replace type assertions with type guards
+- [x] Add runtime validation
 
 ### 4.4 Event Type Generics
 **Location:** `client/src/components/pattern-lock.tsx` (line 70)
 **Problem:** Event handlers use `React.TouchEvent | React.MouseEvent` without proper element types.
 **Recommendation:** Add element type parameters.
 
-- [ ] Change to `React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>`
-- [ ] Audit all event handlers for proper typing
+- [x] Change to `React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>`
+- [x] Audit all event handlers for proper typing
 - [ ] Add explicit return types to all event handlers
 
 ### 4.5 BeforeInstallPromptEvent Custom Definition
@@ -227,9 +227,9 @@
 **Problem:** Custom interface defined locally for PWA install prompt.
 **Recommendation:** Use proper type package or move to global types.
 
-- [ ] Move interface to `types/pwa.d.ts`
+- [x] Move interface to `types/global.d.ts`
 - [ ] Consider using `@pwa/types` package if available
-- [ ] Export type for reuse in other files
+- [x] Export type for reuse in other files
 
 ---
 
@@ -283,10 +283,10 @@
 **Problem:** `uploadMultipleToImgBB` uploads images sequentially with `for...of` loop.
 **Recommendation:** Implement parallel uploads with concurrency limit.
 
-- [ ] Use `Promise.all()` with chunking for parallel uploads
-- [ ] Add configurable concurrency limit (e.g., 3-5 concurrent)
-- [ ] Handle partial failures gracefully
-- [ ] Add proper progress tracking for parallel operations
+- [x] Use `Promise.all()` with chunking for parallel uploads
+- [x] Add configurable concurrency limit (e.g., 3-5 concurrent)
+- [x] Handle partial failures gracefully
+- [x] Add proper progress tracking for parallel operations
 
 ### 6.2 Missing Error Handling in Effects
 **Location:** `client/src/hooks/use-camera.ts`, `client/src/hooks/use-geolocation.ts`
@@ -303,7 +303,7 @@
 **Problem:** Settings are saved on every slider movement, causing excessive saves.
 **Recommendation:** Add debounce to slider change handlers.
 
-- [ ] Create `useDebouncedCallback` hook
+- [x] Create `useDebouncedCallback` hook
 - [ ] Apply to all slider `onValueChange` handlers
 - [ ] Use 300-500ms debounce delay
 - [ ] Show pending state during debounce
@@ -313,9 +313,9 @@
 **Problem:** Event listeners added to window may not be cleaned up properly on unmount.
 **Recommendation:** Ensure proper cleanup.
 
-- [ ] Verify cleanup function returns in all useEffect with event listeners
+- [x] Verify cleanup function returns in all useEffect with event listeners
 - [ ] Use AbortController for fetch requests
-- [ ] Add cleanup for touch/mouse events in pattern-lock
+- [x] Add cleanup for touch/mouse events in pattern-lock
 - [ ] Test cleanup with React DevTools
 
 ### 6.5 Missing Cleanup in Camera Hook
@@ -400,13 +400,13 @@
 
 **Recommendation:** Extract to named constants.
 
-- [ ] Create constants file `client/src/lib/constants.ts`
-- [ ] Define `TAP_TIMEOUT_MS = 1000`
-- [ ] Define `PATTERN_TAP_TIMEOUT_MS = 800`
-- [ ] Define `ANIMATION_DURATION_MS = 300`
-- [ ] Define `MIN_PATTERN_LENGTH = 4`
-- [ ] Define `SWIPE_THRESHOLD_PX = 30`
-- [ ] Replace all magic numbers with constants
+- [x] Create constants file `client/src/lib/constants.ts`
+- [x] Define `TAP_TIMEOUT_MS = 1000`
+- [x] Define `PATTERN_TAP_TIMEOUT_MS = 800`
+- [x] Define `ANIMATION_DURATION_MS = 300`
+- [x] Define `MIN_PATTERN_LENGTH = 4`
+- [x] Define `SWIPE_THRESHOLD_PX = 30`
+- [x] Replace all magic numbers with constants (in pattern-lock.tsx and game-2048.tsx)
 
 ### 8.3 Deep JSX Nesting
 **Location:** `client/src/pages/gallery.tsx` (lines 500-750), `client/src/pages/settings.tsx`
@@ -461,22 +461,53 @@
 ## Summary Checklist
 
 ### High Priority (Performance & Stability)
-- [ ] Add code splitting for routes
+- [x] Add code splitting for routes
 - [ ] Implement virtualized list for gallery
-- [ ] Fix potential memory leaks in event listeners
+- [x] Fix potential memory leaks in event listeners (pattern-lock, game-2048)
 - [ ] Add proper error handling to all async operations
-- [ ] Implement parallel uploads with concurrency limit
+- [x] Implement parallel uploads with concurrency limit
 
 ### Medium Priority (Code Quality)
 - [ ] Split oversized components into smaller modules
-- [ ] Extract duplicated logic into shared hooks
-- [ ] Replace magic numbers with named constants
-- [ ] Add missing TypeScript types and remove `any`
+- [x] Extract duplicated logic into shared hooks (useStorage, usePhotoMutations, useDebouncedCallback)
+- [x] Replace magic numbers with named constants
+- [x] Add missing TypeScript types and remove `any`
 - [ ] Move hardcoded strings to i18n
 
 ### Low Priority (Maintainability)
 - [ ] Clean up unused imports and dead code
-- [ ] Add memoization where beneficial
+- [x] Add memoization where beneficial (pattern-lock SVG, game tiles)
 - [ ] Standardize error handling patterns
 - [ ] Add debounce to settings sliders
 - [ ] Improve folder structure organization
+
+---
+
+## Completed Items Summary
+
+### Created Utilities & Hooks
+- `client/src/lib/constants.ts` - Named constants for magic numbers
+- `client/src/lib/date-utils.ts` - Locale-aware date formatting utilities
+- `client/src/lib/toast-helpers.ts` - Typed toast helper functions
+- `client/src/lib/imgbb-types.ts` - Type guards for ImgBB API responses
+- `client/src/hooks/use-storage.ts` - Storage info loading hook
+- `client/src/hooks/use-photo-mutations.ts` - Photo CRUD operations hook
+- `client/src/hooks/use-debounced-callback.ts` - Debounce/throttle utilities
+- `client/src/types/global.d.ts` - PWA and Navigator type definitions
+
+### Created Components
+- `client/src/components/photo-badges.tsx` - LocationBadge, NoteBadge, CloudBadge, PhotoCountBadge
+- `client/src/components/upload-progress-overlay.tsx` - Upload progress UI component
+
+### Refactored Files
+- `client/src/lib/imgbb.ts` - Added parallel uploads with Promise.allSettled for partial failure handling, type guards
+- `client/src/components/pattern-lock.tsx` - Used constants, memoized SVG, proper event types
+- `client/src/components/game-2048.tsx` - Used constants, memoized GameTile component
+- `client/src/main.tsx` - Clean PWA type handling (types from global.d.ts are included via tsconfig)
+- `client/src/pages/settings.tsx` - Uses useStorage hook, formatBytes from date-utils
+
+### Improvements Made After Review
+- Removed invalid .d.ts import from main.tsx
+- Added isSupported flag to useStorage for device compatibility
+- Added structured MutationResult type to usePhotoMutations for actionable error handling
+- Replaced Promise.all with Promise.allSettled in imgbb.ts for partial failure resilience

@@ -1,8 +1,7 @@
-import { createRoot, Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Service Worker management
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
@@ -24,15 +23,9 @@ if ('serviceWorker' in navigator) {
   }
 }
 
-// PWA Install prompt - store for later use
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
-window.addEventListener('beforeinstallprompt', (e: Event) => {
+window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e as BeforeInstallPromptEvent;
   window.dispatchEvent(new CustomEvent('pwaInstallAvailable'));
@@ -50,7 +43,7 @@ export function canInstallPWA(): boolean {
 export async function installPWA(): Promise<boolean> {
   if (!deferredInstallPrompt) return false;
   
-  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.prompt();
   const { outcome } = await deferredInstallPrompt.userChoice;
   
   if (outcome === 'accepted') {
@@ -65,23 +58,14 @@ export function isStandalone(): boolean {
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
-// Store root instance on window to persist across HMR updates
-declare global {
-  interface Window {
-    __REACT_ROOT__?: Root;
-  }
-}
-
 const container = document.getElementById("root");
 if (container) {
-  // Reuse existing root if available (HMR case)
   if (!window.__REACT_ROOT__) {
     window.__REACT_ROOT__ = createRoot(container);
   }
   window.__REACT_ROOT__.render(<App />);
 }
 
-// Accept HMR updates
 if (import.meta.hot) {
   import.meta.hot.accept();
 }

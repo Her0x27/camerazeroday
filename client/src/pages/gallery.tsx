@@ -21,10 +21,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { getAllPhotos, deletePhoto, clearAllPhotos, getPhotosByFolder, updatePhoto, getPhoto } from "@/lib/db";
-import { uploadToImgBB, uploadMultipleToImgBB } from "@/lib/imgbb";
+import { getAllPhotos, updatePhoto, getPhoto } from "@/lib/db";
+import { uploadMultipleToImgBB } from "@/lib/imgbb";
 import { useSettings } from "@/lib/settings-context";
 import { useToast } from "@/hooks/use-toast";
+import { usePhotoMutations } from "@/hooks/use-photo-mutations";
+import { useI18n } from "@/lib/i18n";
+import { formatDate } from "@/lib/date-utils";
+import { UploadProgressOverlay } from "@/components/upload-progress-overlay";
+import { LocationBadge, NoteBadge, CloudBadge } from "@/components/photo-badges";
 import type { Photo, GalleryFilter, CloudData } from "@shared/schema";
 
 type ViewMode = "folders" | "photos";
@@ -40,6 +45,8 @@ export default function GalleryPage() {
   const [, navigate] = useLocation();
   const { settings } = useSettings();
   const { toast } = useToast();
+  const { t, language } = useI18n();
+  const { deletePhotoById, clearAll } = usePhotoMutations();
   
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,36 +151,34 @@ export default function GalleryPage() {
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     
-    try {
-      await deletePhoto(deleteTarget);
+    const result = await deletePhotoById(deleteTarget);
+    if (result.success) {
       setAllPhotos((prev) => prev.filter((p) => p.id !== deleteTarget));
-    } catch (error) {
-      console.error("Delete error:", error);
-    } finally {
-      setDeleteTarget(null);
+    } else {
+      console.error("Delete error:", result.error);
     }
-  }, [deleteTarget]);
+    setDeleteTarget(null);
+  }, [deleteTarget, deletePhotoById]);
 
   // Clear all photos
   const handleClearAll = useCallback(async () => {
-    try {
-      await clearAllPhotos();
+    const result = await clearAll();
+    if (result.success) {
       setAllPhotos([]);
       setSelectedFolder(undefined);
       setViewMode("folders");
-    } catch (error) {
-      console.error("Clear error:", error);
-    } finally {
-      setShowClearDialog(false);
+    } else {
+      console.error("Clear error:", result.error);
     }
-  }, []);
+    setShowClearDialog(false);
+  }, [clearAll]);
 
   // Upload photos to ImgBB
   const handleUploadPhotos = useCallback(async (photos: Photo[]) => {
     if (!settings.imgbb?.apiKey || !settings.imgbb.isValidated) {
       toast({
-        title: "Error",
-        description: "Please configure ImgBB API key first",
+        title: t.common.error,
+        description: t.gallery.configureApiFirst,
         variant: "destructive",
       });
       return;
@@ -182,8 +187,8 @@ export default function GalleryPage() {
     const photosToUpload = photos.filter(p => !p.cloud);
     if (photosToUpload.length === 0) {
       toast({
-        title: "Info",
-        description: "All photos are already uploaded to cloud",
+        title: t.common.info,
+        description: t.gallery.allUploaded,
       });
       return;
     }

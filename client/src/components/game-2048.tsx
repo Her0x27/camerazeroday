@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { PatternLock, patternToString } from "@/components/pattern-lock";
+import { GAME, GESTURE, TIMING, STORAGE_KEYS } from "@/lib/constants";
 
 type Grid = number[][];
 
@@ -12,7 +13,6 @@ interface Position {
   col: number;
 }
 
-const GRID_SIZE = 4;
 const TILE_COLORS: Record<number, { bg: string; text: string }> = {
   0: { bg: "bg-muted/50", text: "" },
   2: { bg: "bg-amber-100 dark:bg-amber-900/40", text: "text-amber-900 dark:text-amber-100" },
@@ -29,13 +29,13 @@ const TILE_COLORS: Record<number, { bg: string; text: string }> = {
 };
 
 function createEmptyGrid(): Grid {
-  return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+  return Array(GAME.GRID_SIZE).fill(null).map(() => Array(GAME.GRID_SIZE).fill(0));
 }
 
 function getRandomEmptyCell(grid: Grid): Position | null {
   const emptyCells: Position[] = [];
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
+  for (let row = 0; row < GAME.GRID_SIZE; row++) {
+    for (let col = 0; col < GAME.GRID_SIZE; col++) {
       if (grid[row][col] === 0) {
         emptyCells.push({ row, col });
       }
@@ -49,7 +49,7 @@ function addRandomTile(grid: Grid): Grid {
   const newGrid = grid.map(row => [...row]);
   const pos = getRandomEmptyCell(newGrid);
   if (pos) {
-    newGrid[pos.row][pos.col] = Math.random() < 0.9 ? 2 : 4;
+    newGrid[pos.row][pos.col] = Math.random() < GAME.NEW_TILE_PROBABILITY_2 ? 2 : 4;
   }
   return newGrid;
 }
@@ -63,9 +63,9 @@ function initializeGrid(): Grid {
 
 function rotateGrid(grid: Grid): Grid {
   const newGrid = createEmptyGrid();
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
-      newGrid[col][GRID_SIZE - 1 - row] = grid[row][col];
+  for (let row = 0; row < GAME.GRID_SIZE; row++) {
+    for (let col = 0; col < GAME.GRID_SIZE; col++) {
+      newGrid[col][GAME.GRID_SIZE - 1 - row] = grid[row][col];
     }
   }
   return newGrid;
@@ -87,7 +87,7 @@ function slideRow(row: number[]): { row: number[]; score: number } {
     }
   }
   
-  while (newRow.length < GRID_SIZE) {
+  while (newRow.length < GAME.GRID_SIZE) {
     newRow.push(0);
   }
   
@@ -125,24 +125,46 @@ function move(grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): { grid: 
 }
 
 function canMove(grid: Grid): boolean {
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
+  for (let row = 0; row < GAME.GRID_SIZE; row++) {
+    for (let col = 0; col < GAME.GRID_SIZE; col++) {
       if (grid[row][col] === 0) return true;
-      if (col < GRID_SIZE - 1 && grid[row][col] === grid[row][col + 1]) return true;
-      if (row < GRID_SIZE - 1 && grid[row][col] === grid[row + 1][col]) return true;
+      if (col < GAME.GRID_SIZE - 1 && grid[row][col] === grid[row][col + 1]) return true;
+      if (row < GAME.GRID_SIZE - 1 && grid[row][col] === grid[row + 1][col]) return true;
     }
   }
   return false;
 }
 
 function hasWon(grid: Grid): boolean {
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
-      if (grid[row][col] >= 2048) return true;
+  for (let row = 0; row < GAME.GRID_SIZE; row++) {
+    for (let col = 0; col < GAME.GRID_SIZE; col++) {
+      if (grid[row][col] >= GAME.WINNING_TILE) return true;
     }
   }
   return false;
 }
+
+interface GameTileProps {
+  value: number;
+  rowIdx: number;
+  colIdx: number;
+}
+
+const GameTile = memo(function GameTile({ value, rowIdx, colIdx }: GameTileProps) {
+  const style = TILE_COLORS[value] || TILE_COLORS[2048];
+  const className = `flex items-center justify-center rounded-md font-bold transition-all duration-100 ${style.bg} ${style.text}`;
+  const fontSize = value >= 1000 ? '1rem' : value >= 100 ? '1.25rem' : '1.5rem';
+  
+  return (
+    <div
+      className={className}
+      style={{ fontSize }}
+      data-testid={`tile-${rowIdx}-${colIdx}`}
+    >
+      {value > 0 ? value : ''}
+    </div>
+  );
+});
 
 interface Game2048Props {
   onSecretGesture?: () => void;
@@ -156,7 +178,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
   const [grid, setGrid] = useState<Grid>(initializeGrid);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(() => {
-    const saved = localStorage.getItem('game2048-best');
+    const saved = localStorage.getItem(STORAGE_KEYS.GAME_BEST_SCORE);
     return saved ? parseInt(saved, 10) : 0;
   });
   const [gameOver, setGameOver] = useState(false);
@@ -184,7 +206,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
         const newScore = prev + moveScore;
         if (newScore > bestScore) {
           setBestScore(newScore);
-          localStorage.setItem('game2048-best', newScore.toString());
+          localStorage.setItem(STORAGE_KEYS.GAME_BEST_SCORE, newScore.toString());
         }
         return newScore;
       });
@@ -202,19 +224,19 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
     
     if (gestureType === 'quickTaps') {
       const now = Date.now();
-      tapTimesRef.current = tapTimesRef.current.filter(t => now - t < 1000);
+      tapTimesRef.current = tapTimesRef.current.filter(t => now - t < TIMING.TAP_TIMEOUT_MS);
       tapTimesRef.current.push(now);
       
-      if (tapTimesRef.current.length >= 4) {
+      if (tapTimesRef.current.length >= GESTURE.QUICK_TAP_COUNT) {
         tapTimesRef.current = [];
         onSecretGesture();
       }
     } else if (gestureType === 'patternUnlock') {
       const now = Date.now();
-      patternTapTimesRef.current = patternTapTimesRef.current.filter(t => now - t < 800);
+      patternTapTimesRef.current = patternTapTimesRef.current.filter(t => now - t < TIMING.PATTERN_TAP_TIMEOUT_MS);
       patternTapTimesRef.current.push(now);
       
-      if (patternTapTimesRef.current.length >= 3) {
+      if (patternTapTimesRef.current.length >= GESTURE.PATTERN_UNLOCK_TAP_COUNT) {
         patternTapTimesRef.current = [];
         setShowPatternOverlay(true);
         setPatternError(false);
@@ -231,7 +253,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
       onSecretGesture?.();
     } else {
       setPatternError(true);
-      setTimeout(() => setPatternError(false), 1000);
+      setTimeout(() => setPatternError(false), TIMING.TAP_TIMEOUT_MS);
     }
   }, [secretPattern, onSecretGesture]);
   
@@ -291,9 +313,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
       
-      const minSwipe = 30;
-      
-      if (Math.max(absDx, absDy) < minSwipe) {
+      if (Math.max(absDx, absDy) < GESTURE.MIN_SWIPE_DISTANCE_PX) {
         handleSecretTap();
         return;
       }
@@ -316,10 +336,13 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
     };
   }, [handleMove, handleSecretTap]);
   
-  const getTileStyle = (value: number) => {
-    const style = TILE_COLORS[value] || TILE_COLORS[2048];
-    return `${style.bg} ${style.text}`;
-  };
+  const gridTiles = useMemo(() => {
+    return grid.flatMap((row, rowIdx) =>
+      row.map((cell, colIdx) => (
+        <GameTile key={`${rowIdx}-${colIdx}`} value={cell} rowIdx={rowIdx} colIdx={colIdx} />
+      ))
+    );
+  }, [grid]);
   
   return (
     <div 
@@ -363,18 +386,7 @@ export function Game2048({ onSecretGesture, gestureType = 'quickTaps', secretPat
             data-testid="game-grid"
           >
             <div className="grid grid-cols-4 gap-2 h-full">
-              {grid.map((row, rowIdx) =>
-                row.map((cell, colIdx) => (
-                  <div
-                    key={`${rowIdx}-${colIdx}`}
-                    className={`flex items-center justify-center rounded-md font-bold transition-all duration-100 ${getTileStyle(cell)}`}
-                    style={{ fontSize: cell >= 1000 ? '1rem' : cell >= 100 ? '1.25rem' : '1.5rem' }}
-                    data-testid={`tile-${rowIdx}-${colIdx}`}
-                  >
-                    {cell > 0 ? cell : ''}
-                  </div>
-                ))
-              )}
+              {gridTiles}
             </div>
             
             {(gameOver || won) && (

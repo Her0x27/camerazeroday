@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -8,13 +8,22 @@ import { SettingsProvider } from "@/lib/settings-context";
 import { I18nProvider } from "@/lib/i18n";
 import { DisguiseProvider, useDisguise } from "@/lib/disguise-context";
 import { SplashScreen } from "@/components/splash-screen";
+import { Loader2 } from "lucide-react";
 
-import CameraPage from "@/pages/camera";
-import GalleryPage from "@/pages/gallery";
-import PhotoDetailPage from "@/pages/photo-detail";
-import SettingsPage from "@/pages/settings";
-import DisguiseGamePage from "@/pages/disguise-game";
-import NotFound from "@/pages/not-found";
+const CameraPage = lazy(() => import("@/pages/camera"));
+const GalleryPage = lazy(() => import("@/pages/gallery"));
+const PhotoDetailPage = lazy(() => import("@/pages/photo-detail"));
+const SettingsPage = lazy(() => import("@/pages/settings"));
+const DisguiseGamePage = lazy(() => import("@/pages/disguise-game"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" data-testid="page-loader" />
+    </div>
+  );
+}
 
 function DisguiseRedirect({ children }: { children: React.ReactNode }) {
   const [location, navigate] = useLocation();
@@ -32,14 +41,16 @@ function DisguiseRedirect({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <DisguiseRedirect>
-      <Switch>
-        <Route path="/" component={CameraPage} />
-        <Route path="/gallery" component={GalleryPage} />
-        <Route path="/photo/:id" component={PhotoDetailPage} />
-        <Route path="/settings" component={SettingsPage} />
-        <Route path="/disguise-game" component={DisguiseGamePage} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          <Route path="/" component={CameraPage} />
+          <Route path="/gallery" component={GalleryPage} />
+          <Route path="/photo/:id" component={PhotoDetailPage} />
+          <Route path="/settings" component={SettingsPage} />
+          <Route path="/disguise-game" component={DisguiseGamePage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     </DisguiseRedirect>
   );
 }

@@ -62,9 +62,10 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { usePWA } from "@/hooks/use-pwa";
 import { useDisguise } from "@/lib/disguise-context";
-import { getStorageEstimate, clearAllPhotos, getPhotoCount } from "@/lib/db";
+import { useStorage } from "@/hooks/use-storage";
 import { validateApiKey } from "@/lib/imgbb";
 import { PatternLock, patternToString } from "@/components/pattern-lock";
+import { formatBytes } from "@/lib/date-utils";
 import {
   Select,
   SelectContent,
@@ -86,7 +87,8 @@ export default function SettingsPage() {
   const [patternStep, setPatternStep] = useState<'draw' | 'confirm'>('draw');
   const [tempPattern, setTempPattern] = useState<string>('');
   const [patternError, setPatternError] = useState(false);
-  const [storageInfo, setStorageInfo] = useState<{ used: number; quota: number; photos: number } | null>(null);
+  
+  const { storageInfo, clearStorage } = useStorage();
   
   const [apiKeyInput, setApiKeyInput] = useState(settings.imgbb?.apiKey || "");
   const [isValidating, setIsValidating] = useState(false);
@@ -96,36 +98,6 @@ export default function SettingsPage() {
     setApiKeyInput(settings.imgbb?.apiKey || "");
   }, [settings.imgbb?.apiKey]);
 
-  useEffect(() => {
-    const loadStorageInfo = async () => {
-      try {
-        const [estimate, count] = await Promise.all([
-          getStorageEstimate(),
-          getPhotoCount(),
-        ]);
-        
-        if (estimate) {
-          setStorageInfo({
-            used: estimate.used,
-            quota: estimate.quota,
-            photos: count,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load storage info:", error);
-      }
-    };
-
-    loadStorageInfo();
-  }, []);
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  };
-
   const handleReset = useCallback(async () => {
     await resetSettings();
     setShowResetDialog(false);
@@ -133,13 +105,12 @@ export default function SettingsPage() {
 
   const handleClearPhotos = useCallback(async () => {
     try {
-      await clearAllPhotos();
-      setStorageInfo((prev) => prev ? { ...prev, photos: 0 } : null);
+      await clearStorage();
     } catch (error) {
       console.error("Clear error:", error);
     }
     setShowClearDialog(false);
-  }, []);
+  }, [clearStorage]);
 
   const handlePatternDraw = (pattern: number[]) => {
     const patternStr = patternToString(pattern);
