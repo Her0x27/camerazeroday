@@ -10,7 +10,7 @@ import { useOrientation } from "@/hooks/use-orientation";
 import { useSettings } from "@/lib/settings-context";
 import { Reticle } from "@/components/reticles";
 import { MetadataOverlay } from "@/components/metadata-overlay";
-import { savePhoto, getPhotoCount } from "@/lib/db";
+import { savePhoto, getPhotoCount, getAllPhotos } from "@/lib/db";
 import type { InsertPhoto } from "@shared/schema";
 
 export default function CameraPage() {
@@ -18,6 +18,7 @@ export default function CameraPage() {
   const { settings } = useSettings();
   
   const [photoCount, setPhotoCount] = useState(0);
+  const [lastPhotoThumb, setLastPhotoThumb] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
@@ -46,9 +47,24 @@ export default function CameraPage() {
     requestPermission: requestOrientationPermission,
   } = useOrientation(settings.orientationEnabled);
 
-  // Load photo count
+  // Load photo count and last photo thumb
   useEffect(() => {
-    getPhotoCount().then(setPhotoCount).catch(console.error);
+    const loadPhotos = async () => {
+      try {
+        const count = await getPhotoCount();
+        setPhotoCount(count);
+        
+        if (count > 0) {
+          const photos = await getAllPhotos("newest");
+          if (photos.length > 0) {
+            setLastPhotoThumb(photos[0].thumbnailData);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load photos:", error);
+      }
+    };
+    loadPhotos();
   }, []);
 
   // Start camera on mount
@@ -117,6 +133,7 @@ export default function CameraPage() {
 
       await savePhoto(photo);
       setPhotoCount((prev) => prev + 1);
+      setLastPhotoThumb(result.thumbnailData);
 
       // Play capture sound if enabled
       if (settings.soundEnabled) {
@@ -241,7 +258,7 @@ export default function CameraPage() {
 
       {/* Bottom controls */}
       <div className="bg-black/80 backdrop-blur-sm safe-bottom z-10">
-        <div className="flex items-center justify-center gap-[5%] px-[5%] py-[3%] h-32">
+        <div className="flex items-center justify-center gap-[5%] px-[5%] py-2 h-20">
           {/* Gallery button */}
           <Button
             variant="ghost"
@@ -262,22 +279,30 @@ export default function CameraPage() {
           <button
             onClick={handleCapture}
             disabled={!isReady || isCapturing}
-            className={`aspect-square flex-[1.5] max-w-32 rounded-full border-4 flex items-center justify-center transition-all ${
+            className={`aspect-square flex-[1.5] max-w-28 rounded-full border-4 flex items-center justify-center transition-all overflow-hidden ${
               isReady && !isCapturing
                 ? "border-white bg-white/10 hover:bg-white/20 active:scale-95 active:bg-white/30"
                 : "border-muted-foreground/50 bg-muted/20"
             }`}
             data-testid="button-capture"
           >
-            <div 
-              className={`w-[80%] h-[80%] rounded-full transition-all ${
-                isCapturing 
-                  ? "bg-primary scale-75" 
-                  : isReady 
-                    ? "bg-white" 
-                    : "bg-muted"
-              }`}
-            />
+            {lastPhotoThumb ? (
+              <img 
+                src={lastPhotoThumb} 
+                alt="Last photo" 
+                className="w-full h-full object-cover rounded-full opacity-70"
+              />
+            ) : (
+              <div 
+                className={`w-[80%] h-[80%] rounded-full transition-all ${
+                  isCapturing 
+                    ? "bg-primary scale-75" 
+                    : isReady 
+                      ? "bg-white" 
+                      : "bg-muted"
+                }`}
+              />
+            )}
           </button>
 
           {/* Note button */}
